@@ -2,9 +2,13 @@
   "name": "obtuse-octo-adventure",
   "version": "1.0.0",
   "description": "obtuse octo adventure",
-  "main": "index.js",
+  "main": "app/index.js",
   "directories": {
     "test": "tests"
+  },
+  "engines": {
+    "node": "0.10.x",
+    "npm": "2.x"
   },
   "dependencies": {
   },
@@ -28,6 +32,7 @@
     "tsd": "^0.6.3"
   },
   "scripts": {
+    "start": "gulp start",
     "test": "gulp test"
   },
   "repository": {

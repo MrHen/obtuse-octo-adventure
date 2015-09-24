@@ -1,0 +1,8 @@
+{
+  "name": "murmuring-tundra-3318",
+  "description": "obtuse octo adventure",
+  "repository": "https://github.com/MrHen/obtuse-octo-adventure",
+  "logo": "http://node-js-sample.herokuapp.com/node.svg",
+  "keywords": [],
+  "image": "heroku/nodejs"
+}
