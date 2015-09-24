@@ -31,7 +31,8 @@
   },
   "scripts": {
     "test": "gulp test",
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "gulp build"
   },
   "repository": {
     "type": "git",
