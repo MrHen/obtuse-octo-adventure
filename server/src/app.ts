@@ -6,11 +6,12 @@ import http = require('http');
 var app = express();
 app.set('port', (process.env.PORT || 5000));
 
-app.use(express.static('app'));
+app.get('/', function (req, res) {
+    res.send('Hello World!');
+});
 
 var server = http.createServer(app);
-var server_config = { port: 4000 };
 
 server.listen(app.get('port'), () => {
-    console.info('Express server listening', {port: server_config.port});
+    console.info('Express server listening', {port: app.get('port')});
 });

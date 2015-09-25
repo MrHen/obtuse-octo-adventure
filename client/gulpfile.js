@@ -55,15 +55,15 @@ var locations = {
 ////////
 
 gulp.task('clean', function(callback) {
-    run_sequence('clean:app', callback);
+    run_sequence('clean:client', callback);
 });
 
 gulp.task('purge', function(callback) {
-    run_sequence('clean:app', 'clean:tsd', callback);
+    run_sequence('clean:client', 'clean:tsd', callback);
 });
 
-gulp.task('clean:app', function(callback) {
-    del(['app/*'], callback);
+gulp.task('clean:client', function(callback) {
+    del([locations.output + '/*'], callback);
 });
 
 gulp.task('clean:deploy', function(callback) {
@@ -78,8 +78,8 @@ gulp.task('clean:tsd', function (callback) {
 // Watch
 ////////
 
-gulp.task('watch', ['build:app'], function() {
-    return gulp.watch(locations.sources, configs.watcher, ['build:app:typescript', 'build:app:copy'])
+gulp.task('watch', ['build:client'], function() {
+    return gulp.watch(locations.sources, configs.watcher, ['build:client:typescript', 'build:client:copy'])
         .on('change', function (event) {
             gulp_util.log("[" + gulp_util.colors.cyan("watch") + "]", 'File ' + event.path + ' was ' + event.type);
         });
@@ -90,14 +90,14 @@ gulp.task('watch', ['build:app'], function() {
 ////////
 
 gulp.task('build', function(callback) {
-    run_sequence('build:app', callback);
+    run_sequence('build:client', callback);
 });
 
-gulp.task('build:app', ['build:tsd', 'build:bower'], function(callback) {
-    run_sequence('build:app:typescript', 'build:app:copy', callback);
+gulp.task('build:client', ['build:tsd', 'build:bower'], function(callback) {
+    run_sequence('build:client:typescript', 'build:client:copy', callback);
 });
 
-gulp.task('build:app:copy', function() {
+gulp.task('build:client:copy', function() {
     var copyFilter = gulp_filter(locations.filters.copy);
 
     return gulp.src(locations.sources)
@@ -108,7 +108,7 @@ gulp.task('build:app:copy', function() {
 
 var tsProject = gulp_typescript.createProject(configs.typescript);
 
-gulp.task('build:app:typescript', function () {
+gulp.task('build:client:typescript', function () {
     var tsFilter = gulp_filter(locations.filters.typescript); // non-test TypeScript files
 
     var tsResult = gulp.src(locations.sources)
@@ -119,7 +119,7 @@ gulp.task('build:app:typescript', function () {
     return tsResult.js.pipe(gulp.dest(locations.output));
 });
 
-gulp.task('build:test', ['build:tsd', 'build:app'], function(callback) {
+gulp.task('build:test', ['build:tsd', 'build:client'], function(callback) {
     run_sequence('build:test:typescript', callback);
 });
 
@@ -154,11 +154,11 @@ gulp.task('build:tsd', function (callback) {
 // Run
 //////
 
-gulp.task('start', ['build:app'], function(callback) {
-    run_sequence('start:app', callback);
+gulp.task('start', ['build:client'], function(callback) {
+    run_sequence('start:client', callback);
 });
 
-gulp.task('start:app', function() {
+gulp.task('start:client', function() {
     gulp_nodemon({
         script: locations.start,
         env: {
@@ -177,7 +177,7 @@ gulp.task('deploy', function(callback) {
     run_sequence('deploy:ghpages', callback);
 });
 
-gulp.task('deploy:ghpages', ['build:app', 'test:run'], function() {
+gulp.task('deploy:ghpages', ['build:client', 'test:run'], function() {
     return gulp.src(locations.deploy)
         .pipe(gulp_gh_pages());
 });
@@ -190,7 +190,7 @@ gulp.task('test', function(callback) {
     run_sequence('test:run', callback);
 });
 
-gulp.task('test:run', ['build:app', 'build:test'], function() {
+gulp.task('test:run', ['build:client', 'build:test'], function() {
     return gulp.src([locations.test])
         .pipe(gulp_spawn_mocha(configs.mocha));
 });
