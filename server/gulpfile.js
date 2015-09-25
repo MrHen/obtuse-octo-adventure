@@ -166,7 +166,7 @@ gulp.task('start:server', function() {
     gulp_nodemon({
         script: locations.start,
         env: {
-            NODE_ENV: process.env.NODE_ENV
+            NODE_ENV: process.env.NODE_ENV || 'development'
         },
         watch: locations.watch.restart,
         verbose: true

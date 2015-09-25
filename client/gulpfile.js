@@ -41,7 +41,7 @@ var locations = {
     bower: "app/bower_components",
 
     filters: {
-        copy: ['**/*.{html,css}'],
+        copy: ['**/*.{html,css,json}'],
         typescript: ['**/*.ts', '!**/*.spec.ts']
     },
 
@@ -171,7 +171,8 @@ gulp.task('start:client', function() {
     gulp_nodemon({
         script: locations.start,
         env: {
-            NODE_ENV: process.env.NODE_ENV
+            NODE_ENV: process.env.NODE_ENV || 'development',
+            NODE_CONFIG_DIR: 'app/config'
         },
         watch: locations.watch.restart,
         verbose: true
