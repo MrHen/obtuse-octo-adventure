@@ -111,10 +111,19 @@ var tsProject = gulp_typescript.createProject(configs.typescript);
 gulp.task('build:client:typescript', function () {
     var tsFilter = gulp_filter(locations.filters.typescript); // non-test TypeScript files
 
+    var errors = null;
     var tsResult = gulp.src(locations.sources)
         .pipe(gulp_changed(locations.output, {extension: '.js'}))
         .pipe(tsFilter)
-        .pipe(gulp_typescript(tsProject));
+        .pipe(gulp_typescript(tsProject))
+        .on('error', function(error) {
+            errors = error;
+        })
+        .on('end', function() {
+            if (errors) {
+                throw errors;
+            }
+        });
 
     return tsResult.js.pipe(gulp.dest(locations.output));
 });
