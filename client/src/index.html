@@ -6,16 +6,8 @@
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
     <link rel="stylesheet" href="css/app.css">
     <script src="bower_components/angular/angular.js"></script>
+    <script src="sockets/sockets.service.js"></script>
     <script src="index.js"></script>
-    <script>
-        var host = "ws://https://murmuring-tundra-3318.herokuapp.com/";
-        var ws = new WebSocket(host);
-        ws.onmessage = function (event) {
-            var li = document.createElement('li');
-            li.innerHTML = JSON.parse(event.data);
-            document.querySelector('#socketdebug').appendChild(li);
-        };
-    </script>
 </head>
 <body class="container-fluid" ng-controller="OctoController">
 
@@ -23,7 +15,9 @@
 
 <p>Hello {{foo}}</p>
 
-<p id="socketdebug"></p>
+<ul id="socketdebug">
+    <li ng-repeat="message in socketDebug" ng-bind="message"></li>
+</ul>
 
 </body>
 </html>
