@@ -17,20 +17,20 @@ server.listen(app.get('port'), () => {
     console.info('Express server listening', {port: app.get('port')});
 });
 
-var wss = new ws.Server({server: server})
-console.log("websocket server created")
+var wss = new ws.Server({server: server});
+console.log("websocket server created");
 
-wss.on("connection", (client:ws.WebSocket) => {
+wss.on("connection", (client) => {
     var id = setInterval(() => {
         client.send(JSON.stringify(new Date()), () => {
 
         })
     }, 1000);
 
-    console.log("websocket connection open")
+    console.log("websocket connection open");
 
     client.on("close", () => {
-        console.log("websocket connection close")
+        console.log("websocket connection close");
         clearInterval(id)
     })
 });
