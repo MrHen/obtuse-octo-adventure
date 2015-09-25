@@ -11,6 +11,7 @@
     "npm": "2.x"
   },
   "dependencies": {
+    "config": "^1.16.0",
     "data-driven": "^1.2.0",
     "express": "^4.13.3",
     "should": "^7.0.4"
