@@ -2,7 +2,7 @@ var del = require('del');
 var gulp = require('gulp');
 var gulp_changed = require('gulp-changed');
 var gulp_filter = require("gulp-filter");
-var gulp_git = require("gulp-git");
+var gulp_shell = require('gulp-shell');
 var gulp_spawn_mocha = require('gulp-spawn-mocha');
 var gulp_tsd = require('gulp-tsd');
 var gulp_typescript = require('gulp-typescript');
@@ -168,15 +168,16 @@ gulp.task('start:server', function() {
 // Deploy
 /////////
 
-// git push heroku `git subtree split --prefix server master`:master --force
 gulp.task('deploy', function(callback) {
     run_sequence('deploy:heroku', callback);
 });
 
 gulp.task('deploy:heroku', ['build:server', 'test:run'], function() {
-    gulp_git.push('heroku', '$(git subtree split --prefix server master):master', {args: " --force"}, function (err) {
-        if (err) throw err;
-    });
+    var command = 'git push heroku `git subtree split --prefix server master`:master --force';
+    gulp_util.log("[" + gulp_util.colors.cyan("deploy:heroku") + "]", 'Changing directory');
+    process.chdir('..');
+    gulp_util.log("[" + gulp_util.colors.cyan("deploy:heroku") + "]", 'Executing ' + command);
+    return gulp.src('').pipe(gulp_shell([command]));
 });
 
 ///////
