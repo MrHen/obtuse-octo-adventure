@@ -24,13 +24,22 @@
 
 <p>Hello {{chatMessage}}</p>
 
-<ul id="socketdebug">
-    <li ng-repeat="message in socketDebug" ng-bind="message"></li>
-</ul>
+<div>
+    <h2>Chat</h2>
+    <div ng-show="globalChat.length">
+        <ul>
+            <li ng-repeat="message in globalChat track by $index" ng-bind="message"></li>
+        </ul>
+    </div>
+    <div ng-show="!globalChat.length">Loading chat...</div>
+</div>
 
-<ul>
-    <li ng-repeat="message in globalChat track by $index" ng-bind="message"></li>
-</ul>
+<div>
+    <h2>Socket pings</h2>
+    <ul>
+        <li ng-repeat="message in socketDebug" ng-bind="message"></li>
+    </ul>
+</div>
 
 </body>
 </html>

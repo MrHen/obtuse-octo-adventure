@@ -28,7 +28,8 @@ module OctoApp {
 
             this.Config.load()
                 .then(() => this.initSockets())
-                .then(() => this.initApi());
+                .then(() => this.initApi())
+                .then(() => this.initChat());
 
             // TODO load global chat
         }
@@ -57,6 +58,12 @@ module OctoApp {
             });
 
             return deferred.promise;
+        }
+
+        private initChat():angular.IPromise<void> {
+            return this.Api.getGlobalChat().then((messages:string[]) => {
+                this.$scope.globalChat = messages;
+            });
         }
 
         private chatSubmit(form:angular.IFormController) {

@@ -3,11 +3,11 @@
 import _ = require('lodash');
 import redis = require('redis');
 
-module StateService {
-    export interface StateInterface {
-        connect(callback:(err:Error)=>any):any;
+import {ChatStateInterface} from '../routes/ChatRoute';
 
-        pushGlobalChat(message:string, callback:(err:Error, allMessages:string[])=>any):any;
+module StateService {
+    export interface StateInterface extends ChatStateInterface {
+        connect(callback:(err:Error)=>any):any;
     }
 
     export interface StateConfigInterface {
@@ -45,6 +45,10 @@ module StateService {
             process.nextTick(() => callback(null));
         }
 
+        getGlobalChat(callback:(err:Error, allMessages:string[])=>any) {
+            process.nextTick(() => callback(null, _.cloneDeep(this.globalChat)));
+        }
+
         pushGlobalChat(message:string, callback:(err:Error, allMessages:string[])=>any) {
             this.globalChat.push(message);
             console.log("pushGlobalChat saw " + this.globalChat.length + " of " + config.max_chat);
@@ -75,6 +79,10 @@ module StateService {
             } catch (e) {
                 process.nextTick(() => callback(e));
             }
+        }
+
+        getGlobalChat(callback:(err:Error, allMessages:string[])=>any) {
+            StateRedis.redisClient.lrange(StateRedis.GLOBALCHAT, - config.max_chat, -1, callback);
         }
 
         pushGlobalChat(message:string, callback:(err:Error, allMessages:string[])=>any) {
