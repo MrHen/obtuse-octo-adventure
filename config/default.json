@@ -1,4 +1,4 @@
 {
-  "api_base": "ws://murmuring-tundra-3318.herokuapp.com/",
+  "api_base": "http://murmuring-tundra-3318.herokuapp.com/",
   "websocket_host": "ws://murmuring-tundra-3318.herokuapp.com/"
 }
