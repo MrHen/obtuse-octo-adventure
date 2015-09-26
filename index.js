@@ -56,8 +56,11 @@ var OctoApp;
         };
         OctoController.prototype.chatSubmit = function (form) {
             var _this = this;
-            this.Api.postGlobalChat(this.$scope.chatMessage).then(function (messages) {
-                _this.$scope.globalChat = messages;
+            this.Api.postGlobalChat(this.$scope.chatMessage)
+                .then(function (messages) {
+                //TODO this.$scope.globalChat = messages;
+                _this.$scope.chatMessage = null;
+                return messages;
             });
         };
         OctoController.$inject = ["$q", "$scope", "Api", "Config", "Sockets"];
