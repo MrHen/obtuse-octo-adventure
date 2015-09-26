@@ -41,14 +41,15 @@
                         <input class="form-control" type="text" ng-model="chatMessage" placeholder="Say something!"/>
                         <button class="btn btn-default" type="submit" ng-click="chatSubmit(chatform)">Submit</button>
                     </form>
-
+                </div>
+                <div class="panel-body">
+                    <div ng-show="!globalChat.length">Loading chat...</div>
                     <div ng-show="globalChat.length">
                         <ul>
                             <li ng-repeat="message in globalChat track by $index" ng-bind="message"></li>
                         </ul>
                     </div>
                 </div>
-                <div ng-show="!globalChat.length">Loading chat...</div>
             </div>
 
             <div>
