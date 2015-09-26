@@ -71,6 +71,7 @@ module StateService {
 
             try {
                 StateRedis.redisClient = redis.createClient(process.env.REDIS_URL);
+                process.nextTick(() => callback(null));
             } catch (e) {
                 process.nextTick(() => callback(e));
             }
