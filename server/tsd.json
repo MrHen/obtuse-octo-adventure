@@ -37,6 +37,21 @@
     },
     "ws/ws.d.ts": {
       "commit": "54f064352a3615443f7bff4198078db15e28247b"
+    },
+    "redis/redis.d.ts": {
+      "commit": "54f064352a3615443f7bff4198078db15e28247b"
+    },
+    "async/async.d.ts": {
+      "commit": "54f064352a3615443f7bff4198078db15e28247b"
+    },
+    "http-status/http-status.d.ts": {
+      "commit": "54f064352a3615443f7bff4198078db15e28247b"
+    },
+    "body-parser/body-parser.d.ts": {
+      "commit": "54f064352a3615443f7bff4198078db15e28247b"
+    },
+    "cors/cors.d.ts": {
+      "commit": "54f064352a3615443f7bff4198078db15e28247b"
     }
   }
 }

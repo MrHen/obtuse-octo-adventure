@@ -11,7 +11,10 @@
     "npm": "2.x"
   },
   "dependencies": {
+    "async": "^1.4.2",
+    "body-parser": "^1.14.0",
     "bower": "^1.5.2",
+    "cors": "^2.7.1",
     "data-driven": "^1.2.0",
     "del": "^1.2.1",
     "express": "^4.13.3",
@@ -26,6 +29,9 @@
     "gulp-tsd": "0.0.4",
     "gulp-typescript": "^2.8.1",
     "gulp-util": "^3.0.6",
+    "http-status": "^0.2.0",
+    "lodash": "^3.10.1",
+    "redis": "^2.0.1",
     "run-sequence": "^1.1.2",
     "should": "^7.0.4",
     "tsd": "^0.6.3",

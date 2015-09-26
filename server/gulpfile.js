@@ -19,7 +19,7 @@ var configs = {
     },
 
     typescript: {
-        noImplicitAny: true,
+        noImplicitAny: false,
         noEmitOnError: true,
         module: 'commonjs',
         target: 'ES5'
