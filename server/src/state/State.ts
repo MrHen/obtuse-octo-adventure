@@ -76,6 +76,8 @@ module StateService {
     class StateRedis implements StateInterface {
         private static redisClient:redis.RedisClient = null;
 
+        private static redisPubsub:redis.RedisClient = null;
+
         private static GLOBALCHAT = 'globalchat';
 
         public static ERROR_UNKNOWN = 'Unknown redis failure';
@@ -87,6 +89,7 @@ module StateService {
 
             try {
                 StateRedis.redisClient = redis.createClient(process.env.REDIS_URL);
+                StateRedis.redisPubsub = redis.createClient(process.env.REDIS_URL);
                 process.nextTick(() => callback(null));
             } catch (e) {
                 process.nextTick(() => callback(e));
@@ -103,12 +106,12 @@ module StateService {
                 return callback(new Error(StateRedis.ERROR_UNKNOWN), []);
             }
 
-            StateRedis.redisClient.publish(EVENT_GLOBALCHAT, message);
+            StateRedis.redisPubsub.publish(EVENT_GLOBALCHAT, message);
             StateRedis.redisClient.lrange(StateRedis.GLOBALCHAT, - config.max_chat, -1, callback);
         }
 
         onGlobalChat(callback:(message:string)=>any) {
-            StateRedis.redisClient.subscribe(EVENT_GLOBALCHAT, (channel, message, pattern) => {
+            StateRedis.redisPubsub.subscribe(EVENT_GLOBALCHAT, (channel, message, pattern) => {
                 callback(message);
             });
         }
