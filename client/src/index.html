@@ -3,21 +3,33 @@
 <head>
     <meta charset="utf-8">
     <title>My HTML File</title>
+
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
     <link rel="stylesheet" href="css/app.css">
+
+    <script src="bower_components/lodash/lodash.min.js"></script>
     <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/restangular/src/restangular.js"></script>
     <script src="config/config.service.js"></script>
+    <script src="api/api.service.js"></script>
     <script src="sockets/sockets.service.js"></script>
     <script src="index.js"></script>
 </head>
 <body class="container-fluid" ng-controller="OctoController">
 
-<input type="text" ng-model="foo"/>
+<form name="chatform">
+    <input type="text" ng-model="chatMessage"/>
+    <button type="submit" ng-click="chatSubmit(chatform)">Submit</button>
+</form>
 
-<p>Hello {{foo}}</p>
+<p>Hello {{chatMessage}}</p>
 
 <ul id="socketdebug">
     <li ng-repeat="message in socketDebug" ng-bind="message"></li>
+</ul>
+
+<ul>
+    <li ng-repeat="message in globalChat track by $index" ng-bind="message"></li>
 </ul>
 
 </body>

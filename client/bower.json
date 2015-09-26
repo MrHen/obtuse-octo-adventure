@@ -22,6 +22,8 @@
   ],
   "dependencies": {
     "bootstrap": "~3.3.5",
-    "angular": "~1.4.5"
+    "angular": "~1.4.5",
+    "restangular": "~1.5.1",
+    "lodash": "~3.10.1"
   }
 }

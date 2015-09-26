@@ -2,6 +2,7 @@
 
 module ConfigService {
     export interface ConfigInterface {
+        api_base?: string;
         websocket_host?: string;
     }
 
