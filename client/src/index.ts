@@ -32,7 +32,7 @@ module OctoApp {
             this.Config.load()
                 .then(() => this.initSockets())
                 .then(() => this.initApi())
-                .then(() => this.initChat());
+                .then(() => this.loadChat());
 
             // TODO load global chat
         }
@@ -49,14 +49,14 @@ module OctoApp {
         private initSockets():angular.IPromise<void> {
             this.Sockets.init(this.Config.data.websocket_host);
 
-            this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketMessageEvent);
+            this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
 
-            this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketMessageEvent);
+            this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
 
             return this.$q.when();
         }
 
-        private initChat():angular.IPromise<void> {
+        private loadChat():angular.IPromise<void> {
             return this.Api.getGlobalChat().then((messages:string[]) => {
                 this.$scope.globalChat = messages;
             });
@@ -68,12 +68,17 @@ module OctoApp {
             });
         }
 
-        private socketMessageEvent = (message:string) => {
+        private socketTimeEvent = (message:string) => {
             this.$scope.socketDebug.unshift(message);
             if (this.$scope.socketDebug.length > 20) {
                 this.$scope.socketDebug.pop();
             }
             this.$scope.$apply();
+        };
+
+        // Don't try to figure out if this message was from us or them; just reload chat
+        private socketChatEvent = (message:string) => {
+            this.loadChat();
         }
     }
 
