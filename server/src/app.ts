@@ -38,12 +38,7 @@ async.auto({
         autoCb(null, null);
     }],
     'server': ['app', 'routes', (autoCb, results) => {
-        var server = http.createServer(results.app);
-
-        server.listen(results.app.get('port'), () => {
-            console.info('Express server listening', {port: results.app.get('port')});
-            autoCb(null, server);
-        });
+        autoCb(null, http.createServer(results.app));
     }],
     'sockets': ['server', (autoCb, results) => {
         var sockets = new Sockets.Sockets(results.server);
@@ -51,6 +46,12 @@ async.auto({
         console.log("websocket server created");
 
         autoCb(null, sockets);
+    }],
+    'listen': ['server', 'sockets', (autoCb, results) => {
+        results.server.listen(results.app.get('port'), () => {
+            console.info('Express server listening', {port: results.app.get('port')});
+            autoCb(null, null);
+        });
     }],
     'pubsub': ['db', 'sockets', (autoCb, results) => {
         results.db.onGlobalChat((message) => {

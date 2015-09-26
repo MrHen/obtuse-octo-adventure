@@ -15,6 +15,9 @@ module OctoApp {
     export class OctoController {
         public static $inject:string[] = ["$q", "$scope", "Api", "Config", "Sockets"];
 
+        private static EVENT_GLOBALCHAT = 'globalchat:created';
+        private static EVENT_TIME = 'time';
+
         constructor(private $q:angular.IQService, private $scope:OctoScope, private Api:ApiService.Api, private Config:ConfigService.Config, private Sockets:SocketsService.Sockets) {
             if (!this.$scope.socketDebug) {
                 this.$scope.socketDebug = [];
@@ -46,7 +49,9 @@ module OctoApp {
         private initSockets():angular.IPromise<void> {
             this.Sockets.init(this.Config.data.websocket_host);
 
-            this.Sockets.addEventListener('message', this.socketMessageEvent);
+            this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketMessageEvent);
+
+            this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketMessageEvent);
 
             return this.$q.when();
         }
@@ -63,8 +68,8 @@ module OctoApp {
             });
         }
 
-        private socketMessageEvent = (event:any) => {
-            this.$scope.socketDebug.unshift(event.data);
+        private socketMessageEvent = (message:string) => {
+            this.$scope.socketDebug.unshift(message);
             if (this.$scope.socketDebug.length > 20) {
                 this.$scope.socketDebug.pop();
             }

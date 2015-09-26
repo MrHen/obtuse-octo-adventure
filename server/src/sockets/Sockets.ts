@@ -2,7 +2,7 @@
 
 import _ = require('lodash');
 import http = require('http');
-import ws = require('ws');
+import socket_io = require('socket.io');
 
 module Sockets {
     export interface SocketsConfigInterface {
@@ -13,40 +13,43 @@ module Sockets {
 
         private config:SocketsConfigInterface = {};
 
-        private socketServer:ws.Server = null;
+        private socketServer:SocketIO.Server = null;
 
-        private clients:WebSocket[] = [];
+        private connected:SocketIO.Socket[] = [];
+
+        private static EVENT_GLOBALCHAT = 'globalchat:created';
+        private static EVENT_TIME = 'time';
 
         public constructor(server:http.Server, options?:SocketsConfigInterface) {
             this.config = _.defaults(options || {}, Sockets.config_defaults);
 
-            this.socketServer = new ws.Server({server: server});
+            this.socketServer = socket_io(server);
 
             this.socketServer.on("connection", this.onConnection);
         }
 
-        private onConnection = (client) => {
-            this.clients.push(client);
+        private onConnection = (socket:SocketIO.Socket) => {
+            this.connected.push(socket);
 
             var id = setInterval(() => {
-                client.send(JSON.stringify(new Date()), () => {
+                socket.emit(Sockets.EVENT_TIME, JSON.stringify(new Date()), () => {
 
                 })
             }, 1000);
 
             console.log("websocket connection open");
 
-            client.on("close", () => {
+            socket.on("close", () => {
                 console.log("websocket connection close");
-                this.clients = _.without(this.clients, client);
+                this.connected = _.without(this.connected, socket);
                 clearInterval(id)
             })
         };
 
         public emitGlobalChat = (message) => {
-            console.log("emitting chat", {clients:this.clients.length});
-            _.forEach(this.clients, (client) => {
-                client.send(message);
+            console.log("emitting chat", {clients:this.connected.length});
+            _.forEach(this.connected, (client) => {
+                client.emit(Sockets.EVENT_GLOBALCHAT, message);
             })
         }
     }

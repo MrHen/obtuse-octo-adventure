@@ -2,7 +2,7 @@
 
 module SocketsService {
     export class Sockets {
-        private webSocket:WebSocket = null;
+        private webSocket:SocketIOClient.Socket = null;
 
         constructor() {
         }
@@ -12,7 +12,7 @@ module SocketsService {
                 return;
             }
 
-            this.webSocket = new WebSocket(host);
+            this.webSocket = io(host);
         }
 
         public addEventListener(event:string, listener:(event:any)=>any) {
