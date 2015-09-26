@@ -65,9 +65,11 @@ module OctoApp {
         }
 
         private chatSubmit(form:angular.IFormController) {
-            this.Api.postGlobalChat(this.$scope.chatMessage).then((messages:string[]) => {
-                this.$scope.globalChat = messages;
-            });
+            this.Api.postGlobalChat(this.$scope.chatMessage);
+            // TODO reenable
+                //.then((messages:string[]) => {
+                //this.$scope.globalChat = messages;
+                //});
         }
 
         private socketTimeEvent = (message:string) => {

@@ -110,10 +110,14 @@ module StateService {
             StateRedis.redisClient.lrange(StateRedis.GLOBALCHAT, - config.max_chat, -1, callback);
         }
 
-        onGlobalChat(callback:(message:string)=>any) {
-            StateRedis.redisSubcriber.subscribe(EVENT_GLOBALCHAT, (channel, message, pattern) => {
-                callback(message);
+        onGlobalChat(handler:(message:string)=>any) {
+            StateRedis.redisSubcriber.on('message', (channel, message) => {
+                if (channel === EVENT_GLOBALCHAT) {
+                    handler(message);
+                }
             });
+
+            StateRedis.redisSubcriber.subscribe(EVENT_GLOBALCHAT);
         }
     }
 }
