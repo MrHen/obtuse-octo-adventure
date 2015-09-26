@@ -83,7 +83,7 @@ module StateService {
                 return callback(new Error(StateRedis.ERROR_UNKNOWN), []);
             }
 
-            StateRedis.redisClient.lrange(- config.max_chat, -1, callback);
+            StateRedis.redisClient.lrange(StateRedis.GLOBALCHAT, - config.max_chat, -1, callback);
         }
     }
 }
