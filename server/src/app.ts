@@ -51,6 +51,13 @@ async.auto({
         console.log("websocket server created");
 
         autoCb(null, sockets);
+    }],
+    'pubsub': ['db', 'sockets', (autoCb, results) => {
+        results.db.onGlobalChat((message) => {
+            results.sockets.emitGlobalChat(message);
+        });
+
+        autoCb(null, null);
     }]
 }, (err, results:any) => {
     console.info('Setup completed', {err: err});

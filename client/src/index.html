@@ -57,7 +57,7 @@
                     </div>
                     <div class="panel-body">
                         <ul>
-                            <li ng-repeat="message in socketDebug" ng-bind="message"></li>
+                            <li ng-repeat="message in socketDebug track by $index" ng-bind="message"></li>
                         </ul>
                     </div>
                 </div>

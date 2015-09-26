@@ -25,7 +25,7 @@ module Sockets {
             this.socketServer.on("connection", this.onConnection);
         }
 
-        private onConnection(client) {
+        private onConnection = (client) => {
             this.clients.push(client);
 
             var id = setInterval(() => {
@@ -40,6 +40,13 @@ module Sockets {
                 console.log("websocket connection close");
                 this.clients = _.without(this.clients, client);
                 clearInterval(id)
+            })
+        };
+
+        public emitGlobalChat = (message) => {
+            console.log("emitting chat", {clients:this.clients.length});
+            _.forEach(this.clients, (client) => {
+                client.send(message);
             })
         }
     }
