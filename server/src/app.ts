@@ -8,6 +8,7 @@ import http = require('http');
 import ws = require('ws');
 
 import ChatRoute = require('./routes/ChatRoute');
+import Sockets = require('./sockets/Sockets');
 import State = require('./state/State');
 
 async.auto({
@@ -44,26 +45,12 @@ async.auto({
             autoCb(null, server);
         });
     }],
-    'websocket': ['server', (autoCb, results) => {
-        var wss = new ws.Server({server: results.server});
+    'sockets': ['server', (autoCb, results) => {
+        var sockets = new Sockets.Sockets(results.server);
+
         console.log("websocket server created");
 
-        wss.on("connection", (client) => {
-            var id = setInterval(() => {
-                client.send(JSON.stringify(new Date()), () => {
-
-                })
-            }, 1000);
-
-            console.log("websocket connection open");
-
-            client.on("close", () => {
-                console.log("websocket connection close");
-                clearInterval(id)
-            })
-        });
-
-        autoCb(null, wss);
+        autoCb(null, sockets);
     }]
 }, (err, results:any) => {
     console.info('Setup completed', {err: err});

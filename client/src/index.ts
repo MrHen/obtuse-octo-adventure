@@ -46,13 +46,7 @@ module OctoApp {
         private initSockets():angular.IPromise<void> {
             this.Sockets.init(this.Config.data.websocket_host);
 
-            this.Sockets.addEventListener('message', (event:any) => {
-                this.$scope.socketDebug.unshift(event.data);
-                if (this.$scope.socketDebug.length > 20) {
-                    this.$scope.socketDebug.pop();
-                }
-                this.$scope.$apply();
-            });
+            this.Sockets.addEventListener('message', this.socketMessageEvent);
 
             return this.$q.when();
         }
@@ -67,6 +61,14 @@ module OctoApp {
             this.Api.postGlobalChat(this.$scope.chatMessage).then((messages:string[]) => {
                 this.$scope.globalChat = messages;
             });
+        }
+
+        private socketMessageEvent = (event:any) => {
+            this.$scope.socketDebug.unshift(event.data);
+            if (this.$scope.socketDebug.length > 20) {
+                this.$scope.socketDebug.pop();
+            }
+            this.$scope.$apply();
         }
     }
 
