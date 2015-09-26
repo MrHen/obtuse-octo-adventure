@@ -11,6 +11,10 @@ module ApiService {
             this.Restangular.setBaseUrl(baseUrl);
         }
 
+        getGlobalChat():angular.IPromise<string[]> {
+            return this.Restangular.all('chat').getList();
+        }
+
         postGlobalChat(message:string):angular.IPromise<string[]> {
             return this.Restangular.all('chat').post({message:message});
         }

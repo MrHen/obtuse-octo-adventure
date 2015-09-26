@@ -8,6 +8,7 @@ import http = require('http');
 import ws = require('ws');
 
 import ChatRoute = require('./routes/ChatRoute');
+import Sockets = require('./sockets/Sockets');
 import State = require('./state/State');
 
 async.auto({
@@ -37,33 +38,27 @@ async.auto({
         autoCb(null, null);
     }],
     'server': ['app', 'routes', (autoCb, results) => {
-        var server = http.createServer(results.app);
-
-        server.listen(results.app.get('port'), () => {
-            console.info('Express server listening', {port: results.app.get('port')});
-            autoCb(null, server);
-        });
+        autoCb(null, http.createServer(results.app));
     }],
-    'websocket': ['server', (autoCb, results) => {
-        var wss = new ws.Server({server: results.server});
+    'sockets': ['server', (autoCb, results) => {
+        var sockets = new Sockets.Sockets(results.server);
+
         console.log("websocket server created");
 
-        wss.on("connection", (client) => {
-            var id = setInterval(() => {
-                client.send(JSON.stringify(new Date()), () => {
-
-                })
-            }, 1000);
-
-            console.log("websocket connection open");
-
-            client.on("close", () => {
-                console.log("websocket connection close");
-                clearInterval(id)
-            })
+        autoCb(null, sockets);
+    }],
+    'listen': ['server', 'sockets', (autoCb, results) => {
+        results.server.listen(results.app.get('port'), () => {
+            console.info('Express server listening', {port: results.app.get('port')});
+            autoCb(null, null);
+        });
+    }],
+    'pubsub': ['db', 'sockets', (autoCb, results) => {
+        results.db.onGlobalChat((message) => {
+            results.sockets.emitGlobalChat(message);
         });
 
-        autoCb(null, wss);
+        autoCb(null, null);
     }]
 }, (err, results:any) => {
     console.info('Setup completed', {err: err});

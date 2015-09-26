@@ -1,13 +1,16 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
 import _ = require('lodash');
+import events = require('events');
 import redis = require('redis');
 
+import {ChatStateInterface} from '../routes/ChatRoute';
+
 module StateService {
-    export interface StateInterface {
+    export interface StateInterface extends ChatStateInterface {
         connect(callback:(err:Error)=>any):any;
 
-        pushGlobalChat(message:string, callback:(err:Error, allMessages:string[])=>any):any;
+        onGlobalChat(callback:(message:string)=>any):any;
     }
 
     export interface StateConfigInterface {
@@ -17,6 +20,8 @@ module StateService {
     var config_defaults:StateConfigInterface = {
         max_chat: 20
     };
+
+    var EVENT_GLOBALCHAT = 'globalchat:created';
 
     var config:StateConfigInterface = _.cloneDeep(config_defaults);
 
@@ -41,8 +46,14 @@ module StateService {
     class StateMemory implements StateInterface {
         private globalChat:string[] = [];
 
+        private emitter:events.EventEmitter = new events.EventEmitter();
+
         connect(callback:(err:Error)=>any) {
             process.nextTick(() => callback(null));
+        }
+
+        getGlobalChat(callback:(err:Error, allMessages:string[])=>any) {
+            process.nextTick(() => callback(null, _.cloneDeep(this.globalChat)));
         }
 
         pushGlobalChat(message:string, callback:(err:Error, allMessages:string[])=>any) {
@@ -52,7 +63,12 @@ module StateService {
                 this.globalChat.shift();
             }
 
+            this.emitter.emit(EVENT_GLOBALCHAT, message);
             process.nextTick(() => callback(null, _.cloneDeep(this.globalChat)));
+        }
+
+        onGlobalChat(callback:(message:string)=>any) {
+            this.emitter.on(EVENT_GLOBALCHAT, callback);
         }
     }
 
@@ -77,13 +93,24 @@ module StateService {
             }
         }
 
+        getGlobalChat(callback:(err:Error, allMessages:string[])=>any) {
+            StateRedis.redisClient.lrange(StateRedis.GLOBALCHAT, - config.max_chat, -1, callback);
+        }
+
         pushGlobalChat(message:string, callback:(err:Error, allMessages:string[])=>any) {
             var success = StateRedis.redisClient.rpush(StateRedis.GLOBALCHAT, message);
             if (!success) {
                 return callback(new Error(StateRedis.ERROR_UNKNOWN), []);
             }
 
+            StateRedis.redisClient.publish(EVENT_GLOBALCHAT, message);
             StateRedis.redisClient.lrange(StateRedis.GLOBALCHAT, - config.max_chat, -1, callback);
+        }
+
+        onGlobalChat(callback:(message:string)=>any) {
+            StateRedis.redisClient.subscribe(EVENT_GLOBALCHAT, (channel, message, pattern) => {
+                callback(message);
+            });
         }
     }
 }

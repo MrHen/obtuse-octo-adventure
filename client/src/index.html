@@ -2,12 +2,13 @@
 <html lang="en" data-ng-app="octo">
 <head>
     <meta charset="utf-8">
-    <title>My HTML File</title>
+    <title>Obtuse Octo Adventure</title>
 
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
     <link rel="stylesheet" href="css/app.css">
 
     <script src="bower_components/lodash/lodash.min.js"></script>
+    <script src="bower_components/socket.io-client/socket.io.js"></script>
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/restangular/src/restangular.js"></script>
     <script src="config/config.service.js"></script>
@@ -15,22 +16,56 @@
     <script src="sockets/sockets.service.js"></script>
     <script src="index.js"></script>
 </head>
-<body class="container-fluid" ng-controller="OctoController">
+<body ng-controller="OctoController">
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="page-header">
+                <h1>Obtuse Octo Adventure</h1>
+            </div>
+        </div>
+    </div>
 
-<form name="chatform">
-    <input type="text" ng-model="chatMessage"/>
-    <button type="submit" ng-click="chatSubmit(chatform)">Submit</button>
-</form>
+    <div class="row">
+        <div class="col-sm-8">
+            <p>Content goes here.</p>
+        </div>
 
-<p>Hello {{chatMessage}}</p>
+        <div class="col-sm-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h2 class="panel-title">Chat</h2>
+                </div>
+                <div class="panel-body">
+                    <form class="form-inline" name="chatform">
+                        <input class="form-control" type="text" ng-model="chatMessage" placeholder="Say something!"/>
+                        <button class="btn btn-default" type="submit" ng-click="chatSubmit(chatform)">Submit</button>
+                    </form>
 
-<ul id="socketdebug">
-    <li ng-repeat="message in socketDebug" ng-bind="message"></li>
-</ul>
+                    <div ng-show="globalChat.length">
+                        <ul>
+                            <li ng-repeat="message in globalChat track by $index" ng-bind="message"></li>
+                        </ul>
+                    </div>
+                </div>
+                <div ng-show="!globalChat.length">Loading chat...</div>
+            </div>
 
-<ul>
-    <li ng-repeat="message in globalChat track by $index" ng-bind="message"></li>
-</ul>
+            <div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h2 class="panel-title">Socket pings</h2>
+                    </div>
+                    <div class="panel-body">
+                        <ul>
+                            <li ng-repeat="message in socketDebug track by $index" ng-bind="message"></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

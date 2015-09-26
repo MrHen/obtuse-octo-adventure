@@ -52,6 +52,9 @@
     },
     "cors/cors.d.ts": {
       "commit": "54f064352a3615443f7bff4198078db15e28247b"
+    },
+    "socket.io/socket.io.d.ts": {
+      "commit": "54f064352a3615443f7bff4198078db15e28247b"
     }
   }
 }

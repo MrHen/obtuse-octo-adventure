@@ -15,6 +15,11 @@ module OctoApp {
     export class OctoController {
         public static $inject:string[] = ["$q", "$scope", "Api", "Config", "Sockets"];
 
+        private static EVENT_GLOBALCHAT = 'globalchat:created';
+        private static EVENT_TIME = 'time';
+
+        private static MAX_PING_MESSAGES = 5;
+
         constructor(private $q:angular.IQService, private $scope:OctoScope, private Api:ApiService.Api, private Config:ConfigService.Config, private Sockets:SocketsService.Sockets) {
             if (!this.$scope.socketDebug) {
                 this.$scope.socketDebug = [];
@@ -28,7 +33,8 @@ module OctoApp {
 
             this.Config.load()
                 .then(() => this.initSockets())
-                .then(() => this.initApi());
+                .then(() => this.initApi())
+                .then(() => this.loadChat());
 
             // TODO load global chat
         }
@@ -43,26 +49,38 @@ module OctoApp {
         }
 
         private initSockets():angular.IPromise<void> {
-            var deferred = this.$q.defer<void>();
-
             this.Sockets.init(this.Config.data.websocket_host);
-            this.Sockets.addEventListener('message', (event:any) => {
-                this.$scope.socketDebug.unshift(event.data);
-                if (this.$scope.socketDebug.length > 20) {
-                    this.$scope.socketDebug.pop();
-                }
-                this.$scope.$apply();
 
-                deferred.resolve();
+            this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
+
+            this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
+
+            return this.$q.when();
+        }
+
+        private loadChat():angular.IPromise<void> {
+            return this.Api.getGlobalChat().then((messages:string[]) => {
+                this.$scope.globalChat = messages;
             });
-
-            return deferred.promise;
         }
 
         private chatSubmit(form:angular.IFormController) {
             this.Api.postGlobalChat(this.$scope.chatMessage).then((messages:string[]) => {
                 this.$scope.globalChat = messages;
             });
+        }
+
+        private socketTimeEvent = (message:string) => {
+            this.$scope.socketDebug.unshift(message);
+            if (this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
+                this.$scope.socketDebug.pop();
+            }
+            this.$scope.$apply();
+        };
+
+        // Don't try to figure out if this message was from us or them; just reload chat
+        private socketChatEvent = (message:string) => {
+            this.loadChat();
         }
     }
 
