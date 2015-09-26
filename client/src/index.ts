@@ -18,6 +18,8 @@ module OctoApp {
         private static EVENT_GLOBALCHAT = 'globalchat:created';
         private static EVENT_TIME = 'time';
 
+        private static MAX_PING_MESSAGES = 5;
+
         constructor(private $q:angular.IQService, private $scope:OctoScope, private Api:ApiService.Api, private Config:ConfigService.Config, private Sockets:SocketsService.Sockets) {
             if (!this.$scope.socketDebug) {
                 this.$scope.socketDebug = [];
@@ -70,7 +72,7 @@ module OctoApp {
 
         private socketTimeEvent = (message:string) => {
             this.$scope.socketDebug.unshift(message);
-            if (this.$scope.socketDebug.length > 20) {
+            if (this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
                 this.$scope.socketDebug.pop();
             }
             this.$scope.$apply();
