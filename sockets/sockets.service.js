@@ -9,7 +9,7 @@ var SocketsService;
             if (this.webSocket) {
                 return;
             }
-            this.webSocket = new WebSocket(host);
+            this.webSocket = io(host);
         };
         Sockets.prototype.addEventListener = function (event, listener) {
             this.webSocket.addEventListener(event, listener);

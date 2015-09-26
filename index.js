@@ -12,6 +12,17 @@ var OctoApp;
             this.Api = Api;
             this.Config = Config;
             this.Sockets = Sockets;
+            this.socketTimeEvent = function (message) {
+                _this.$scope.socketDebug.unshift(message);
+                if (_this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
+                    _this.$scope.socketDebug.pop();
+                }
+                _this.$scope.$apply();
+            };
+            // Don't try to figure out if this message was from us or them; just reload chat
+            this.socketChatEvent = function (message) {
+                _this.loadChat();
+            };
             if (!this.$scope.socketDebug) {
                 this.$scope.socketDebug = [];
             }
@@ -21,7 +32,8 @@ var OctoApp;
             this.$scope.chatSubmit = this.chatSubmit.bind(this);
             this.Config.load()
                 .then(function () { return _this.initSockets(); })
-                .then(function () { return _this.initApi(); });
+                .then(function () { return _this.initApi(); })
+                .then(function () { return _this.loadChat(); });
             // TODO load global chat
         }
         OctoController.prototype.initApi = function () {
@@ -31,18 +43,16 @@ var OctoApp;
             return deferred.promise;
         };
         OctoController.prototype.initSockets = function () {
-            var _this = this;
-            var deferred = this.$q.defer();
             this.Sockets.init(this.Config.data.websocket_host);
-            this.Sockets.addEventListener('message', function (event) {
-                _this.$scope.socketDebug.unshift(event.data);
-                if (_this.$scope.socketDebug.length > 20) {
-                    _this.$scope.socketDebug.pop();
-                }
-                _this.$scope.$apply();
-                deferred.resolve();
+            this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
+            this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
+            return this.$q.when();
+        };
+        OctoController.prototype.loadChat = function () {
+            var _this = this;
+            return this.Api.getGlobalChat().then(function (messages) {
+                _this.$scope.globalChat = messages;
             });
-            return deferred.promise;
         };
         OctoController.prototype.chatSubmit = function (form) {
             var _this = this;
@@ -51,6 +61,9 @@ var OctoApp;
             });
         };
         OctoController.$inject = ["$q", "$scope", "Api", "Config", "Sockets"];
+        OctoController.EVENT_GLOBALCHAT = 'globalchat:created';
+        OctoController.EVENT_TIME = 'time';
+        OctoController.MAX_PING_MESSAGES = 5;
         return OctoController;
     })();
     OctoApp.OctoController = OctoController;

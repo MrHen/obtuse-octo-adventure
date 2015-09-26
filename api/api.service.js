@@ -8,6 +8,9 @@ var ApiService;
         Api.prototype.init = function (baseUrl) {
             this.Restangular.setBaseUrl(baseUrl);
         };
+        Api.prototype.getGlobalChat = function () {
+            return this.Restangular.all('chat').getList();
+        };
         Api.prototype.postGlobalChat = function (message) {
             return this.Restangular.all('chat').post({ message: message });
         };
