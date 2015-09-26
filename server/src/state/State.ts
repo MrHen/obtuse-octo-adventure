@@ -82,6 +82,8 @@ module StateService {
 
         public static ERROR_UNKNOWN = 'Unknown redis failure';
 
+        private emitter:events.EventEmitter = new events.EventEmitter();
+
         connect(callback:(err:Error)=>any) {
             if (StateRedis.redisClient) {
                 return process.nextTick(() => callback(null));
@@ -90,6 +92,11 @@ module StateService {
             try {
                 StateRedis.redisClient = redis.createClient(process.env.REDIS_URL);
                 StateRedis.redisSubcriber = redis.createClient(process.env.REDIS_URL);
+
+                StateRedis.redisSubcriber.on('message', (channel, message) => {
+                    this.emitter.emit(channel, message);
+                });
+
                 process.nextTick(() => callback(null));
             } catch (e) {
                 process.nextTick(() => callback(e));
@@ -111,12 +118,9 @@ module StateService {
         }
 
         onGlobalChat(handler:(message:string)=>any) {
-            StateRedis.redisSubcriber.on('message', (channel, message) => {
-                if (channel === EVENT_GLOBALCHAT) {
-                    handler(message);
-                }
-            });
+            this.emitter.on(EVENT_GLOBALCHAT, handler);
 
+            // TODO should only sub once
             StateRedis.redisSubcriber.subscribe(EVENT_GLOBALCHAT);
         }
     }
