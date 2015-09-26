@@ -44,20 +44,17 @@ module OctoApp {
         }
 
         private initSockets():angular.IPromise<void> {
-            var deferred = this.$q.defer<void>();
-
             this.Sockets.init(this.Config.data.websocket_host);
+
             this.Sockets.addEventListener('message', (event:any) => {
                 this.$scope.socketDebug.unshift(event.data);
                 if (this.$scope.socketDebug.length > 20) {
                     this.$scope.socketDebug.pop();
                 }
                 this.$scope.$apply();
-
-                deferred.resolve();
             });
 
-            return deferred.promise;
+            return this.$q.when();
         }
 
         private initChat():angular.IPromise<void> {
