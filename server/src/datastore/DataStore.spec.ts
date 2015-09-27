@@ -92,6 +92,23 @@ describe('DataStore', () => {
     });
 
     describe('GameDataStore', () => {
+        describe("postGame", () => {
+            it('increments game id', (done) => {
+                dataStore.game.postGame((err:Error, createdGameId:string) => {
+                    should.not.exist(err);
+                    should.exist(createdGameId);
+                    createdGameId.should.eql('0');
+
+                    dataStore.game.postGame((err:Error, createdGameId:string) => {
+                        should.not.exist(err);
+                        should.exist(createdGameId);
+                        createdGameId.should.eql('1');
+                        done();
+                    })
+                })
+            });
+        });
+
         describe('with missing game', () => {
             it('getPlayerCards', (done) => {
                 dataStore.game.getPlayerCards("bogus game", "bogus player", (err, results) => {
