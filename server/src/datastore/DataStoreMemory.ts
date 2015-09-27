@@ -43,46 +43,46 @@ module DataStoreMemory {
         }
     }
 
+    interface Dict<T> {[index:string]:T}
+
     // Used for local development
     class GameMemory implements GameDataStoreInterface {
         private nextGameId:number = 0;
-        private games:{
-            [id:string]:{
-                players: {
-                    [name:string]: {
-                        cards: string[];
-                        state: string;
-                    }
-                }
-            }
-        } = {};
+        private games:Dict<{players:Dict<{cards: string[]; state: string;}>}> = {};
 
-        public getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any {
-            callback(null, this.games[gameId].players[player].cards);
-        }
-
-        public getPlayerStates(gameId:string, callback:(err:Error, players:{[player:string]:string})=>any):any {
-            var players = this.games[gameId].players;
-            var mapped = _.mapValues(players, (value) => value.state);
-            console.log('getPlayerStates', players, mapped);
-            callback(null, mapped);
-        }
-
-        public setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any {
+        private getGame(gameId:string) {
             if (!this.games[gameId]) {
                 this.games[gameId] = {
                     players: {}
                 }
             }
+            return this.games[gameId];
+        }
 
-            if (!this.games[gameId].players[player]) {
-                this.games[gameId].players[player] = {
-                    cards: [],
-                    state: state
+        private getPlayer(gameId:string, player:string) {
+            var game = this.getGame(gameId);
+            if (!game.players[player]) {
+                game.players[player] = {
+                    cards: null,
+                    state: null
                 }
             }
+            return game.players[player];
+        }
 
-            this.games[gameId].players[player].state = state;
+        public getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any {
+            callback(null, this.getPlayer(gameId, player).cards);
+        }
+
+        public getPlayerStates(gameId:string, callback:(err:Error, players:{[player:string]:string})=>any):any {
+            var players = this.getGame(gameId).players;
+
+            var mapped:Dict<string> = _.omit<Dict<string>, Dict<string>>(_.mapValues(players, (value) => value.state), _.isUndefined);
+            callback(null, _.isEmpty(mapped) ? null : mapped);
+        }
+
+        public setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any {
+            this.getPlayer(gameId, player).state = state;
             callback(null);
         }
 
@@ -90,7 +90,14 @@ module DataStoreMemory {
             callback(null, "" + this.nextGameId++);
         }
         public postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error)=>any):any {
-            this.games[gameId].players[player].cards.push(card);
+            if (!card) {
+                return callback(new Error(ERRORS.GAME.INVALID_CARD));
+            }
+            var playerData = this.getPlayer(gameId, player);
+            if (!playerData.cards) {
+                playerData.cards = [];
+            }
+            playerData.cards.push(card);
             callback(null);
         }
         public postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any {

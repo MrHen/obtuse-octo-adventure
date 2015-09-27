@@ -11,6 +11,9 @@ module DataStoreInterfaces {
     export var ERRORS = {
         CHAT: {
             INVALID_MESSAGE: 'Invalid chat message'
+        },
+        GAME: {
+            INVALID_CARD: 'Invalid card'
         }
     };
 
