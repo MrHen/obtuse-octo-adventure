@@ -21,59 +21,59 @@ describe('DataStore', () => {
 
     describe('ChatDataStore', () => {
         it('gets empty chat', (done) => {
-            dataStore.chat.getGlobalChat(10, (err, results) => {
+            dataStore.chat.getGlobalChat(10, (err, result) => {
                 should.not.exist(err);
-                should.exist(results);
-                results.should.eql([]);
+                should.exist(result);
+                result.should.eql([]);
                 done();
             });
         });
 
         it('posts and retrieves chat', (done) => {
-            dataStore.chat.pushGlobalChat("Yay!", (err, results) => {
-                dataStore.chat.getGlobalChat(10, (err, results) => {
+            dataStore.chat.pushGlobalChat("Yay!", (err, result) => {
+                dataStore.chat.getGlobalChat(10, (err, result) => {
                     should.not.exist(err);
-                    should.exist(results);
-                    results.should.eql(['Yay!']);
+                    should.exist(result);
+                    result.should.eql(['Yay!']);
                     done();
                 });
             });
         });
 
         it('gets with default limit', (done) => {
-            dataStore.chat.pushGlobalChat("Yay!", (err, results) => {
-                dataStore.chat.getGlobalChat(null, (err, results) => {
+            dataStore.chat.pushGlobalChat("Yay!", (err, result) => {
+                dataStore.chat.getGlobalChat(null, (err, result) => {
                     should.not.exist(err);
-                    should.exist(results);
-                    results.should.eql(["Yay!"]);
+                    should.exist(result);
+                    result.should.eql(["Yay!"]);
                     done();
                 });
             });
         });
 
         it('gets with negative limit', (done) => {
-            dataStore.chat.pushGlobalChat("Yay!", (err, results) => {
-                dataStore.chat.getGlobalChat(-1, (err, results) => {
+            dataStore.chat.pushGlobalChat("Yay!", (err, result) => {
+                dataStore.chat.getGlobalChat(-1, (err, result) => {
                     should.not.exist(err);
-                    should.exist(results);
-                    results.should.eql([]);
+                    should.exist(result);
+                    result.should.eql([]);
                     done();
                 });
             });
         });
 
         it('cannot post with null message', (done) => {
-            dataStore.chat.pushGlobalChat(null, (err, results) => {
+            dataStore.chat.pushGlobalChat(null, (err, result) => {
                 should.exist(err);
-                should.not.exist(results);
+                should.not.exist(result);
                 done();
             });
         });
 
         it('cannot post with empty message', (done) => {
-            dataStore.chat.pushGlobalChat("", (err, results) => {
+            dataStore.chat.pushGlobalChat("", (err, result) => {
                 should.exist(err);
-                should.not.exist(results);
+                should.not.exist(result);
                 done();
             });
         });
@@ -85,7 +85,7 @@ describe('DataStore', () => {
                 done();
             });
 
-            dataStore.chat.pushGlobalChat("Yay!", (err, results) => {
+            dataStore.chat.pushGlobalChat("Yay!", (err, result) => {
                 should.not.exist(err);
             });
         });
@@ -111,17 +111,17 @@ describe('DataStore', () => {
 
         describe('with missing game', () => {
             it('getPlayerCards', (done) => {
-                dataStore.game.getPlayerCards("bogus game", "bogus player", (err, results) => {
+                dataStore.game.getPlayerCards("bogus game", "bogus player", (err, result) => {
                     should.not.exist(err);
-                    should.not.exist(results);
+                    should.not.exist(result);
                     done();
                 });
             });
 
             it('getPlayerStates', (done) => {
-                dataStore.game.getPlayerStates("bogus game", (err, results) => {
+                dataStore.game.getPlayerStates("bogus game", (err, result) => {
                     should.not.exist(err);
-                    should.not.exist(results);
+                    should.not.exist(result);
                     done();
                 });
             });
@@ -154,9 +154,9 @@ describe('DataStore', () => {
             });
 
             it('get with no players', (done) => {
-                dataStore.game.getPlayerCards(gameId, "bogus player", (err, results) => {
+                dataStore.game.getPlayerCards(gameId, "bogus player", (err, result) => {
                     should.not.exist(err);
-                    should.not.exist(results);
+                    should.not.exist(result);
                     done();
                 });
             });
@@ -165,10 +165,10 @@ describe('DataStore', () => {
                 dataStore.game.postPlayerCard(gameId, "new player", "AH", (err) => {
                     should.not.exist(err);
 
-                    dataStore.game.getPlayerCards(gameId, "new player", (err, results) => {
+                    dataStore.game.getPlayerCards(gameId, "new player", (err, result) => {
                         should.not.exist(err);
-                        should.exist(results);
-                        results.should.eql(["AH"]);
+                        should.exist(result);
+                        result.should.eql(["AH"]);
                         done();
                     });
                 });
@@ -181,10 +181,10 @@ describe('DataStore', () => {
                     dataStore.game.postPlayerCard(gameId, "other player", "AC", (err) => {
                         should.not.exist(err);
 
-                        dataStore.game.getPlayerCards(gameId, "new player", (err, results) => {
+                        dataStore.game.getPlayerCards(gameId, "new player", (err, result) => {
                             should.not.exist(err);
-                            should.exist(results);
-                            results.should.eql(["AH"]);
+                            should.exist(result);
+                            result.should.eql(["AH"]);
                             done();
                         });
                     });
@@ -198,10 +198,10 @@ describe('DataStore', () => {
                     dataStore.game.postPlayerCard(gameId, "new player", "AC", (err) => {
                         should.not.exist(err);
 
-                        dataStore.game.getPlayerCards(gameId, "new player", (err, results) => {
+                        dataStore.game.getPlayerCards(gameId, "new player", (err, result) => {
                             should.not.exist(err);
-                            should.exist(results);
-                            results.should.eql(["AH", "AC"]);
+                            should.exist(result);
+                            result.should.eql(["AH", "AC"]);
                             done();
                         });
                     });
@@ -236,9 +236,9 @@ describe('DataStore', () => {
             });
 
             it('get with no players', (done) => {
-                dataStore.game.getPlayerStates(gameId, (err, results) => {
+                dataStore.game.getPlayerStates(gameId, (err, result) => {
                     should.not.exist(err);
-                    should.not.exist(results);
+                    should.not.exist(result);
                     done();
                 });
             });
@@ -247,10 +247,10 @@ describe('DataStore', () => {
                 dataStore.game.setPlayerState(gameId, "new player", "state", (err) => {
                     should.not.exist(err);
 
-                    dataStore.game.getPlayerStates(gameId, (err, results) => {
+                    dataStore.game.getPlayerStates(gameId, (err, result) => {
                         should.not.exist(err);
-                        should.exist(results);
-                        results.should.eql({"new player": "state"});
+                        should.exist(result);
+                        result.should.eql({"new player": "state"});
                         done();
                     });
                 });
@@ -263,10 +263,10 @@ describe('DataStore', () => {
                     dataStore.game.setPlayerState(gameId, "other player", "other state", (err) => {
                         should.not.exist(err);
 
-                        dataStore.game.getPlayerStates(gameId, (err, results) => {
+                        dataStore.game.getPlayerStates(gameId, (err, result) => {
                             should.not.exist(err);
-                            should.exist(results);
-                            results.should.eql({
+                            should.exist(result);
+                            result.should.eql({
                                 "new player": "state",
                                 "other player": "other state"
                             });
@@ -283,10 +283,10 @@ describe('DataStore', () => {
                     dataStore.game.setPlayerState(gameId, "new player", "other state", (err) => {
                         should.not.exist(err);
 
-                        dataStore.game.getPlayerStates(gameId, (err, results) => {
+                        dataStore.game.getPlayerStates(gameId, (err, result) => {
                             should.not.exist(err);
-                            should.exist(results);
-                            results.should.eql({
+                            should.exist(result);
+                            result.should.eql({
                                 "new player": "other state"
                             });
                             done();
@@ -306,6 +306,244 @@ describe('DataStore', () => {
                 dataStore.game.setPlayerState(gameId, "new player", null, (err) => {
                     should.not.exist(err);
                     done();
+                });
+            });
+        });
+    });
+
+    describe('RoomDataStore', () => {
+        describe('with missing room', () => {
+            it('deletePlayer', (done) => {
+                dataStore.room.deletePlayer("bogus", "player", (err, result) => {
+                    should.not.exist(err);
+                    should.not.exist(result);
+                    done();
+                });
+            });
+            it('getGame', (done) => {
+                dataStore.room.getGame("bogus", (err, result) => {
+                    should.not.exist(err);
+                    should.not.exist(result);
+                    done();
+                });
+            });
+            it('getPlayers', (done) => {
+                dataStore.room.getPlayers("bogus", (err, result) => {
+                    should.not.exist(err);
+                    should.exist(result);
+                    result.should.eql([]);
+                    done();
+                });
+            });
+            it('putPlayer', (done) => {
+                dataStore.room.putPlayer("bogus", "player", (err, result) => {
+                    should.not.exist(err);
+                    should.exist(result);
+                    result.should.eql("player");
+                    done();
+                });
+            });
+            it('setGame', (done) => {
+                dataStore.room.setGame("bogus", "game", (err) => {
+                    should.not.exist(err);
+                    done();
+                });
+            });
+        });
+
+        describe('getRooms', () => {
+            it('gets demo room', (done) => {
+                dataStore.room.getRooms((err:Error, rooms:string[]) => {
+                    should.not.exist(err);
+                    should.exist(rooms);
+                    rooms.should.eql(['demo']);
+                    done();
+                })
+            });
+        });
+
+        describe('game', () => {
+            it('set and get game', (done) => {
+                dataStore.room.setGame('demo', 'game', (err:Error) => {
+                    should.not.exist(err);
+
+                    dataStore.room.getGame('demo', (err:Error, game:string) => {
+                        should.not.exist(err);
+                        should.exist(game);
+                        game.should.eql('game');
+                        done();
+                    });
+                })
+            });
+
+            it('set empty game', (done) => {
+                dataStore.room.setGame('demo', 'game', (err:Error) => {
+                    should.not.exist(err);
+
+                    dataStore.room.setGame('demo', '', (err:Error) => {
+                        should.exist(err);
+
+                        dataStore.room.getGame('demo', (err:Error, game:string) => {
+                            should.not.exist(err);
+                            should.exist(game);
+                            game.should.eql('game');
+                            done();
+                        });
+                    })
+                });
+            });
+
+            it('set null game', (done) => {
+                dataStore.room.setGame('demo', 'game', (err:Error) => {
+                    should.not.exist(err);
+
+                    dataStore.room.setGame('demo', null, (err:Error) => {
+                        should.exist(err);
+
+                        dataStore.room.getGame('demo', (err:Error, game:string) => {
+                            should.not.exist(err);
+                            should.exist(game);
+                            game.should.eql('game');
+                            done();
+                        });
+                    })
+                });
+            });
+        });
+
+        describe('players', () => {
+            it('put and get player', (done) => {
+                dataStore.room.putPlayer('demo', 'player', (err:Error, player:string) => {
+                    should.not.exist(err);
+                    should.exist(player);
+                    player.should.eql('player');
+
+                    dataStore.room.getPlayers('demo', (err:Error, players:string[]) => {
+                        should.not.exist(err);
+                        should.exist(players);
+                        players.should.eql(['player']);
+                        done();
+                    });
+                })
+            });
+
+            it('put and get multiple player', (done) => {
+                dataStore.room.putPlayer('demo', 'player', (err:Error, player:string) => {
+                    should.not.exist(err);
+
+                    dataStore.room.putPlayer('demo', 'other', (err:Error, player:string) => {
+                        should.not.exist(err);
+                        should.exist(player);
+                        player.should.eql('other');
+
+                        dataStore.room.getPlayers('demo', (err:Error, players:string[]) => {
+                            should.not.exist(err);
+                            should.exist(players);
+                            players.should.eql(['player', 'other']);
+                            done();
+                        });
+                    });
+                })
+            });
+
+            it('put and get multiple times', (done) => {
+                dataStore.room.putPlayer('demo', 'player', (err:Error, player:string) => {
+                    should.not.exist(err);
+
+                    dataStore.room.putPlayer('demo', 'player', (err:Error, player:string) => {
+                        should.not.exist(err);
+                        should.exist(player);
+                        player.should.eql('player');
+
+                        dataStore.room.getPlayers('demo', (err:Error, players:string[]) => {
+                            should.not.exist(err);
+                            should.exist(players);
+                            players.should.eql(['player']);
+                            done();
+                        });
+                    });
+                })
+            });
+
+            it('delete player', (done) => {
+                dataStore.room.putPlayer('demo', 'player', (err:Error, player:string) => {
+                    should.not.exist(err);
+
+                    dataStore.room.deletePlayer('demo', 'player', (err:Error) => {
+                        should.not.exist(err);
+
+                        dataStore.room.getPlayers('demo', (err:Error, players:string[]) => {
+                            should.not.exist(err);
+                            should.exist(players);
+                            players.should.eql([]);
+                            done();
+                        });
+                    });
+                })
+            });
+
+            it('delete missing player', (done) => {
+                dataStore.room.deletePlayer('demo', 'player', (err:Error) => {
+                    should.not.exist(err);
+
+                    dataStore.room.getPlayers('demo', (err:Error, players:string[]) => {
+                        should.not.exist(err);
+                        should.exist(players);
+                        players.should.eql([]);
+                        done();
+                    });
+                });
+            });
+
+            it('set empty players', (done) => {
+                dataStore.room.putPlayer('demo', '', (err:Error) => {
+                    should.exist(err);
+
+                    dataStore.room.getPlayers('demo', (err:Error, players:string[]) => {
+                        should.not.exist(err);
+                        should.exist(players);
+                        players.should.eql([]);
+                        done();
+                    });
+                })
+            });
+
+            it('set null game', (done) => {
+                dataStore.room.putPlayer('demo', null, (err:Error) => {
+                    should.exist(err);
+
+                    dataStore.room.getPlayers('demo', (err:Error, players:string[]) => {
+                        should.not.exist(err);
+                        should.exist(players);
+                        players.should.eql([]);
+                        done();
+                    });
+                })
+            });
+
+            it('delete empty player', (done) => {
+                dataStore.room.deletePlayer('demo', '', (err:Error) => {
+                    should.not.exist(err);
+
+                    dataStore.room.getPlayers('demo', (err:Error, players:string[]) => {
+                        should.not.exist(err);
+                        should.exist(players);
+                        players.should.eql([]);
+                        done();
+                    });
+                });
+            });
+
+            it('delete null player', (done) => {
+                dataStore.room.deletePlayer('demo', null, (err:Error) => {
+                    should.not.exist(err);
+
+                    dataStore.room.getPlayers('demo', (err:Error, players:string[]) => {
+                        should.not.exist(err);
+                        should.exist(players);
+                        players.should.eql([]);
+                        done();
+                    });
                 });
             });
         });

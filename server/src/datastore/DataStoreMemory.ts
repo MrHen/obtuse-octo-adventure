@@ -127,18 +127,28 @@ module DataStoreMemory {
         }
 
         getPlayers(roomId:string, callback:(err:Error, players:string[])=>any):any {
-            callback(null, this.players[roomId]);
+            callback(null, this.players[roomId] || []);
         }
 
-        putPlayer(roomId:string, player:string, callback:(err:Error)=>any):any {
+        putPlayer(roomId:string, player:string, callback:(err:Error, player:string)=>any):any {
+            if (!player) {
+                return callback(new Error(ERRORS.ROOM.INVALID_PLAYER), null);
+            }
+
             if (!this.players[roomId]) {
                 this.players[roomId] = [];
             }
-            this.players[roomId].push(player);
-            callback(null);
+            if (!_.include(this.players[roomId], player)) {
+                this.players[roomId].push(player);
+            }
+            callback(null, player);
         }
 
         setGame(roomId:string, game:string, callback:(err:Error)=>any):any {
+            if (!game) {
+                return callback(new Error(ERRORS.ROOM.INVALID_GAME));
+            }
+
             this.games[roomId] = game;
             callback(null);
         }
