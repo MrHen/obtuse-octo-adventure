@@ -3,26 +3,24 @@
 import express = require('express');
 import http_status = require('http-status');
 
-module ChatRoute {
-    export interface ChatApiInterface {
-        getGlobalChat(callback:(err:Error, allMessages:string[])=>any):any;
-        pushGlobalChat(message:string, callback:(err:Error, allMessages:string[])=>any):any;
-    }
+import {ChatDataStoreInterface} from '../datastore/DataStoreInterfaces.ts';
+import {ChatRouteInterface} from './RouteInterfaces.ts';
 
-    export class ChatRouteController {
+module ChatRoute {
+    export class ChatRouteController implements ChatRouteInterface {
         public static ERROR_INVALID_MESSAGE = 'Invalid chat message';
 
-        private api:ChatApiInterface = null;
+        private api:ChatDataStoreInterface = null;
 
-        constructor(api:ChatApiInterface) {
+        constructor(api:ChatDataStoreInterface) {
             this.api = api;
         }
 
         getMessages(callback:(err:Error, result:string[])=>any) {
-            this.api.getGlobalChat(callback);
+            this.api.getGlobalChat(20, callback);
         }
 
-        postMessage(request:{message:string}, callback:(err:Error, result:string[])=>any) {
+        postMessage(request:{message:string}, callback:(err:Error, result:string)=>any) {
             if (!request || !request.message) {
                 return callback(new Error(ChatRouteController.ERROR_INVALID_MESSAGE), null);
             }
@@ -45,7 +43,7 @@ module ChatRoute {
         return res.status(status).send({message:message});
     }
 
-    export function init(app:express.Express, base:string, api:ChatApiInterface) {
+    export function init(app:express.Express, base:string, api:ChatDataStoreInterface) {
         var controller = new ChatRouteController(api);
 
         app.get(base, function (req, res) {
@@ -63,12 +61,12 @@ module ChatRoute {
                 message: req.body.message
             };
 
-            controller.postMessage(chatRequest, (err:Error, messages:string[]) => {
+            controller.postMessage(chatRequest, (err:Error, message:string) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }
 
-                res.send(messages);
+                res.send(message);
             });
         });
     }

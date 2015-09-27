@@ -8,13 +8,13 @@ import http = require('http');
 import ws = require('ws');
 
 import ChatRoute = require('./routes/ChatRoute');
+import DataStoreModule = require('./datastore/DataStore')
 import GameRoute = require('./routes/GameRoute');
-import Sockets = require('./sockets/Sockets');
-import State = require('./state/State');
+import Sockets = require('./services/Sockets');
 
 async.auto({
     'db': (autoCb, results) => {
-        var state = State.create();
+        var state = DataStoreModule.create();
         state.connect((err) => {
             autoCb(err, state);
         })
@@ -30,8 +30,8 @@ async.auto({
         autoCb(null, app);
     },
     'routes': ['app', 'db', (autoCb, results) => {
-        ChatRoute.init(results.app, '/chat', results.db);
-        new GameRoute.GameRouteController(results.app, '/game', results.db);
+        ChatRoute.init(results.app, '/chat', results.db.chat);
+        GameRoute.init(results.app, '/game', results.db.game);
 
         results.app.get('/', function (req, res) {
             res.send('Hello World!');
@@ -56,7 +56,7 @@ async.auto({
         });
     }],
     'pubsub': ['db', 'sockets', (autoCb, results) => {
-        results.db.onGlobalChat((message) => {
+        results.db.chat.onGlobalChat((message) => {
             results.sockets.emitGlobalChat(message);
         });
 

@@ -5,18 +5,16 @@ import async = require('async');
 import express = require('express');
 import http_status = require('http-status');
 
-module GameRoute {
+import {GameDataStoreInterface} from '../datastore/DataStoreInterfaces.ts';
+import {GameRouteInterface} from './RouteInterfaces.ts';
+
+module GameRouteModule {
     var PLAYER_STATES = {
-        CURRENT: 'current',
-        DEALING: 'deal',
-        DONE: 'done',
-        WAITING: 'wait'
+        CURRENT: 'current', DEALING: 'deal', DONE: 'done', WAITING: 'wait'
     };
 
     var PLAYER_ACTIONS = {
-        DEAL: 'deal',
-        HIT: 'hit',
-        STAY: 'stay'
+        DEAL: 'deal', HIT: 'hit', STAY: 'stay'
     };
 
     var DEALER = 'dealer';
@@ -36,32 +34,20 @@ module GameRoute {
         actions: string[];
     }
 
-    export interface GameApiInterface {
-        getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any;
-        getPlayerStates(gameId:string, callback:(err:Error, players:{[player:string]:string})=>any):any;
-
-        setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any;
-
-        postGame(callback:(err:Error, gameId:string)=>any):any;
-        postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error)=>any):any;
-        postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any;
-    }
-
-    export class GameRouteController {
+    export class GameRouteController implements GameRouteInterface {
         public static ERROR_INVALID_ACTION = 'Invalid action';
         public static ERROR_INVALID_GAME = 'Invalid game';
         public static ERROR_INVALID_PLAYER = 'Invalid player';
         public static ERROR_INVALID_PLAYERNAME = 'Invalid player name';
         public static ERROR_INVALID_TURN = 'Different player turn';
 
-        private api:GameApiInterface = null;
+        private api:GameDataStoreInterface = null;
 
-        public constructor(app:express.Express, base:string, api:GameApiInterface) {
+        public constructor(api:GameDataStoreInterface) {
             this.api = api;
-            this.init(app, base);
         }
 
-        private getGame(gameId:string, callback:(err:Error, game:Game)=>any):any {
+        public getGame(gameId:string, callback:(err:Error, game:Game)=>any):any {
             async.auto({
                 'states': (autoCb, results) => this.api.getPlayerStates(gameId, autoCb),
                 'players': ['states', (autoCb, results) => autoCb(null, _.keys(results.states))],
@@ -77,21 +63,19 @@ module GameRoute {
 
                 _.forEach<string>(results.players, (name, key) => {
                     players[name] = {
-                        state: results.states[name],
-                        cards: results.cards[key]
+                        state: results.states[name], cards: results.cards[key]
                     }
                 });
 
                 var game:Game = {
-                    id: gameId,
-                    players:players
+                    id: gameId, players: players
                 };
 
                 callback(null, game);
             });
         }
 
-        private getCurrentTurn(gameId:string, callback:(err:Error, currentTurn:GameCurrentTurn)=>any):any {
+        public getCurrentTurn(gameId:string, callback:(err:Error, currentTurn:GameCurrentTurn)=>any):any {
             this.api.getPlayerStates(gameId, (err:Error, players:{[player:string]:string}) => {
                 if (err) {
                     callback(err, null);
@@ -105,13 +89,12 @@ module GameRoute {
                 }
 
                 callback(null, {
-                    player: player,
-                    actions: actions
+                    player: player, actions: actions
                 });
             });
         }
 
-        private postAction(gameId:string, player:string, action:string, callback:(err:Error)=>any):any {
+        public postAction(gameId:string, player:string, action:string, callback:(err:Error)=>any):any {
             this.api.getPlayerStates(gameId, (err:Error, players:{[player:string]:string}) => {
                 if (err) {
                     callback(err);
@@ -124,7 +107,7 @@ module GameRoute {
             });
         }
 
-        private postGame(newPlayers:string[], callback:(err:Error, game:Game)=>any):any {
+        public postGame(newPlayers:string[], callback:(err:Error, game:Game)=>any):any {
             var players = _.map(newPlayers, (player) => player.toLowerCase());
 
             if (_.include(players, DEALER)) {
@@ -132,11 +115,9 @@ module GameRoute {
             }
 
             async.auto({
-                'gameId': (autoCb, results) => this.api.postGame(autoCb),
-                'dealer': ['gameId', (autoCb, results) => {
+                'gameId': (autoCb, results) => this.api.postGame(autoCb), 'dealer': ['gameId', (autoCb, results) => {
                     this.api.setPlayerState(results.gameId, DEALER, PLAYER_STATES.DEALING, autoCb)
-                }],
-                'states': ['gameId', (autoCb, results) => {
+                }], 'states': ['gameId', (autoCb, results) => {
                     async.eachLimit(players, 2, (player, eachCb) => {
                         this.api.setPlayerState(results.gameId, player, PLAYER_STATES.WAITING, eachCb)
                     }, autoCb);
@@ -150,94 +131,92 @@ module GameRoute {
 
                 _.forEach<string>(players, (name) => {
                     gamePlayers[name] = {
-                        state: PLAYER_STATES.WAITING,
-                        cards: []
+                        state: PLAYER_STATES.WAITING, cards: []
                     }
                 });
 
                 gamePlayers[DEALER] = {
-                    state: PLAYER_STATES.DEALING,
-                    cards: []
+                    state: PLAYER_STATES.DEALING, cards: []
                 };
 
                 var game:Game = {
-                    id: <string>results.gameId,
-                    players:gamePlayers
+                    id: <string>results.gameId, players: gamePlayers
                 };
 
                 callback(null, game);
             });
         }
+    }
 
-        private static sendErrorResponse(res:express.Response, err:Error) {
-            var status:number = null;
-            // TODO This is not entirely appropriate
-            var message:string = err.message;
-            switch(err.message) {
-                case GameRouteController.ERROR_INVALID_ACTION:
-                case GameRouteController.ERROR_INVALID_PLAYER:
-                case GameRouteController.ERROR_INVALID_TURN:
-                    status = http_status.BAD_REQUEST;
-                    break;
-                default:
-                    status = http_status.INTERNAL_SERVER_ERROR;
-            }
-            return res.status(status).send({message:message});
+    function sendErrorResponse(res:express.Response, err:Error) {
+        var status:number = null;
+        // TODO This is not entirely appropriate
+        var message:string = err.message;
+        switch (err.message) {
+            case GameRouteController.ERROR_INVALID_ACTION:
+            case GameRouteController.ERROR_INVALID_PLAYER:
+            case GameRouteController.ERROR_INVALID_TURN:
+                status = http_status.BAD_REQUEST;
+                break;
+            default:
+                status = http_status.INTERNAL_SERVER_ERROR;
         }
+        return res.status(status).send({message: message});
+    }
 
-        private init = (app:express.Express, base:string) => {
+    export var init = (app:express.Express, base:string, api:GameDataStoreInterface) => {
+        var controller = new GameRouteController(api);
 
-            app.get(base + '/:game_id', (req, res) => {
-                var gameId = req.params.game_id;
+        app.get(base + '/:game_id', (req, res) => {
+            var gameId = req.params.game_id;
 
-                this.getGame(gameId, (err:Error, game:Game) => {
-                    if (err) {
-                        return GameRouteController.sendErrorResponse(res, err);
-                    }
+            controller.getGame(gameId, (err:Error, game:Game) => {
+                if (err) {
+                    return sendErrorResponse(res, err);
+                }
 
-                    res.json(game);
-                });
+                res.json(game);
             });
+        });
 
-            app.get(base + '/:game_id/current', (req, res) => {
-                var gameId = req.params.game_id;
+        app.get(base + '/:game_id/current', (req, res) => {
+            var gameId = req.params.game_id;
 
-                this.getCurrentTurn(gameId, (err:Error, currentTurn:GameCurrentTurn) => {
-                    if (err) {
-                        return GameRouteController.sendErrorResponse(res, err);
-                    }
+            controller.getCurrentTurn(gameId, (err:Error, currentTurn:GameCurrentTurn) => {
+                if (err) {
+                    return sendErrorResponse(res, err);
+                }
 
-                    res.json(currentTurn);
-                });
+                res.json(currentTurn);
             });
+        });
 
-            app.post(base, (req, res) => {
-                var players:string[] = req.body.players;
+        app.post(base, (req, res) => {
+            var players:string[] = req.body.players;
 
-                this.postGame(players, (err:Error, game:Game) => {
-                    if (err) {
-                        return GameRouteController.sendErrorResponse(res, err);
-                    }
+            controller.postGame(players, (err:Error, game:Game) => {
+                if (err) {
+                    return sendErrorResponse(res, err);
+                }
 
-                    res.json(game);
-                });
+                res.json(game);
             });
+        });
 
-            app.post(base + '/:game_id/actions', (req, res) => {
-                var gameId = req.params.game_id;
-                var player = req.body.player;
-                var action = req.body.action;
+        app.post(base + '/:game_id/actions', (req, res) => {
+            var gameId = req.params.game_id;
+            var player = req.body.player;
+            var action = req.body.action;
 
-                this.postAction(gameId, player, action, (err:Error) => {
-                    if (err) {
-                        return GameRouteController.sendErrorResponse(res, err);
-                    }
+            controller.postAction(gameId, player, action, (err:Error) => {
+                if (err) {
+                    return sendErrorResponse(res, err);
+                }
 
-                    res.json(action);
-                });
+                res.json(action);
             });
-        }
+        });
     }
 }
 
-export = GameRoute;
+export = GameRouteModule;
