@@ -90,4 +90,38 @@ describe('DataStore', () => {
             });
         });
     });
+
+    describe('GameDataStore', () => {
+        describe('with missing game', () => {
+            it('getPlayerCards', (done) => {
+                dataStore.game.getPlayerCards("bogus game", "bogus player", (err, results) => {
+                    should.not.exist(err);
+                    should.not.exist(results);
+                    done();
+                });
+            });
+
+            it('getPlayerStates', (done) => {
+                dataStore.game.getPlayerStates("bogus game", (err, results) => {
+                    should.not.exist(err);
+                    should.not.exist(results);
+                    done();
+                });
+            });
+
+            it('setPlayerState', (done) => {
+                dataStore.game.setPlayerState("bogus game", "bogus player", "state", (err) => {
+                    should.not.exist(err);
+                    done();
+                });
+            });
+
+            it('postPlayerCard', (done) => {
+                dataStore.game.postPlayerCard("bogus game", "bogus player", "card", (err) => {
+                    should.not.exist(err);
+                    done();
+                });
+            });
+        });
+    });
 });
