@@ -8,6 +8,16 @@ module DataStoreInterfaces {
         connect(callback:(err:Error)=>any);
     }
 
+    export var ERRORS = {
+        CHAT: {
+            INVALID_MESSAGE: 'Invalid chat message'
+        }
+    };
+
+    export var EVENTS = {
+        GLOBALCHAT: 'globalchat:created'
+    };
+
     export interface ChatDataStoreInterface {
         getGlobalChat(limit:number, callback:(err:Error, allMessages:string[])=>any):any;
         onGlobalChat(callback:(message:string)=>any):any;

@@ -2,8 +2,7 @@ import _ = require('lodash');
 import events = require('events');
 import redis = require('redis');
 
-import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface} from './DataStoreInterfaces';
-import {EVENTS} from '../state/StateInterfaces';
+import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, EVENTS} from './DataStoreInterfaces';
 
 module DataStoreRedisModule {
     var redisClient:redis.RedisClient = null;

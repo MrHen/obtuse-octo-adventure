@@ -1,8 +1,7 @@
 import _ = require('lodash');
 import events = require('events');
 
-import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface} from './DataStoreInterfaces';
-import {EVENTS} from '../state/StateInterfaces';
+import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
 
 module DataStoreMemory {
     export class MemoryDataStore implements DataStoreInterface {
@@ -30,6 +29,9 @@ module DataStoreMemory {
         }
 
         public pushGlobalChat(message:string, callback:(err:Error, message:string)=>any) {
+            if (!message) {
+                return callback(new Error(ERRORS.CHAT.INVALID_MESSAGE), null);
+            }
             this.globalChat.push(message);
 
             this.emitter.emit(EVENTS.GLOBALCHAT, message);
