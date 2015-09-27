@@ -4,8 +4,9 @@ import async = require('async');
 import express = require('express');
 import http_status = require('http-status');
 
-import {RoomDataStoreInterface} from '../datastore/DataStoreInterfaces.ts';
-import {RoomRouteInterface, RoomResponse} from './RouteInterfaces.ts';
+import {RoomEventController} from '../services/GameService';
+import {RoomDataStoreInterface} from '../datastore/DataStoreInterfaces';
+import {RoomRouteInterface, RoomResponse} from './RouteInterfaces';
 
 module RoomRoute {
     export class RoomRouteController implements RoomRouteInterface {
@@ -13,15 +14,18 @@ module RoomRoute {
         private static PLAYER = 'player';
 
         private api:RoomDataStoreInterface = null;
+        private service:RoomEventController = null;
 
-        constructor(api:RoomDataStoreInterface) {
+        constructor(api:RoomDataStoreInterface, service:RoomEventController) {
             this.api = api;
+            this.service = service;
         }
 
         getRoom(roomId:string, callback:(err:Error, room:RoomResponse)=>any):any {
             async.auto({
-                'game': (autoCb, results) => this.api.getGame(roomId, autoCb),
-                'players': (autoCb, results) => this.api.getPlayers(roomId, autoCb)
+                'roomstart': (autoCb, results) => this.service.onRoomStart(roomId, autoCb),
+                'game': ['roomstart', (autoCb, results) => this.api.getGame(roomId, autoCb)],
+                'players': ['roomstart', (autoCb, results) => this.api.getPlayers(roomId, autoCb)]
             }, (err, results) => {
                 if (err) {
                     callback(err, null);
@@ -71,8 +75,8 @@ module RoomRoute {
         return res.status(status).send({message:message});
     }
 
-    export function init(app:express.Express, base:string, api:RoomDataStoreInterface) {
-        var controller = new RoomRouteController(api);
+    export function init(app:express.Express, base:string, api:RoomDataStoreInterface, service:RoomEventController) {
+        var controller = new RoomRouteController(api, service);
 
         app.post(base + '/:room_id/players', function (req, res) {
             var roomId = req.params.room_id;
