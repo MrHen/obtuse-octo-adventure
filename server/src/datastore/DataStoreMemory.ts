@@ -73,10 +73,13 @@ module DataStoreMemory {
             callback(null, this.getPlayer(gameId, player).cards);
         }
 
-        public getPlayerStates(gameId:string, callback:(err:Error, players:{[player:string]:string})=>any):any {
+        public getPlayerStates(gameId:string, callback:(err:Error, players:{player:string; state:string}[])=>any):any {
             var players = this.getGame(gameId).players;
 
-            var mapped:Dict<string> = _.omit<Dict<string>, Dict<string>>(_.mapValues(players, (value) => value.state), _.isUndefined);
+            var mapped = _.map(players, (value, key) => {
+                return {player: key, state:value.state};
+            });
+
             callback(null, _.isEmpty(mapped) ? null : mapped);
         }
 

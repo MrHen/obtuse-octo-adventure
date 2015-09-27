@@ -250,7 +250,7 @@ describe('DataStore', () => {
                     dataStore.game.getPlayerStates(gameId, (err, result) => {
                         should.not.exist(err);
                         should.exist(result);
-                        result.should.eql({"new player": "state"});
+                        result.should.eql([{player:"new player", state: "state"}]);
                         done();
                     });
                 });
@@ -266,10 +266,10 @@ describe('DataStore', () => {
                         dataStore.game.getPlayerStates(gameId, (err, result) => {
                             should.not.exist(err);
                             should.exist(result);
-                            result.should.eql({
-                                "new player": "state",
-                                "other player": "other state"
-                            });
+                            result.should.eql([
+                                {player: "new player", state: "state"},
+                                {player: "other player", state: "other state"}
+                            ]);
                             done();
                         });
                     });
@@ -286,9 +286,7 @@ describe('DataStore', () => {
                         dataStore.game.getPlayerStates(gameId, (err, result) => {
                             should.not.exist(err);
                             should.exist(result);
-                            result.should.eql({
-                                "new player": "other state"
-                            });
+                            result.should.eql([{player: "new player", state: "other state"}]);
                             done();
                         });
                     });

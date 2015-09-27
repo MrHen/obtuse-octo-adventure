@@ -82,14 +82,16 @@ module DataStoreRedisModule {
             redisClient.lrange(key, 0, -1, callback);
         }
 
-        public getPlayerStates(gameId:string, callback:(err:Error, players:{[player:string]:string})=>any):any {
+        public getPlayerStates(gameId:string, callback:(err:Error, players:{player:string; state:string}[])=>any):any {
             var key = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_STATE].join(DELIMETER);
             redisClient.hgetall(key, (err, result:string[]) => {
                 if (err) {
                     return callback(err, null);
                 }
 
-                callback(null, _.zipObject(_.chunk(result, 2)));
+                callback(null, _.map(_.chunk(result, 2), (chunk) => {
+                    return {player: chunk[0], state: chunk[1]};
+                }));
             });
         }
 

@@ -76,15 +76,15 @@ module GameRouteModule {
         }
 
         public getCurrentTurn(gameId:string, callback:(err:Error, currentTurn:GameCurrentTurn)=>any):any {
-            this.api.getPlayerStates(gameId, (err:Error, players:{[player:string]:string}) => {
+            this.api.getPlayerStates(gameId, (err:Error, states:{player:string; state:string}[]) => {
                 if (err) {
                     callback(err, null);
                 }
 
-                var player = _.get<string>(_.invert(players), PLAYER_STATES.CURRENT);
+                var player = _.find<{player:string; state:string}>(states, "state", PLAYER_STATES.CURRENT).player;
                 var actions = [PLAYER_ACTIONS.HIT, PLAYER_ACTIONS.STAY];
                 if (!player) {
-                    player = _.get<string>(_.invert(players), PLAYER_STATES.DEALING);
+                    player = _.find<{player:string; state:string}>(states, "player", PLAYER_STATES.DEALING).player;
                     actions = [PLAYER_ACTIONS.DEAL];
                 }
 
@@ -95,12 +95,12 @@ module GameRouteModule {
         }
 
         public postAction(gameId:string, player:string, action:string, callback:(err:Error)=>any):any {
-            this.api.getPlayerStates(gameId, (err:Error, players:{[player:string]:string}) => {
+            this.api.getPlayerStates(gameId, (err:Error, states:{player:string; state:string}[]) => {
                 if (err) {
                     callback(err);
                 }
 
-                var state = players[player];
+                var state = _.find<{player:string; state:string}>(states, "state", player);
                 console.log("TODO: Do something", {action: action, state: state});
 
                 callback(null);

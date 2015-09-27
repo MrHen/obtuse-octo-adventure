@@ -34,7 +34,7 @@ module DataStoreInterfaces {
 
     export interface GameDataStoreInterface {
         getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any;
-        getPlayerStates(gameId:string, callback:(err:Error, players:{[player:string]:string})=>any):any;
+        getPlayerStates(gameId:string, callback:(err:Error, players:{player:string; state:string}[])=>any):any;
 
         setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any;
 
