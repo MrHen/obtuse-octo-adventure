@@ -124,6 +124,88 @@ describe('DataStore', () => {
             });
         });
 
+        describe('player cards', () => {
+            var gameId:string = null;
+
+            beforeEach((done) => {
+                dataStore.game.postGame((err:Error, createdGameId:string) => {
+                    should.not.exist(err);
+                    should.exist(createdGameId);
+                    gameId = createdGameId;
+                    done();
+                })
+            });
+
+            it('get with no players', (done) => {
+                dataStore.game.getPlayerCards(gameId, "bogus player", (err, results) => {
+                    should.not.exist(err);
+                    should.not.exist(results);
+                    done();
+                });
+            });
+
+            it('post to new player', (done) => {
+                dataStore.game.postPlayerCard(gameId, "new player", "AH", (err) => {
+                    should.not.exist(err);
+
+                    dataStore.game.getPlayerCards(gameId, "new player", (err, results) => {
+                        should.not.exist(err);
+                        should.exist(results);
+                        results.should.eql(["AH"]);
+                        done();
+                    });
+                });
+            });
+
+            it('post to multiple players', (done) => {
+                dataStore.game.postPlayerCard(gameId, "new player", "AH", (err) => {
+                    should.not.exist(err);
+
+                    dataStore.game.postPlayerCard(gameId, "other player", "AC", (err) => {
+                        should.not.exist(err);
+
+                        dataStore.game.getPlayerCards(gameId, "new player", (err, results) => {
+                            should.not.exist(err);
+                            should.exist(results);
+                            results.should.eql(["AH"]);
+                            done();
+                        });
+                    });
+                });
+            });
+
+            it('post multiple cards', (done) => {
+                dataStore.game.postPlayerCard(gameId, "new player", "AH", (err) => {
+                    should.not.exist(err);
+
+                    dataStore.game.postPlayerCard(gameId, "new player", "AC", (err) => {
+                        should.not.exist(err);
+
+                        dataStore.game.getPlayerCards(gameId, "new player", (err, results) => {
+                            should.not.exist(err);
+                            should.exist(results);
+                            results.should.eql(["AH", "AC"]);
+                            done();
+                        });
+                    });
+                });
+            });
+
+            it('post empty card', (done) => {
+                dataStore.game.postPlayerCard(gameId, "new player", "", (err) => {
+                    should.exist(err);
+                    done();
+                });
+            });
+
+            it('post null card', (done) => {
+                dataStore.game.postPlayerCard(gameId, "new player", null, (err) => {
+                    should.exist(err);
+                    done();
+                });
+            });
+        });
+
         describe('player states', () => {
             var gameId:string = null;
 
