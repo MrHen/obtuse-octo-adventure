@@ -28,11 +28,39 @@
 
     <div class="row">
         <div class="col-sm-8">
-            <p>Content goes here.</p>
+            <div>
+                <div ng-show="!room">
+                    <p>Loading room...</p>
+                </div>
+                <div ng-show="room">
+                    <p>{{room.game_id}}</p>
+                    <ul>
+                        <li ng-repeat="player in room.players track by $index" ng-bind="player"></li>
+                    </ul>
+                </div>
+            </div>
+
+            <p>Content goes here. {{player.name}}</p>
         </div>
 
         <div class="col-sm-4">
-            <div class="panel panel-default">
+            <div id="settings-panel" class="panel panel-default">
+                <div class="panel-heading">
+                    <h2 class="panel-title">Settings</h2>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal" name="settingsform">
+                        <div class="form-group">
+                            <label for="settingsName" class="col-sm-2 control-label">Name</label>
+                            <div class="col-sm-10">
+                                <input ng-disabled="!canEditPlayer" type="text" class="form-control" ng-model="player.name" id="settingsName" placeholder="Name">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="chat-panel" class="panel panel-default">
                 <div class="panel-heading">
                     <h2 class="panel-title">Chat</h2>
                 </div>
@@ -43,8 +71,9 @@
                     </form>
                 </div>
                 <div class="panel-body">
-                    <div ng-show="!globalChat.length">Loading chat...</div>
-                    <div ng-show="globalChat.length">
+                    <div ng-show="!globalChat">Loading chat...</div>
+                    <div ng-show="!globalChat.length">Empty chat</div>
+                    <div ng-show="globalChat">
                         <ul>
                             <li ng-repeat="message in globalChat track by $index" ng-bind="message"></li>
                         </ul>
@@ -52,16 +81,14 @@
                 </div>
             </div>
 
-            <div>
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h2 class="panel-title">Socket pings</h2>
-                    </div>
-                    <div class="panel-body">
-                        <ul>
-                            <li ng-repeat="message in socketDebug track by $index" ng-bind="message"></li>
-                        </ul>
-                    </div>
+            <div class="ping-panel" class="panel panel-default">
+                <div class="panel-heading">
+                    <h2 class="panel-title">Socket pings</h2>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        <li ng-repeat="message in socketDebug track by $index" ng-bind="message"></li>
+                    </ul>
                 </div>
             </div>
         </div>

@@ -7,6 +7,7 @@ module RouteInterfaces {
     }
 
     export interface RoomResponse {
+        room_id: string;
         game_id: string;
         players: string[];
     }

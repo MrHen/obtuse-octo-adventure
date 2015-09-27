@@ -10,6 +10,14 @@ module OctoApp {
 
         chatMessage: string;
         chatSubmit: (form:angular.IFormController)=>any;
+
+        canEditPlayer: boolean;
+
+        player: {
+            name: string
+        };
+
+        room: ApiService.RoomResponse;
     }
 
     export class OctoController {
@@ -25,16 +33,21 @@ module OctoApp {
                 this.$scope.socketDebug = [];
             }
 
-            if (!this.$scope.globalChat) {
-                this.$scope.globalChat = [];
+            this.$scope.chatSubmit = this.chatSubmit.bind(this);
+
+            if (!this.$scope.player) {
+                this.$scope.player = {
+                    name: "Player 1"
+                };
             }
 
-            this.$scope.chatSubmit = this.chatSubmit.bind(this);
+            this.$scope.canEditPlayer = false;
 
             this.Config.load()
                 .then(() => this.initSockets())
                 .then(() => this.initApi())
-                .then(() => this.loadChat());
+                .then(() => this.loadChat())
+                .then(() => this.loadRoom());
 
             // TODO load global chat
         }
@@ -64,8 +77,20 @@ module OctoApp {
             });
         }
 
+        private loadRoom():angular.IPromise<void> {
+            return this.Api.getRooms().then((rooms:ApiService.RoomResponse[]) => {
+                this.$scope.room = rooms && rooms.length ? rooms[0] : null;
+            });
+        }
+
         private chatSubmit(form:angular.IFormController) {
-            this.Api.postGlobalChat(this.$scope.chatMessage)
+            var message = this.$scope.chatMessage;
+
+            if (this.$scope.player.name) {
+                message = this.$scope.player.name + ": " + message;
+            }
+
+            this.Api.postGlobalChat(message)
                 .then((messages:string[]) => {
                     this.$scope.globalChat = messages;
                     return messages;

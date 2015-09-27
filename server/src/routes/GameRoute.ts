@@ -117,7 +117,8 @@ module GameRouteModule {
             async.auto({
                 'gameId': (autoCb, results) => this.api.postGame(autoCb), 'dealer': ['gameId', (autoCb, results) => {
                     this.api.setPlayerState(results.gameId, DEALER, PLAYER_STATES.DEALING, autoCb)
-                }], 'states': ['gameId', (autoCb, results) => {
+                }],
+                'states': ['gameId', (autoCb, results) => {
                     async.eachLimit(players, 2, (player, eachCb) => {
                         this.api.setPlayerState(results.gameId, player, PLAYER_STATES.WAITING, eachCb)
                     }, autoCb);
@@ -167,18 +168,6 @@ module GameRouteModule {
     export var init = (app:express.Express, base:string, api:GameDataStoreInterface) => {
         var controller = new GameRouteController(api);
 
-        app.get(base + '/:game_id', (req, res) => {
-            var gameId = req.params.game_id;
-
-            controller.getGame(gameId, (err:Error, game:Game) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(game);
-            });
-        });
-
         app.get(base + '/:game_id/current', (req, res) => {
             var gameId = req.params.game_id;
 
@@ -191,10 +180,10 @@ module GameRouteModule {
             });
         });
 
-        app.post(base, (req, res) => {
-            var players:string[] = req.body.players;
+        app.get(base + '/:game_id', (req, res) => {
+            var gameId = req.params.game_id;
 
-            controller.postGame(players, (err:Error, game:Game) => {
+            controller.getGame(gameId, (err:Error, game:Game) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }
@@ -214,6 +203,18 @@ module GameRouteModule {
                 }
 
                 res.json(action);
+            });
+        });
+
+        app.post(base, (req, res) => {
+            var players:string[] = req.body.players;
+
+            controller.postGame(players, (err:Error, game:Game) => {
+                if (err) {
+                    return sendErrorResponse(res, err);
+                }
+
+                res.json(game);
             });
         });
     }

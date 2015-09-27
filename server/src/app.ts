@@ -7,9 +7,13 @@ import express = require('express');
 import http = require('http');
 import ws = require('ws');
 
-import ChatRoute = require('./routes/ChatRoute');
 import DataStoreModule = require('./datastore/DataStore')
+import {DataStoreInterface} from './datastore/DataStoreInterfaces';
+
+import ChatRoute = require('./routes/ChatRoute');
 import GameRoute = require('./routes/GameRoute');
+import RoomRoute = require('./routes/RoomRoute');
+
 import Sockets = require('./services/Sockets');
 
 async.auto({
@@ -19,6 +23,48 @@ async.auto({
             autoCb(err, state);
         })
     },
+    'prepGame': ['db', (autoCb, results) => {
+        var api:DataStoreInterface = results.db;
+
+        var room_id = 'demo';
+
+        async.auto({
+            'addDealer': [(prepCb, results) => {
+                api.room.putPlayer(room_id, 'dealer', prepCb)
+            }],
+            'addPlayer': (prepCb, results) => {
+                api.room.putPlayer(room_id, 'player', prepCb)
+            },
+            'players': ['addDealer', 'addPlayer', (prepCb, results) => {
+                api.room.getPlayers(room_id, prepCb)
+            }],
+            'existing_game': (prepCb, results) => {
+                api.room.getGame(room_id, prepCb);
+            },
+            'new_game': ['existing_game', (prepCb, results) => {
+                if (results.existing_game) {
+                    return prepCb(null, results.existing_game);
+                }
+
+                api.game.postGame(prepCb);
+            }],
+            'assignGame': ['existing_game', 'new_game', (prepCb, results) => {
+                if (results.existing_game !== results.new_game) {
+                    return api.room.setGame(room_id, results.new_game, prepCb);
+                }
+
+                prepCb(null, null);
+            }],
+            'player_states': ['players', 'new_game', (prepCb, results) => {
+                async.eachLimit(results.players, 3, (player:string, eachCb) => {
+                    var state = player === 'dealer' ? 'deal' : 'wait';
+                    api.game.setPlayerState(results.new_game, player, state, eachCb)
+                })
+            }]
+        }, (err, results:any) => {
+            autoCb(err, null);
+        });
+    }],
     'app': (autoCb, results) => {
         var app = express();
         app.set('port', (process.env.PORT || 5000));
@@ -32,6 +78,7 @@ async.auto({
     'routes': ['app', 'db', (autoCb, results) => {
         ChatRoute.init(results.app, '/chat', results.db.chat);
         GameRoute.init(results.app, '/game', results.db.game);
+        RoomRoute.init(results.app, '/rooms', results.db.room);
 
         results.app.get('/', function (req, res) {
             res.send('Hello World!');
