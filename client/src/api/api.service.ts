@@ -1,6 +1,21 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
 module ApiService {
+    export interface RoomResponse {
+        game_id: string;
+        players: string[];
+    }
+
+    export interface GameResponse {
+        id: string;
+        players: {
+            [name:string]:{
+                state: string;
+                cards: string[];
+            }
+        };
+    }
+
     export class Api {
         public static $inject:string[] = ["Restangular"];
 
@@ -11,12 +26,20 @@ module ApiService {
             this.Restangular.setBaseUrl(baseUrl);
         }
 
+        getGame(game_id:string):angular.IPromise<GameResponse> {
+            return this.Restangular.all('game').get(game_id);
+        }
+
         getGlobalChat():angular.IPromise<string[]> {
             return this.Restangular.all('chat').getList();
         }
 
         postGlobalChat(message:string):angular.IPromise<string[]> {
             return this.Restangular.all('chat').post({message:message});
+        }
+
+        getRooms():angular.IPromise<RoomResponse[]> {
+            return this.Restangular.all('rooms').getList();
         }
     }
 

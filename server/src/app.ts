@@ -7,17 +7,27 @@ import express = require('express');
 import http = require('http');
 import ws = require('ws');
 
+import DataStoreModule = require('./datastore/DataStore')
+import {DataStoreInterface} from './datastore/DataStoreInterfaces';
+
+import {GameServiceController} from './services/GameService';
+
 import ChatRoute = require('./routes/ChatRoute');
-import Sockets = require('./sockets/Sockets');
-import State = require('./state/State');
+import GameRoute = require('./routes/GameRoute');
+import RoomRoute = require('./routes/RoomRoute');
+
+import Sockets = require('./services/Sockets');
 
 async.auto({
     'db': (autoCb, results) => {
-        var state = State.create();
+        var state = DataStoreModule.create();
         state.connect((err) => {
             autoCb(err, state);
         })
     },
+    'service': ['db', (autoCb, results) => {
+        autoCb(null, new GameServiceController(results.db));
+    }],
     'app': (autoCb, results) => {
         var app = express();
         app.set('port', (process.env.PORT || 5000));
@@ -28,8 +38,10 @@ async.auto({
 
         autoCb(null, app);
     },
-    'routes': ['app', 'db', (autoCb, results) => {
-        ChatRoute.init(results.app, '/chat', results.db);
+    'routes': ['app', 'db', 'service', (autoCb, results) => {
+        ChatRoute.init(results.app, '/chat', results.db.chat);
+        GameRoute.init(results.app, '/game', results.db.game);
+        RoomRoute.init(results.app, '/rooms', results.db.room, results.service);
 
         results.app.get('/', function (req, res) {
             res.send('Hello World!');
@@ -53,9 +65,17 @@ async.auto({
             autoCb(null, null);
         });
     }],
-    'pubsub': ['db', 'sockets', (autoCb, results) => {
-        results.db.onGlobalChat((message) => {
+    'pubsub': ['db', 'service', 'sockets', (autoCb, results) => {
+        results.db.chat.onGlobalChat((message) => {
             results.sockets.emitGlobalChat(message);
+        });
+
+        results.service.onActionReminder((reminder) => {
+            results.sockets.emitActionReminder(reminder);
+        });
+
+        results.service.onPushedCard((gameId:string, player:string, card:string) => {
+            results.sockets.emitCardPushed(gameId, player, card);
         });
 
         autoCb(null, null);

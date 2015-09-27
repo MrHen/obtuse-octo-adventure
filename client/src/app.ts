@@ -12,7 +12,7 @@ app.use('/config/default.json', (req, res) => {
     res.send(JSON.parse(JSON.stringify(config)));
 });
 
-app.use(express.static('app'));
+app.use('/', express.static('app'));
 
 var server = http.createServer(app);
 

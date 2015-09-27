@@ -28,11 +28,50 @@
 
     <div class="row">
         <div class="col-sm-8">
-            <p>Content goes here.</p>
+            <div>
+                <div ng-show="!room">
+                    <p>Loading room...</p>
+                </div>
+                <div ng-show="room">
+                    <p>{{room.game_id}}</p>
+                    <table class="table">
+                        <tr>
+                            <th>Player</th>
+                            <th>State</th>
+                            <th>Cards</th>
+                            <th>Score</th>
+                        </tr>
+                        <tr ng-repeat="player in players track by $index">
+                            <td ng-bind="player.name"></td>
+                            <td ng-bind="player.state"></td>
+                            <td ng-bind="player.cards"></td>
+                            <td>?</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <p>Content goes here. {{player.name}}</p>
         </div>
 
         <div class="col-sm-4">
-            <div class="panel panel-default">
+            <div id="settings-panel" class="panel panel-default">
+                <div class="panel-heading">
+                    <h2 class="panel-title">Settings</h2>
+                </div>
+                <div class="panel-body">
+                    <form class="form-horizontal" name="settingsform">
+                        <div class="form-group">
+                            <label for="settingsName" class="col-sm-2 control-label">Name</label>
+                            <div class="col-sm-10">
+                                <input ng-disabled="!canEditPlayer" type="text" class="form-control" ng-model="player.name" id="settingsName" placeholder="Name">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="chat-panel" class="panel panel-default">
                 <div class="panel-heading">
                     <h2 class="panel-title">Chat</h2>
                 </div>
@@ -41,26 +80,30 @@
                         <input class="form-control" type="text" ng-model="chatMessage" placeholder="Say something!"/>
                         <button class="btn btn-default" type="submit" ng-click="chatSubmit(chatform)">Submit</button>
                     </form>
-
-                    <div ng-show="globalChat.length">
+                </div>
+                <div class="panel-body">
+                    <div ng-show="!globalChat">Loading chat...</div>
+                    <div ng-show="!globalChat.length">Empty chat</div>
+                    <div ng-show="globalChat">
                         <ul>
                             <li ng-repeat="message in globalChat track by $index" ng-bind="message"></li>
                         </ul>
                     </div>
                 </div>
-                <div ng-show="!globalChat.length">Loading chat...</div>
             </div>
 
-            <div>
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h2 class="panel-title">Socket pings</h2>
-                    </div>
-                    <div class="panel-body">
-                        <ul>
-                            <li ng-repeat="message in socketDebug track by $index" ng-bind="message"></li>
-                        </ul>
-                    </div>
+            <div id="debug-panel" class="panel panel-default">
+                <div class="panel-heading">
+                    <h2 class="panel-title">Socket pings</h2>
+                </div>
+                <div class="panel-body">
+                    <button class="btn btn-default" ng-click="loadRoom()">Load Room</button>
+                    <button class="btn btn-default" ng-click="loadGame()">Load Game</button>
+                </div>
+                <div class="panel-body">
+                    <ul>
+                        <li ng-repeat="message in socketDebug track by $index" ng-bind="message"></li>
+                    </ul>
                 </div>
             </div>
         </div>
