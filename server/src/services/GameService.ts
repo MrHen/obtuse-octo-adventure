@@ -32,7 +32,8 @@ module GameServiceModule {
 
         private static EVENTS = {
             ACTION_REMINDER: 'action:reminder',
-            ACTION_START: 'action:start'
+            ACTION_START: 'action:start',
+            PUSH_CARD: 'card'
         };
 
         private api:DataStoreInterface = null;
@@ -86,6 +87,12 @@ module GameServiceModule {
                         this.api.game.setPlayerState(results.new_game, player, 'deal', eachCb)
                     }, prepCb)
                 }],
+                'card_push_listeners': ['players', 'new_game', (prepCb, results) => {
+                    _.forEach(results.players, (player:string) => {
+                        this.api.game.onPushedCard(results.new_game, player, this.handleCardPushed);
+                    });
+                    prepCb(null, null);
+                }],
                 'action_start': ['player_states', (prepCb, results) => {
                     this.emitter.emit(GameServiceController.EVENTS.ACTION_START, results.new_game);
                     prepCb(null, null);
@@ -127,7 +134,7 @@ module GameServiceModule {
             });
         }
 
-        public handleCardPushed(gameId:string, player:string, card:string, callback?:(err:Error)=>any) {
+        public handleCardPushed = (gameId:string, player:string, card:string, callback?:(err:Error)=>any) => {
             if (!callback) {
                 callback = (err:Error) => {
                     if (err) {
@@ -165,11 +172,15 @@ module GameServiceModule {
                     }
 
                     autoCb(null, null)
+                }],
+                'event': ['process', (autoCb, results) => {
+                    this.emitter.emit(GameServiceController.EVENTS.PUSH_CARD, gameId, player, card);
+                    autoCb(null, null);
                 }]
             }, (err, results:any) => {
                 callback(err);
             });
-        }
+        };
 
         public handleDeal(game_id:string, player:string, callback?:(err:Error)=>any) {
             if (!callback) {
@@ -188,6 +199,7 @@ module GameServiceModule {
                     this.setActionTimer(() => {
                         this.emitter.emit(GameServiceController.EVENTS.ACTION_START, game_id);
                     });
+                    autoCb(null, null);
                 }]
             }, (err, results:any) => {
                 callback(err);
@@ -209,6 +221,10 @@ module GameServiceModule {
 
         public onActionStart(callback:(room_id)=>any) {
             this.emitter.on(GameServiceController.EVENTS.ACTION_START, callback);
+        }
+
+        public onPushedCard(callback:(gameId:string, player:string, card:string)=>any) {
+            this.emitter.on(GameServiceController.EVENTS.PUSH_CARD, callback);
         }
     }
 }

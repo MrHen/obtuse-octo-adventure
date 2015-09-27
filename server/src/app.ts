@@ -74,8 +74,7 @@ async.auto({
             results.sockets.emitActionReminder(reminder);
         });
 
-        results.db.game.onPushedCard((gameId:string, player:string, card:string) => {
-            results.service.handleCardPushed(gameId, player, card);
+        results.service.onPushedCard((gameId:string, player:string, card:string) => {
             results.sockets.emitCardPushed(gameId, player, card);
         });
 

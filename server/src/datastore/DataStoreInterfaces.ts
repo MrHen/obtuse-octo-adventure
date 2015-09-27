@@ -43,7 +43,7 @@ module DataStoreInterfaces {
         postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error)=>any):any;
         postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any;
 
-        onPushedCard(callback:(gameId:string, player:string, card:string)=>any):any;
+        onPushedCard(gameId:string, player:string, callback:(gameId:string, player:string, card:string)=>any):any;
     }
 
     export interface RoomDataStoreInterface {

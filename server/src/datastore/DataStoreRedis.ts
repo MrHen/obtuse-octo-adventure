@@ -128,6 +128,19 @@ module DataStoreRedisModule {
         public postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any {
             callback(null);
         }
+
+        public onPushedCard(gameId:string, player:string, handler:(gameId:string, player:string, card:string)=>any) {
+            emitter.on(EVENTS.PUSHEDCARD, (card:string) => {
+                handler(gameId, player, card);
+            });
+
+            var key = [GameRedis.KEY_GAME,
+                       gameId,
+                       GameRedis.KEY_PLAYER,
+                       player,
+                       GameRedis.KEY_CARDS].join(DELIMETER);
+            redisSubcriber.subscribe(key);
+        }
     }
 
     class RoomRedis implements RoomDataStoreInterface {
