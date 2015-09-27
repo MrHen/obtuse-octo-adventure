@@ -123,5 +123,92 @@ describe('DataStore', () => {
                 });
             });
         });
+
+        describe('player states', () => {
+            var gameId:string = null;
+
+            beforeEach((done) => {
+                dataStore.game.postGame((err:Error, createdGameId:string) => {
+                    should.not.exist(err);
+                    should.exist(createdGameId);
+                    gameId = createdGameId;
+                    done();
+                })
+            });
+
+            it('get with no players', (done) => {
+                dataStore.game.getPlayerStates(gameId, (err, results) => {
+                    should.not.exist(err);
+                    should.not.exist(results);
+                    done();
+                });
+            });
+
+            it('set and get states', (done) => {
+                dataStore.game.setPlayerState(gameId, "new player", "state", (err) => {
+                    should.not.exist(err);
+
+                    dataStore.game.getPlayerStates(gameId, (err, results) => {
+                        should.not.exist(err);
+                        should.exist(results);
+                        results.should.eql({"new player": "state"});
+                        done();
+                    });
+                });
+            });
+
+            it('set and get multiple states', (done) => {
+                dataStore.game.setPlayerState(gameId, "new player", "state", (err) => {
+                    should.not.exist(err);
+
+                    dataStore.game.setPlayerState(gameId, "other player", "other state", (err) => {
+                        should.not.exist(err);
+
+                        dataStore.game.getPlayerStates(gameId, (err, results) => {
+                            should.not.exist(err);
+                            should.exist(results);
+                            results.should.eql({
+                                "new player": "state",
+                                "other player": "other state"
+                            });
+                            done();
+                        });
+                    });
+                });
+            });
+
+            it('update existing state', (done) => {
+                dataStore.game.setPlayerState(gameId, "new player", "state", (err) => {
+                    should.not.exist(err);
+
+                    dataStore.game.setPlayerState(gameId, "new player", "other state", (err) => {
+                        should.not.exist(err);
+
+                        dataStore.game.getPlayerStates(gameId, (err, results) => {
+                            should.not.exist(err);
+                            should.exist(results);
+                            results.should.eql({
+                                "new player": "other state"
+                            });
+                            done();
+                        });
+                    });
+                });
+            });
+
+            it('set empty state', (done) => {
+                dataStore.game.setPlayerState(gameId, "new player", "", (err) => {
+                    should.not.exist(err);
+                    done();
+                });
+            });
+
+            it('set null state', (done) => {
+                dataStore.game.setPlayerState(gameId, "new player", null, (err) => {
+                    should.not.exist(err);
+                    done();
+                });
+            });
+        });
     });
 });
