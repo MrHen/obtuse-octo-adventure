@@ -8,7 +8,7 @@ app.set('port', (process.env.PORT || 4000));
 app.use('/config/default.json', function (req, res) {
     res.send(JSON.parse(JSON.stringify(config)));
 });
-app.use(express.static('app'));
+app.use('/', express.static('app'));
 var server = http.createServer(app);
 server.listen(app.get('port'), function () {
     console.info('Express server listening', { port: app.get('port') });

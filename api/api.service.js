@@ -8,11 +8,17 @@ var ApiService;
         Api.prototype.init = function (baseUrl) {
             this.Restangular.setBaseUrl(baseUrl);
         };
+        Api.prototype.getGame = function (game_id) {
+            return this.Restangular.all('game').get(game_id);
+        };
         Api.prototype.getGlobalChat = function () {
             return this.Restangular.all('chat').getList();
         };
         Api.prototype.postGlobalChat = function (message) {
             return this.Restangular.all('chat').post({ message: message });
+        };
+        Api.prototype.getRooms = function () {
+            return this.Restangular.all('rooms').getList();
         };
         Api.$inject = ["Restangular"];
         return Api;

@@ -12,6 +12,34 @@ var OctoApp;
             this.Api = Api;
             this.Config = Config;
             this.Sockets = Sockets;
+            this.loadRoom = function () {
+                return _this.Api.getRooms().then(function (rooms) {
+                    _this.$scope.room = rooms && rooms.length ? rooms[0] : null;
+                });
+            };
+            this.loadGame = function () {
+                return _this.Api.getGame(_this.$scope.room.game_id).then(function (game) {
+                    console.log('loadGame resolved', game.plain());
+                    _this.$scope.players = _.map(game.players, function (value, key) {
+                        return {
+                            name: key,
+                            state: value.state,
+                            cards: value.cards
+                        };
+                    });
+                });
+            };
+            this.socketActionReminderEvent = function (message) {
+                _this.$scope.socketDebug.unshift(message);
+                if (_this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
+                    _this.$scope.socketDebug.pop();
+                }
+                _this.$scope.$apply();
+            };
+            this.socketCardEvent = function (message) {
+                // TODO be smarter about loading
+                _this.loadGame();
+            };
             this.socketTimeEvent = function (message) {
                 _this.$scope.socketDebug.unshift(message);
                 if (_this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
@@ -26,14 +54,19 @@ var OctoApp;
             if (!this.$scope.socketDebug) {
                 this.$scope.socketDebug = [];
             }
-            if (!this.$scope.globalChat) {
-                this.$scope.globalChat = [];
-            }
             this.$scope.chatSubmit = this.chatSubmit.bind(this);
+            if (!this.$scope.player_name) {
+                this.$scope.player_name = 'player';
+            }
+            this.$scope.canEditPlayer = false;
+            this.$scope.loadRoom = this.loadRoom;
+            this.$scope.loadGame = this.loadGame;
             this.Config.load()
                 .then(function () { return _this.initSockets(); })
                 .then(function () { return _this.initApi(); })
-                .then(function () { return _this.loadChat(); });
+                .then(function () { return _this.loadChat(); })
+                .then(function () { return _this.loadRoom(); })
+                .then(function () { return _this.loadGame(); });
             // TODO load global chat
         }
         OctoController.prototype.initApi = function () {
@@ -44,6 +77,8 @@ var OctoApp;
         };
         OctoController.prototype.initSockets = function () {
             this.Sockets.init(this.Config.data.websocket_host);
+            this.Sockets.addEventListener(OctoController.EVENT_ACTIONREMINDER, this.socketActionReminderEvent);
+            this.Sockets.addEventListener(OctoController.EVENT_CARD, this.socketCardEvent);
             this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
             this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
             return this.$q.when();
@@ -56,14 +91,20 @@ var OctoApp;
         };
         OctoController.prototype.chatSubmit = function (form) {
             var _this = this;
-            this.Api.postGlobalChat(this.$scope.chatMessage)
+            var message = this.$scope.chatMessage;
+            if (this.$scope.player_name) {
+                message = this.$scope.player_name + ": " + message;
+            }
+            this.Api.postGlobalChat(message)
                 .then(function (messages) {
-                //TODO this.$scope.globalChat = messages;
-                _this.$scope.chatMessage = null;
+                _this.$scope.globalChat = messages;
                 return messages;
             });
+            this.$scope.chatMessage = null;
         };
         OctoController.$inject = ["$q", "$scope", "Api", "Config", "Sockets"];
+        OctoController.EVENT_ACTIONREMINDER = 'action';
+        OctoController.EVENT_CARD = 'card';
         OctoController.EVENT_GLOBALCHAT = 'globalchat:created';
         OctoController.EVENT_TIME = 'time';
         OctoController.MAX_PING_MESSAGES = 5;
