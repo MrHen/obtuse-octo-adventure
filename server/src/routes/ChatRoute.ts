@@ -4,7 +4,7 @@ import express = require('express');
 import http_status = require('http-status');
 
 module ChatRoute {
-    export interface ChatStateInterface {
+    export interface ChatApiInterface {
         getGlobalChat(callback:(err:Error, allMessages:string[])=>any):any;
         pushGlobalChat(message:string, callback:(err:Error, allMessages:string[])=>any):any;
     }
@@ -12,14 +12,14 @@ module ChatRoute {
     export class ChatRouteController {
         public static ERROR_INVALID_MESSAGE = 'Invalid chat message';
 
-        private state:ChatStateInterface = null;
+        private api:ChatApiInterface = null;
 
-        constructor(state:ChatStateInterface) {
-            this.state = state;
+        constructor(api:ChatApiInterface) {
+            this.api = api;
         }
 
         getMessages(callback:(err:Error, result:string[])=>any) {
-            this.state.getGlobalChat(callback);
+            this.api.getGlobalChat(callback);
         }
 
         postMessage(request:{message:string}, callback:(err:Error, result:string[])=>any) {
@@ -27,7 +27,7 @@ module ChatRoute {
                 return callback(new Error(ChatRouteController.ERROR_INVALID_MESSAGE), null);
             }
 
-            this.state.pushGlobalChat(request.message, callback);
+            this.api.pushGlobalChat(request.message, callback);
         }
     }
 
@@ -45,8 +45,8 @@ module ChatRoute {
         return res.status(status).send({message:message});
     }
 
-    export function init(app:express.Express, base:string, state:ChatStateInterface) {
-        var controller = new ChatRouteController(state);
+    export function init(app:express.Express, base:string, api:ChatApiInterface) {
+        var controller = new ChatRouteController(api);
 
         app.get(base, function (req, res) {
             controller.getMessages((err:Error, messages:string[]) => {

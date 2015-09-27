@@ -8,6 +8,7 @@ import http = require('http');
 import ws = require('ws');
 
 import ChatRoute = require('./routes/ChatRoute');
+import GameRoute = require('./routes/GameRoute');
 import Sockets = require('./sockets/Sockets');
 import State = require('./state/State');
 
@@ -30,6 +31,7 @@ async.auto({
     },
     'routes': ['app', 'db', (autoCb, results) => {
         ChatRoute.init(results.app, '/chat', results.db);
+        new GameRoute.GameRouteController(results.app, '/game', results.db);
 
         results.app.get('/', function (req, res) {
             res.send('Hello World!');
