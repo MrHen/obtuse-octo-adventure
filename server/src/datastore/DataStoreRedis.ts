@@ -2,7 +2,7 @@ import _ = require('lodash');
 import events = require('events');
 import redis = require('redis');
 
-import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, EVENTS} from './DataStoreInterfaces';
+import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, RoomDataStoreInterface, EVENTS} from './DataStoreInterfaces';
 
 module DataStoreRedisModule {
     var redisClient:redis.RedisClient = null;
@@ -25,6 +25,7 @@ module DataStoreRedisModule {
     export class RedisDataStore implements DataStoreInterface {
         public chat = new ChatRedis();
         public game = new GameRedis();
+        public room = new RoomRedis();
 
         public connect(callback:(err:Error)=>any) {
             if (redisClient) {
@@ -71,19 +72,6 @@ module DataStoreRedisModule {
         private static KEY_PLAYER = 'player';
         private static KEY_STATE = 'state';
         private static KEY_CARDS = 'cards';
-
-        public connect(callback:(err:Error)=>any) {
-            if (redisClient) {
-                return process.nextTick(() => callback(null));
-            }
-
-            try {
-                init();
-                process.nextTick(() => callback(null));
-            } catch (e) {
-                process.nextTick(() => callback(e));
-            }
-        }
 
         public getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any {
             var key = [GameRedis.KEY_GAME,
@@ -136,6 +124,67 @@ module DataStoreRedisModule {
         }
 
         public postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any {
+            callback(null);
+        }
+    }
+
+    class RoomRedis implements RoomDataStoreInterface {
+        private static KEY_ROOM = 'room';
+        private static KEY_GAME = 'player';
+        private static KEY_PLAYER = 'player';
+
+        private static roomName:string = 'demo';
+
+        deletePlayer(roomId:string, player:string, callback:(err:Error)=>any):any {
+            var key = [RoomRedis.KEY_ROOM, roomId, RoomRedis.KEY_PLAYER].join(DELIMETER);
+            var success = redisClient.srem(key, player);
+            if (!success) {
+                return callback(new Error(ERROR_UNKNOWN));
+            }
+            callback(null);
+        }
+
+        getRooms(callback:(err:Error, rooms:string[])=>any):any {
+            callback(null, [RoomRedis.roomName]);
+        }
+
+        getGame(roomId:string, callback:(err:Error, game:string)=>any):any {
+            var key = [RoomRedis.KEY_ROOM, roomId, RoomRedis.KEY_GAME].join(DELIMETER);
+            redisClient.get(key, (err, result:string) => {
+                if (err) {
+                    return callback(err, null);
+                }
+
+                callback(null, result);
+            });
+        }
+
+        getPlayers(roomId:string, callback:(err:Error, players:string[])=>any):any {
+            var key = [RoomRedis.KEY_ROOM, roomId, RoomRedis.KEY_PLAYER].join(DELIMETER);
+            redisClient.smembers(key, (err, result:string[]) => {
+                if (err) {
+                    return callback(err, null);
+                }
+
+                callback(null, result);
+            });
+        }
+
+        putPlayer(roomId:string, player:string, callback:(err:Error)=>any):any {
+            var key = [RoomRedis.KEY_ROOM, roomId, RoomRedis.KEY_PLAYER].join(DELIMETER);
+            var success = redisClient.sadd(key, player);
+            if (!success) {
+                return callback(new Error(ERROR_UNKNOWN));
+            }
+            callback(null);
+        }
+
+        setGame(roomId:string, game:string, callback:(err:Error)=>any):any {
+            var key = [RoomRedis.KEY_ROOM, roomId, RoomRedis.KEY_GAME].join(DELIMETER);
+            var success = redisClient.set(key, game);
+            if (!success) {
+                return callback(new Error(ERROR_UNKNOWN));
+            }
             callback(null);
         }
     }

@@ -1,12 +1,14 @@
 import _ = require('lodash');
 import events = require('events');
 
-import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
+import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, RoomDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
 
+// Used for local development
 module DataStoreMemory {
     export class MemoryDataStore implements DataStoreInterface {
         public chat = new ChatMemory();
         public game = new GameMemory();
+        public room = new RoomMemory();
 
         public connect(callback:(err:Error)=>any) {
             process.nextTick(() => callback(null));
@@ -43,9 +45,6 @@ module DataStoreMemory {
         }
     }
 
-    interface Dict<T> {[index:string]:T}
-
-    // Used for local development
     class GameMemory implements GameDataStoreInterface {
         private nextGameId:number = 0;
         private games:Dict<{players:Dict<{cards: string[]; state: string;}>}> = {};
@@ -104,6 +103,48 @@ module DataStoreMemory {
             callback(null);
         }
     }
+
+    class RoomMemory implements RoomDataStoreInterface {
+        private static roomName:string = 'demo';
+
+        private games:Dict<string> = {};
+
+        private players:Dict<string[]> = {};
+
+        deletePlayer(roomId:string, player:string, callback:(err:Error)=>any):any {
+            if (this.players[roomId]) {
+                this.players[roomId] = _.without(this.players[roomId], player);
+            }
+            callback(null);
+        }
+
+        getRooms(callback:(err:Error, rooms:string[])=>any):any {
+            callback(null, [RoomMemory.roomName]);
+        }
+
+        getGame(roomId:string, callback:(err:Error, game:string)=>any):any {
+            callback(null, this.games[roomId]);
+        }
+
+        getPlayers(roomId:string, callback:(err:Error, players:string[])=>any):any {
+            callback(null, this.players[roomId]);
+        }
+
+        putPlayer(roomId:string, player:string, callback:(err:Error)=>any):any {
+            if (!this.players[roomId]) {
+                this.players[roomId] = [];
+            }
+            this.players[roomId].push(player);
+            callback(null);
+        }
+
+        setGame(roomId:string, game:string, callback:(err:Error)=>any):any {
+            this.games[roomId] = game;
+            callback(null);
+        }
+    }
+
+    interface Dict<T> {[index:string]:T}
 }
 
 export = DataStoreMemory;

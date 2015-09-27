@@ -6,6 +6,17 @@ module RouteInterfaces {
         postMessage(request:{message:string}, callback:(err:Error, result:string)=>any);
     }
 
+    export interface RoomResponse {
+        game_id: string;
+        players: string[];
+    }
+
+    export interface RoomRouteInterface {
+        getRoom(roomId:string, callback:(err:Error, room:RoomResponse)=>any):any;
+        getRooms(callback:(err:Error, rooms:RoomResponse[])=>any):any;
+        postPlayer(roomId:string, callback:(err:Error, player:string)=>any):any;
+    }
+
     export interface GameResponse {
         id: string;
         players: {[name:string]:GamePlayerResponse};

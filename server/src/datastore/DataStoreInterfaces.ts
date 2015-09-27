@@ -4,6 +4,7 @@ module DataStoreInterfaces {
     export interface DataStoreInterface {
         chat:ChatDataStoreInterface;
         game:GameDataStoreInterface;
+        room:RoomDataStoreInterface;
 
         connect(callback:(err:Error)=>any);
     }
@@ -25,6 +26,15 @@ module DataStoreInterfaces {
         getGlobalChat(limit:number, callback:(err:Error, allMessages:string[])=>any):any;
         onGlobalChat(callback:(message:string)=>any):any;
         pushGlobalChat(message:string, callback:(err:Error, message:string)=>any):any;
+    }
+
+    export interface RoomDataStoreInterface {
+        deletePlayer(roomId:string, player:string, callback:(err:Error, player:string)=>any):any;
+        getRooms(callback:(err:Error, rooms:string[])=>any):any;
+        getGame(roomId:string, callback:(err:Error, game:string)=>any):any;
+        getPlayers(roomId:string, callback:(err:Error, players:string[])=>any):any;
+        putPlayer(roomId:string, player:string, callback:(err:Error, player:string)=>any):any;
+        setGame(roomId:string, game:string, callback:(err:Error)=>any):any;
     }
 
     export interface GameDataStoreInterface {
