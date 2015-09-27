@@ -65,9 +65,18 @@ async.auto({
             autoCb(null, null);
         });
     }],
-    'pubsub': ['db', 'sockets', (autoCb, results) => {
+    'pubsub': ['db', 'service', 'sockets', (autoCb, results) => {
         results.db.chat.onGlobalChat((message) => {
             results.sockets.emitGlobalChat(message);
+        });
+
+        results.service.onActionReminder((reminder) => {
+            results.sockets.emitActionReminder(reminder);
+        });
+
+        results.db.game.onPushedCard((gameId:string, player:string, card:string) => {
+            results.service.handleCardPushed(gameId, player, card);
+            results.sockets.emitCardPushed(gameId, player, card);
         });
 
         autoCb(null, null);

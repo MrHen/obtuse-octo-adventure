@@ -49,6 +49,8 @@ module DataStoreMemory {
         private nextGameId:number = 0;
         private games:Dict<{players:Dict<{cards: string[]; state: string;}>}> = {};
 
+        private emitter:events.EventEmitter = new events.EventEmitter();
+
         private getGame(gameId:string) {
             if (!this.games[gameId]) {
                 this.games[gameId] = {
@@ -100,10 +102,15 @@ module DataStoreMemory {
                 playerData.cards = [];
             }
             playerData.cards.push(card);
+            this.emitter.emit(EVENTS.PUSHEDCARD, gameId, player, card);
             callback(null);
         }
         public postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any {
             callback(null);
+        }
+
+        public onPushedCard(callback:(gameId:string, player:string, card:string)=>any) {
+            this.emitter.on(EVENTS.PUSHEDCARD, callback);
         }
     }
 

@@ -19,6 +19,8 @@ module Sockets {
 
         private static EVENT_GLOBALCHAT = 'globalchat:created';
         private static EVENT_TIME = 'time';
+        private static EVENT_ACTIONREMINDER = 'action';
+        private static EVENT_CARD = 'card';
 
         public constructor(server:http.Server, options?:SocketsConfigInterface) {
             this.config = _.defaults(options || {}, Sockets.config_defaults);
@@ -50,6 +52,19 @@ module Sockets {
             console.log("emitting chat", {clients:this.connected.length});
             _.forEach(this.connected, (client) => {
                 client.emit(Sockets.EVENT_GLOBALCHAT, message);
+            })
+        };
+
+        public emitActionReminder = (reminder:{player:string; actions:string[]}) => {
+            _.forEach(this.connected, (client) => {
+                client.emit(Sockets.EVENT_ACTIONREMINDER, JSON.stringify(reminder));
+            })
+        };
+
+        public emitCardPushed = (gameId:string, player:string, card:string) => {
+            // TODO not every user needs every update
+            _.forEach(this.connected, (client) => {
+                client.emit(Sockets.EVENT_CARD, JSON.stringify({gameId: gameId, player:player, card:card}));
             })
         }
     }

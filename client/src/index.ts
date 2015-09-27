@@ -4,6 +4,12 @@
 /// <reference path="./sockets/sockets.service.ts" />
 
 module OctoApp {
+    export interface PlayerListItem {
+        name: string;
+        state: string;
+        cards: string[];
+    }
+
     export interface OctoScope extends angular.IScope {
         globalChat: string[];
         socketDebug: string[];
@@ -13,16 +19,21 @@ module OctoApp {
 
         canEditPlayer: boolean;
 
-        player: {
-            name: string
-        };
+        player_name: string;
 
         room: ApiService.RoomResponse;
+
+        players: PlayerListItem[]
+
+        loadGame: Function;
+        loadRoom: Function;
     }
 
     export class OctoController {
         public static $inject:string[] = ["$q", "$scope", "Api", "Config", "Sockets"];
 
+        private static EVENT_ACTIONREMINDER = 'action';
+        private static EVENT_CARD = 'card';
         private static EVENT_GLOBALCHAT = 'globalchat:created';
         private static EVENT_TIME = 'time';
 
@@ -35,19 +46,21 @@ module OctoApp {
 
             this.$scope.chatSubmit = this.chatSubmit.bind(this);
 
-            if (!this.$scope.player) {
-                this.$scope.player = {
-                    name: "Player 1"
-                };
+            if (!this.$scope.player_name) {
+                this.$scope.player_name = 'player';
             }
 
             this.$scope.canEditPlayer = false;
+
+            this.$scope.loadRoom = this.loadRoom;
+            this.$scope.loadGame = this.loadGame;
 
             this.Config.load()
                 .then(() => this.initSockets())
                 .then(() => this.initApi())
                 .then(() => this.loadChat())
-                .then(() => this.loadRoom());
+                .then(() => this.loadRoom())
+                .then(() => this.loadGame());
 
             // TODO load global chat
         }
@@ -64,6 +77,8 @@ module OctoApp {
         private initSockets():angular.IPromise<void> {
             this.Sockets.init(this.Config.data.websocket_host);
 
+            this.Sockets.addEventListener(OctoController.EVENT_ACTIONREMINDER, this.socketActionReminderEvent);
+            this.Sockets.addEventListener(OctoController.EVENT_CARD, this.socketCardEvent);
             this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
 
             this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
@@ -77,17 +92,30 @@ module OctoApp {
             });
         }
 
-        private loadRoom():angular.IPromise<void> {
+        private loadRoom = ():angular.IPromise<void> => {
             return this.Api.getRooms().then((rooms:ApiService.RoomResponse[]) => {
                 this.$scope.room = rooms && rooms.length ? rooms[0] : null;
             });
-        }
+        };
+
+        private loadGame = ():angular.IPromise<void> => {
+            return this.Api.getGame(this.$scope.room.game_id).then((game:ApiService.GameResponse) => {
+                console.log('loadGame resolved', (<any>game).plain());
+                this.$scope.players = _.map(game.players, (value, key) => {
+                    return {
+                        name: key,
+                        state: value.state,
+                        cards: value.cards
+                    }
+                })
+            });
+        };
 
         private chatSubmit(form:angular.IFormController) {
             var message = this.$scope.chatMessage;
 
-            if (this.$scope.player.name) {
-                message = this.$scope.player.name + ": " + message;
+            if (this.$scope.player_name) {
+                message = this.$scope.player_name + ": " + message;
             }
 
             this.Api.postGlobalChat(message)
@@ -98,6 +126,19 @@ module OctoApp {
 
             this.$scope.chatMessage = null;
         }
+
+        private socketActionReminderEvent = (message:string) => {
+            this.$scope.socketDebug.unshift(message);
+            if (this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
+                this.$scope.socketDebug.pop();
+            }
+            this.$scope.$apply();
+        };
+
+        private socketCardEvent = (message:string) => {
+            // TODO be smarter about loading
+            this.loadGame();
+        };
 
         private socketTimeEvent = (message:string) => {
             this.$scope.socketDebug.unshift(message);

@@ -23,7 +23,8 @@ module DataStoreInterfaces {
     };
 
     export var EVENTS = {
-        GLOBALCHAT: 'globalchat:created'
+        GLOBALCHAT: 'globalchat:created',
+        PUSHEDCARD: 'card'
     };
 
     export interface ChatDataStoreInterface {
@@ -41,10 +42,13 @@ module DataStoreInterfaces {
         postGame(callback:(err:Error, gameId:string)=>any):any;
         postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error)=>any):any;
         postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any;
+
+        onPushedCard(callback:(gameId:string, player:string, card:string)=>any):any;
     }
 
     export interface RoomDataStoreInterface {
         deletePlayer(roomId:string, player:string, callback:(err:Error, player:string)=>any):any;
+        //getBurned(roomId:string, callback:(err:Error, cards:string[])=>any):any;
         getRooms(callback:(err:Error, rooms:string[])=>any):any;
         getGame(roomId:string, callback:(err:Error, game:string)=>any):any;
         getPlayers(roomId:string, callback:(err:Error, players:string[])=>any):any;

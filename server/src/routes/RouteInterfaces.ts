@@ -37,7 +37,7 @@ module RouteInterfaces {
         getGame(gameId:string, callback:(err:Error, game:GameResponse)=>any):any;
         getCurrentTurn(gameId:string, callback:(err:Error, currentTurn:GameCurrentTurnResponse)=>any):any;
         postAction(gameId:string, player:string, action:string, callback:(err:Error)=>any):any;
-        postGame(newPlayers:string[], callback:(err:Error, game:GameResponse)=>any):any;
+        //postGame(newPlayers:string[], callback:(err:Error, game:GameResponse)=>any):any;
     }
 }
 

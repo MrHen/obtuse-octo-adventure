@@ -34,9 +34,20 @@
                 </div>
                 <div ng-show="room">
                     <p>{{room.game_id}}</p>
-                    <ul>
-                        <li ng-repeat="player in room.players track by $index" ng-bind="player"></li>
-                    </ul>
+                    <table class="table">
+                        <tr>
+                            <th>Player</th>
+                            <th>State</th>
+                            <th>Cards</th>
+                            <th>Score</th>
+                        </tr>
+                        <tr ng-repeat="player in players track by $index">
+                            <td ng-bind="player.name"></td>
+                            <td ng-bind="player.state"></td>
+                            <td ng-bind="player.cards"></td>
+                            <td>?</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
 
@@ -81,9 +92,13 @@
                 </div>
             </div>
 
-            <div class="ping-panel" class="panel panel-default">
+            <div id="debug-panel" class="panel panel-default">
                 <div class="panel-heading">
                     <h2 class="panel-title">Socket pings</h2>
+                </div>
+                <div class="panel-body">
+                    <button class="btn btn-default" ng-click="loadRoom()">Load Room</button>
+                    <button class="btn btn-default" ng-click="loadGame()">Load Game</button>
                 </div>
                 <div class="panel-body">
                     <ul>

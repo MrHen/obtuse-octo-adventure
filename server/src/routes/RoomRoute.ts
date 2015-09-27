@@ -23,7 +23,7 @@ module RoomRoute {
 
         getRoom(roomId:string, callback:(err:Error, room:RoomResponse)=>any):any {
             async.auto({
-                'roomstart': (autoCb, results) => this.service.onRoomStart(roomId, autoCb),
+                'roomstart': (autoCb, results) => this.service.handleRoomStart(roomId, autoCb),
                 'game': ['roomstart', (autoCb, results) => this.api.getGame(roomId, autoCb)],
                 'players': ['roomstart', (autoCb, results) => this.api.getPlayers(roomId, autoCb)]
             }, (err, results) => {

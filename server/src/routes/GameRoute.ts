@@ -50,7 +50,7 @@ module GameRouteModule {
         public getGame(gameId:string, callback:(err:Error, game:Game)=>any):any {
             async.auto({
                 'states': (autoCb, results) => this.api.getPlayerStates(gameId, autoCb),
-                'players': ['states', (autoCb, results) => autoCb(null, _.keys(results.states))],
+                'players': ['states', (autoCb, results) => autoCb(null, _.pluck(results.states, 'player'))],
                 'cards': ['players', (autoCb, results) => {
                     async.mapLimit<string, string[]>(results.players, 3, (player, eachCb) => this.api.getPlayerCards(gameId, player, eachCb), autoCb);
                 }]
@@ -61,14 +61,16 @@ module GameRouteModule {
 
                 var players:{[name:string]:GamePlayer} = {};
 
-                _.forEach<string>(results.players, (name, key) => {
-                    players[name] = {
-                        state: results.states[name], cards: results.cards[key]
+                _.forEach<{player:string; state:string}>(results.states, (value, key) => {
+                    players[value.player] = {
+                        state: value.state,
+                        cards: results.cards[key]
                     }
                 });
 
                 var game:Game = {
-                    id: gameId, players: players
+                    id: gameId,
+                    players: players
                 };
 
                 callback(null, game);
@@ -107,46 +109,46 @@ module GameRouteModule {
             });
         }
 
-        public postGame(newPlayers:string[], callback:(err:Error, game:Game)=>any):any {
-            var players = _.map(newPlayers, (player) => player.toLowerCase());
-
-            if (_.include(players, DEALER)) {
-                return callback(new Error(GameRouteController.ERROR_INVALID_PLAYERNAME), null);
-            }
-
-            async.auto({
-                'gameId': (autoCb, results) => this.api.postGame(autoCb), 'dealer': ['gameId', (autoCb, results) => {
-                    this.api.setPlayerState(results.gameId, DEALER, PLAYER_STATES.DEALING, autoCb)
-                }],
-                'states': ['gameId', (autoCb, results) => {
-                    async.eachLimit(players, 2, (player, eachCb) => {
-                        this.api.setPlayerState(results.gameId, player, PLAYER_STATES.WAITING, eachCb)
-                    }, autoCb);
-                }]
-            }, (err, results:any) => {
-                if (err) {
-                    return callback(err, null);
-                }
-
-                var gamePlayers:{[name:string]:GamePlayer} = {};
-
-                _.forEach<string>(players, (name) => {
-                    gamePlayers[name] = {
-                        state: PLAYER_STATES.WAITING, cards: []
-                    }
-                });
-
-                gamePlayers[DEALER] = {
-                    state: PLAYER_STATES.DEALING, cards: []
-                };
-
-                var game:Game = {
-                    id: <string>results.gameId, players: gamePlayers
-                };
-
-                callback(null, game);
-            });
-        }
+        //public postGame(newPlayers:string[], callback:(err:Error, game:Game)=>any):any {
+        //    var players = _.map(newPlayers, (player) => player.toLowerCase());
+        //
+        //    if (_.include(players, DEALER)) {
+        //        return callback(new Error(GameRouteController.ERROR_INVALID_PLAYERNAME), null);
+        //    }
+        //
+        //    async.auto({
+        //        'gameId': (autoCb, results) => this.api.postGame(autoCb), 'dealer': ['gameId', (autoCb, results) => {
+        //            this.api.setPlayerState(results.gameId, DEALER, PLAYER_STATES.DEALING, autoCb)
+        //        }],
+        //        'states': ['gameId', (autoCb, results) => {
+        //            async.eachLimit(players, 2, (player, eachCb) => {
+        //                this.api.setPlayerState(results.gameId, player, PLAYER_STATES.WAITING, eachCb)
+        //            }, autoCb);
+        //        }]
+        //    }, (err, results:any) => {
+        //        if (err) {
+        //            return callback(err, null);
+        //        }
+        //
+        //        var gamePlayers:{[name:string]:GamePlayer} = {};
+        //
+        //        _.forEach<string>(players, (name) => {
+        //            gamePlayers[name] = {
+        //                state: PLAYER_STATES.WAITING, cards: []
+        //            }
+        //        });
+        //
+        //        gamePlayers[DEALER] = {
+        //            state: PLAYER_STATES.DEALING, cards: []
+        //        };
+        //
+        //        var game:Game = {
+        //            id: <string>results.gameId, players: gamePlayers
+        //        };
+        //
+        //        callback(null, game);
+        //    });
+        //}
     }
 
     function sendErrorResponse(res:express.Response, err:Error) {
@@ -206,17 +208,17 @@ module GameRouteModule {
             });
         });
 
-        app.post(base, (req, res) => {
-            var players:string[] = req.body.players;
-
-            controller.postGame(players, (err:Error, game:Game) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(game);
-            });
-        });
+        //app.post(base, (req, res) => {
+        //    var players:string[] = req.body.players;
+        //
+        //    controller.postGame(players, (err:Error, game:Game) => {
+        //        if (err) {
+        //            return sendErrorResponse(res, err);
+        //        }
+        //
+        //        res.json(game);
+        //    });
+        //});
     }
 }
 
