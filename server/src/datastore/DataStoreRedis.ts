@@ -142,6 +142,7 @@ module DataStoreRedisModule {
             var pushkey = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_PLAYER, player, GameRedis.KEY_CARDS].join(DELIMETER);
             redisClient.rpoplpush(popkey, pushkey, (err, result:string) => {
                 console.log('DataStoreRedis.rpoplpush resolved', err, result);
+                redisClient.publish(EVENTS.PUSHEDCARD, JSON.stringify({game_id:gameId, player:player, card:result}));
                 callback(err, result);
             });
         }
