@@ -106,7 +106,6 @@ module DataStoreMemory {
         }
 
         public rpoplpush(gameId:string, player:string, callback:(err:Error, card:string)=>any):any {
-            console.log('DataStoreMemory.rpoplpush', this.getGame(gameId).deck, player);
             if (!this.getGame(gameId).deck || !this.getGame(gameId).deck.length) {
                 return callback(null, null);
             }

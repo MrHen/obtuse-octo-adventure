@@ -28,7 +28,7 @@ module RoomRoute {
                 'players': ['roomstart', (autoCb, results) => this.api.getPlayers(roomId, autoCb)]
             }, (err, results) => {
                 if (err) {
-                    callback(err, null);
+                    return callback(err, null);
                 }
 
                 var response:RoomResponse = {
@@ -51,7 +51,7 @@ module RoomRoute {
                 }]
             }, (err, results) => {
                 if (err) {
-                    callback(err, null);
+                    return callback(err, null);
                 }
 
                 callback(null, results.rooms);

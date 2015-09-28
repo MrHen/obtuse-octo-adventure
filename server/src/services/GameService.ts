@@ -107,7 +107,7 @@ module GameServiceModule {
                 }],
                 'assignGame': ['new_game', (prepCb, results) => {
                     if (!results.new_game) {
-                        prepCb(null, null);
+                        return prepCb(null, null);
                     }
 
                     return this.api.room.setGame(room_id, results.new_game, prepCb);
