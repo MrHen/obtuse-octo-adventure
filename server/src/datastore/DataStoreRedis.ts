@@ -131,8 +131,9 @@ module DataStoreRedisModule {
                     return callback(err);
                 }
 
-                redisClient.lpush(key, cards, (err, result) => {
-                    console.log('DataStoreRedis.setDeck (lpush) resolved', err, result);
+                // use rpush so the cards end up in the expected order
+                redisClient.rpush(key, cards, (err, result) => {
+                    console.log('DataStoreRedis.setDeck (rpush) resolved', err, result);
                     callback(err);
                 });
             });
