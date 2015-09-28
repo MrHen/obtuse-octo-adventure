@@ -102,12 +102,12 @@ module DataStoreRedisModule {
 
         public setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any {
             var key = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_STATE].join(DELIMETER);
-            var success = redisClient.hset(key, player, state);
-
-            if (!success) {
-                return callback(new Error(ERROR_UNKNOWN));
-            }
-            callback(null);
+            var success = redisClient.hset(key, player, state, (err, result) => {
+                console.log('setPlayerState resolved', err, result);
+                if (err) {
+                    return callback(new Error(err));
+                }
+            });
         }
 
         public postGame(callback:(err:Error, gameId:string)=>any):any {
