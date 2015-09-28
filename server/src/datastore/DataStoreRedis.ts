@@ -137,16 +137,17 @@ module DataStoreRedisModule {
         }
 
         public onPushedCard(gameId:string, player:string, handler:(gameId:string, player:string, card:string)=>any) {
-            emitter.on(EVENTS.PUSHEDCARD, (card:string) => {
-                console.log("DataStoreRedis.onPushedCard resolved", gameId, player, card);
-                handler(gameId, player, card);
-            });
-
             var key = [GameRedis.KEY_GAME,
                        gameId,
                        GameRedis.KEY_PLAYER,
                        player,
                        GameRedis.KEY_CARDS].join(DELIMETER);
+
+            emitter.on(key, (card:string) => {
+                console.log("DataStoreRedis.onPushedCard resolved", gameId, player, card);
+                handler(gameId, player, card);
+            });
+
             redisSubcriber.subscribe(key);
         }
     }
