@@ -172,7 +172,7 @@ module DataStoreRedisModule {
                        GameRedis.KEY_PLAYER,
                        player,
                        GameRedis.KEY_CARDS].join(DELIMETER);
-            var success = redisClient.rpush(key, card, (err, result:number) => {
+            var success = redisClient.lpush(key, card, (err, result:number) => {
                 console.log('DataStoreRedis.postPlayerCard resolved', err, result);
 
                 redisClient.publish(EVENTS.PUSHEDCARD, JSON.stringify({game_id:gameId, player:player, card:card}));

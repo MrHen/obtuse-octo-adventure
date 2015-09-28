@@ -134,7 +134,7 @@ module DataStoreMemory {
             if (!playerData.cards) {
                 playerData.cards = [];
             }
-            playerData.cards.push(card);
+            playerData.cards.unshift(card);
             this.emitter.emit(EVENTS.PUSHEDCARD, gameId, player, card);
             callback(null, card);
         }

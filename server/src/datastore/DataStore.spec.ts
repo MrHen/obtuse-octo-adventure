@@ -204,7 +204,7 @@ describe('DataStore', () => {
                         dataStore.game.getPlayerCards(gameId, "new player", (err, result) => {
                             should.not.exist(err);
                             should.exist(result);
-                            result.should.eql(["AH", "AC"]);
+                            result.should.eql(["AC", "AH"]);
                             done();
                         });
                     });
@@ -311,6 +311,56 @@ describe('DataStore', () => {
                 });
             });
         });
+
+        describe('deck', () => {
+            it('count empty deck', (done) => {
+                dataStore.game.countDeck('game_id', (err, result) => {
+                    should.not.exist(err);
+                    should.exist(result);
+                    result.should.eql(0);
+                    done();
+                });
+            });
+
+            it('set deck', (done) => {
+                dataStore.game.setDeck('game_id', ['a','b','c'], (err) => {
+                    should.not.exist(err);
+
+                    dataStore.game.countDeck('game_id', (err, result) => {
+                        should.not.exist(err);
+                        should.exist(result);
+                        result.should.eql(3);
+                        done();
+                    });
+                });
+            });
+
+            it('rpoplpush', (done) => {
+                dataStore.game.setDeck('game_id', ['a','b','c'], (err) => {
+                    should.not.exist(err);
+
+                    dataStore.game.rpoplpush('game_id', 'player_id', (err, result:string) => {
+                        should.not.exist(err);
+                        should.exist(result);
+                        result.should.eql('c');
+
+                        dataStore.game.rpoplpush('game_id', 'player_id', (err, result:string) => {
+                            should.not.exist(err);
+                            should.exist(result);
+                            result.should.eql('b');
+
+                            dataStore.game.getPlayerCards('game_id', 'player_id', (err, cards:string[]) => {
+                                should.not.exist(err);
+                                should.exist(cards);
+                                cards.should.eql(['b', 'c']);
+
+                                done();
+                            });
+                        });
+                    });
+                });
+            });
+        })
     });
 
     describe('RoomDataStore', () => {
