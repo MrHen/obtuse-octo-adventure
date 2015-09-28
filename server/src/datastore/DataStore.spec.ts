@@ -97,12 +97,12 @@ describe('DataStore', () => {
                 dataStore.game.postGame((err:Error, createdGameId:string) => {
                     should.not.exist(err);
                     should.exist(createdGameId);
-                    createdGameId.should.eql('0');
+                    createdGameId.should.eql('1');
 
                     dataStore.game.postGame((err:Error, createdGameId:string) => {
                         should.not.exist(err);
                         should.exist(createdGameId);
-                        createdGameId.should.eql('1');
+                        createdGameId.should.eql('2');
                         done();
                     })
                 })
@@ -113,7 +113,8 @@ describe('DataStore', () => {
             it('getPlayerCards', (done) => {
                 dataStore.game.getPlayerCards("bogus game", "bogus player", (err, result) => {
                     should.not.exist(err);
-                    should.not.exist(result);
+                    should.exist(result);
+                    result.should.eql([]);
                     done();
                 });
             });
@@ -121,7 +122,8 @@ describe('DataStore', () => {
             it('getPlayerStates', (done) => {
                 dataStore.game.getPlayerStates("bogus game", (err, result) => {
                     should.not.exist(err);
-                    should.not.exist(result);
+                    should.exist(result);
+                    result.should.eql([]);
                     done();
                 });
             });
@@ -156,7 +158,8 @@ describe('DataStore', () => {
             it('get with no players', (done) => {
                 dataStore.game.getPlayerCards(gameId, "bogus player", (err, result) => {
                     should.not.exist(err);
-                    should.not.exist(result);
+                    should.exist(result);
+                    result.should.eql([]);
                     done();
                 });
             });
@@ -238,7 +241,8 @@ describe('DataStore', () => {
             it('get with no players', (done) => {
                 dataStore.game.getPlayerStates(gameId, (err, result) => {
                     should.not.exist(err);
-                    should.not.exist(result);
+                    should.exist(result);
+                    result.should.eql([]);
                     done();
                 });
             });

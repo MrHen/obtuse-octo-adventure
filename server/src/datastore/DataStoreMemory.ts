@@ -54,7 +54,7 @@ module DataStoreMemory {
     }
 
     class GameMemory implements GameDataStoreInterface {
-        private nextGameId:number = 0;
+        private nextGameId:number = 1;
         private games:Dict<{deck:string[]; players:Dict<{cards: string[]; state: string;}>}> = {};
 
         private emitter:events.EventEmitter = new events.EventEmitter();
@@ -89,7 +89,7 @@ module DataStoreMemory {
         }
 
         public getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any {
-            callback(null, this.getPlayer(gameId, player).cards);
+            callback(null, this.getPlayer(gameId, player).cards || []);
         }
 
         public getPlayerStates(gameId:string, callback:(err:Error, players:{player:string; state:string}[])=>any):any {
@@ -99,7 +99,7 @@ module DataStoreMemory {
                 return {player: key, state:value.state};
             });
 
-            callback(null, _.isEmpty(mapped) ? null : mapped);
+            callback(null, mapped);
         }
 
         public setDeck(gameId:string, cards:string[], callback:(err:Error)=>any):any {
