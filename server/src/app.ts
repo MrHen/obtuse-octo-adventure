@@ -74,8 +74,14 @@ async.auto({
             results.sockets.emitActionReminder(reminder);
         });
 
-        results.service.onPushedCard((gameId:string, player:string, card:string) => {
+        results.db.game.onPushedCard((gameId:string, player:string, card:string) => {
+            results.service.handleCardPushed(gameId, player, card);
             results.sockets.emitCardPushed(gameId, player, card);
+        });
+
+        results.db.game.onPlayerStateChange((gameId:string, player:string, state:string) => {
+            results.service.handleActionStart(gameId);
+            results.sockets.emitPlayerStateChange(gameId, player, state);
         });
 
         autoCb(null, null);

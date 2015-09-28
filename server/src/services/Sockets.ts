@@ -21,6 +21,7 @@ module Sockets {
         private static EVENT_TIME = 'time';
         private static EVENT_ACTIONREMINDER = 'action';
         private static EVENT_CARD = 'card';
+        private static EVENT_PLAYERSTATE = 'state';
 
         public constructor(server:http.Server, options?:SocketsConfigInterface) {
             this.config = _.defaults(options || {}, Sockets.config_defaults);
@@ -65,6 +66,13 @@ module Sockets {
             // TODO not every user needs every update
             _.forEach(this.connected, (client) => {
                 client.emit(Sockets.EVENT_CARD, JSON.stringify({gameId: gameId, player:player, card:card}));
+            })
+        };
+
+        public emitPlayerStateChange = (gameId:string, player:string, state:string) => {
+            // TODO not every user needs every update
+            _.forEach(this.connected, (client) => {
+                client.emit(Sockets.EVENT_PLAYERSTATE, JSON.stringify({gameId: gameId, player:player, state:state}));
             })
         }
     }

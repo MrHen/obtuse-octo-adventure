@@ -257,14 +257,10 @@ module GameServiceModule {
                     }
 
                     if (state && state !== results.state) {
-                        this.api.game.setPlayerState(gameId, player, state, autoCb);
+                        return this.api.game.setPlayerState(gameId, player, state, autoCb);
                     }
 
-                    autoCb(null, null);
-                }],
-                'loop': ['process', (autoCb, results) => {
-                    this.emitter.emit(GameServiceController.EVENTS.ACTION_LOOP, gameId);
-                    autoCb(null, null);
+                    this.handleActionStart(gameId, autoCb);
                 }]
             }, (err, results:any) => {
                 callback(err);
