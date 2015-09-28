@@ -27,6 +27,8 @@ module OctoApp {
 
         loadGame: Function;
         loadRoom: Function;
+
+        action: Function;
     }
 
     export class OctoController {
@@ -36,6 +38,7 @@ module OctoApp {
         private static EVENT_CARD = 'card';
         private static EVENT_GLOBALCHAT = 'globalchat:created';
         private static EVENT_TIME = 'time';
+        private static EVENT_PLAYERSTATE = 'state';
 
         private static MAX_PING_MESSAGES = 5;
 
@@ -54,6 +57,8 @@ module OctoApp {
 
             this.$scope.loadRoom = this.loadRoom;
             this.$scope.loadGame = this.loadGame;
+
+            this.$scope.action = this.action;
 
             this.Config.load()
                 .then(() => this.initSockets())
@@ -80,6 +85,7 @@ module OctoApp {
             this.Sockets.addEventListener(OctoController.EVENT_ACTIONREMINDER, this.socketActionReminderEvent);
             this.Sockets.addEventListener(OctoController.EVENT_CARD, this.socketCardEvent);
             this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
+            this.Sockets.addEventListener(OctoController.EVENT_PLAYERSTATE, this.socketPlayerStateChangeEvent);
 
             this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
 
@@ -127,6 +133,10 @@ module OctoApp {
             this.$scope.chatMessage = null;
         }
 
+        private action = (action:string) => {
+            this.Api.postAction(this.$scope.room.game_id, this.$scope.player_name, action);
+        }
+
         private socketActionReminderEvent = (message:string) => {
             this.$scope.socketDebug.unshift(message);
             if (this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
@@ -136,6 +146,11 @@ module OctoApp {
         };
 
         private socketCardEvent = (message:string) => {
+            // TODO be smarter about loading
+            this.loadGame();
+        };
+
+        private socketPlayerStateChangeEvent = (message:string) => {
             // TODO be smarter about loading
             this.loadGame();
         };

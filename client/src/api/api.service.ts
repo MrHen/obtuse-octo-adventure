@@ -34,12 +34,16 @@ module ApiService {
             return this.Restangular.all('chat').getList();
         }
 
-        postGlobalChat(message:string):angular.IPromise<string[]> {
-            return this.Restangular.all('chat').post({message:message});
-        }
-
         getRooms():angular.IPromise<RoomResponse[]> {
             return this.Restangular.all('rooms').getList();
+        }
+
+        postAction(game_id:string, player:string, action:string):angular.IPromise<void> {
+            return this.Restangular.one('game', game_id).post('action', {player:player, action:action});
+        }
+
+        postGlobalChat(message:string):angular.IPromise<string[]> {
+            return this.Restangular.all('chat').post({message:message});
         }
     }
 

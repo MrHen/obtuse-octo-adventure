@@ -10,7 +10,7 @@ import {GameRouteInterface} from './RouteInterfaces.ts';
 
 module GameRouteModule {
     var PLAYER_STATES = {
-        CURRENT: 'current', DEALING: 'deal', DONE: 'done', WAITING: 'wait'
+        CURRENT: 'current', DEALING: 'deal', DONE: 'stay', WAITING: 'wait'
     };
 
     var PLAYER_ACTIONS = {
@@ -102,10 +102,24 @@ module GameRouteModule {
                     callback(err);
                 }
 
-                var state = _.find<{player:string; state:string}>(states, "state", player);
+                var state = _.find<{player:string; state:string}>(states, "player", player).state;
                 console.log("TODO: Do something", {action: action, state: state});
 
-                callback(null);
+                if (action === PLAYER_ACTIONS.HIT) {
+                    if (state !== PLAYER_STATES.CURRENT) {
+                        return callback(new Error(GameRouteController.ERROR_INVALID_TURN));
+                    }
+                    return this.api.rpoplpush(gameId, player, callback);
+                }
+
+                if (action === PLAYER_ACTIONS.STAY) {
+                    if (state !== PLAYER_STATES.CURRENT) {
+                        return callback(new Error(GameRouteController.ERROR_INVALID_TURN));
+                    }
+                    return this.api.setPlayerState(gameId, player, PLAYER_STATES.DONE, callback);
+                }
+
+                return callback(new Error(GameRouteController.ERROR_INVALID_ACTION));
             });
         }
 
@@ -182,19 +196,7 @@ module GameRouteModule {
             });
         });
 
-        app.get(base + '/:game_id', (req, res) => {
-            var gameId = req.params.game_id;
-
-            controller.getGame(gameId, (err:Error, game:Game) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(game);
-            });
-        });
-
-        app.post(base + '/:game_id/actions', (req, res) => {
+        app.post(base + '/:game_id/action', (req, res) => {
             var gameId = req.params.game_id;
             var player = req.body.player;
             var action = req.body.action;
@@ -205,6 +207,18 @@ module GameRouteModule {
                 }
 
                 res.json(action);
+            });
+        });
+
+        app.get(base + '/:game_id', (req, res) => {
+            var gameId = req.params.game_id;
+
+            controller.getGame(gameId, (err:Error, game:Game) => {
+                if (err) {
+                    return sendErrorResponse(res, err);
+                }
+
+                res.json(game);
             });
         });
 

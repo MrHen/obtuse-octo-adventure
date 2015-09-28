@@ -47,13 +47,22 @@ module DataStoreMemory {
 
     class GameMemory implements GameDataStoreInterface {
         private nextGameId:number = 0;
-        private games:Dict<{players:Dict<{cards: string[]; state: string;}>}> = {};
+        private games:Dict<{deck:string[]; players:Dict<{cards: string[]; state: string;}>}> = {};
 
         private emitter:events.EventEmitter = new events.EventEmitter();
+
+        public countDeck(gameId:string, callback:(err:Error, count:number)=>any):any {
+            if (!this.getGame(gameId).deck) {
+                return callback(null, 0);
+            }
+
+            callback(null, this.getGame(gameId).deck.length);
+        }
 
         private getGame(gameId:string) {
             if (!this.games[gameId]) {
                 this.games[gameId] = {
+                    deck: null,
                     players: {}
                 }
             }
@@ -85,17 +94,33 @@ module DataStoreMemory {
             callback(null, _.isEmpty(mapped) ? null : mapped);
         }
 
+        public setDeck(gameId:string, cards:string[], callback:(err:Error)=>any):any {
+            console.log('DataStoreMemory.setDeck', gameId, cards);
+            this.getGame(gameId).deck = _.clone(cards);
+            callback(null);
+        }
+
         public setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any {
             this.getPlayer(gameId, player).state = state;
+            this.emitter.emit(EVENTS.PLAYERSTATE, gameId, player, state);
             callback(null);
+        }
+
+        public rpoplpush(gameId:string, player:string, callback:(err:Error, card:string)=>any):any {
+            if (!this.getGame(gameId).deck || !this.getGame(gameId).deck.length) {
+                return callback(null, null);
+            }
+
+            var card:string = this.getGame(gameId).deck.pop();
+            this.postPlayerCard(gameId, player, card, callback);
         }
 
         public postGame(callback:(err:Error, gameId:string)=>any):any {
             callback(null, "" + this.nextGameId++);
         }
-        public postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error)=>any):any {
+        public postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error, card:string)=>any):any {
             if (!card) {
-                return callback(new Error(ERRORS.GAME.INVALID_CARD));
+                return callback(new Error(ERRORS.GAME.INVALID_CARD), null);
             }
             var playerData = this.getPlayer(gameId, player);
             if (!playerData.cards) {
@@ -103,14 +128,18 @@ module DataStoreMemory {
             }
             playerData.cards.push(card);
             this.emitter.emit(EVENTS.PUSHEDCARD, gameId, player, card);
-            callback(null);
+            callback(null, card);
         }
         public postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any {
             callback(null);
         }
 
-        public onPushedCard(callback:(gameId, player, card:string)=>any) {
+        public onPushedCard(callback:(gameId:string, player:string, card:string)=>any) {
             this.emitter.on(EVENTS.PUSHEDCARD, callback);
+        }
+
+        public onPlayerStateChange(callback:(gameId:string, player:string, state:string)=>any) {
+            this.emitter.on(EVENTS.PLAYERSTATE, callback);
         }
     }
 

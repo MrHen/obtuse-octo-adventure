@@ -78,6 +78,16 @@ module DataStoreRedisModule {
         private static KEY_STATE = 'state';
         private static KEY_CARDS = 'cards';
 
+        public countDeck(gameId:string, callback:(err:Error, count:number)=>any):any {
+            var key = [GameRedis.KEY_GAME,
+                       gameId,
+                       GameRedis.KEY_CARDS].join(DELIMETER);
+            redisClient.llen(key, (err, result:number) => {
+                console.log('DataStoreRedis.setDeck countDeck', err, result);
+                callback(err, result);
+            });
+        }
+
         public getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any {
             var key = [GameRedis.KEY_GAME,
                        gameId,
@@ -101,6 +111,21 @@ module DataStoreRedisModule {
             });
         }
 
+        public setDeck(gameId:string, cards:string[], callback:(err:Error)=>any):any {
+            var key = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_CARDS].join(DELIMETER);
+            redisClient.del(key, (err, result) => {
+                console.log('DataStoreRedis.setDeck (del) resolved', err, result);
+                if (err) {
+                    return callback(err);
+                }
+
+                redisClient.lpush(key, cards, (err, result) => {
+                    console.log('DataStoreRedis.setDeck (lpush) resolved', err, result);
+                    callback(err);
+                });
+            });
+        }
+
         public setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any {
             var key = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_STATE].join(DELIMETER);
             var success = redisClient.hset(key, player, state, (err, result) => {
@@ -108,6 +133,16 @@ module DataStoreRedisModule {
                 if (err) {
                     return callback(new Error(err));
                 }
+                redisClient.publish(EVENTS.PLAYERSTATE, JSON.stringify({game_id:gameId, player:player, state:state}));
+            });
+        }
+
+        public rpoplpush(gameId:string, player:string, callback:(err:Error, card:string)=>any):any {
+            var popkey = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_CARDS].join(DELIMETER);
+            var pushkey = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_PLAYER, player, GameRedis.KEY_CARDS].join(DELIMETER);
+            redisClient.rpoplpush(popkey, pushkey, (err, result:string) => {
+                console.log('DataStoreRedis.rpoplpush resolved', err, result);
+                callback(err, result);
             });
         }
 
@@ -141,12 +176,22 @@ module DataStoreRedisModule {
 
         public onPushedCard(handler:(gameId:string, player:string, card:string)=>any) {
             emitter.on(EVENTS.PUSHEDCARD, (message:string) => {
-                console.log("DataStoreRedis.onPushedCard resolved", data);
+                console.log("DataStoreRedis.onPushedCard resolved", message);
                 var data = JSON.parse(message);
                 handler(data.game_id, data.player, data.card);
             });
 
             redisSubcriber.subscribe(EVENTS.PUSHEDCARD);
+        }
+
+        public onPlayerStateChange(handler:(gameId:string, player:string, state:string)=>any) {
+            emitter.on(EVENTS.PLAYERSTATE, (message:string) => {
+                console.log("DataStoreRedis.onPlayerStateChange resolved", message);
+                var data = JSON.parse(message);
+                handler(data.game_id, data.player, data.state);
+            });
+
+            redisSubcriber.subscribe(EVENTS.PLAYERSTATE);
         }
     }
 
