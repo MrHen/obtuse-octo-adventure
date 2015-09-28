@@ -12,7 +12,7 @@ module GameServiceModule {
     }
 
     export class GameServiceController implements RoomEventController {
-        private static ACTION_DELAY:number = 5000; // time between actions controlled by game (e.g., dealer)
+        private static ACTION_DELAY:number = 2000; // time between actions controlled by game (e.g., dealer)
 
         public static PLAYER_STATES = {
             BUST: 'bust',
@@ -30,9 +30,28 @@ module GameServiceModule {
 
         public static MAX = 21;
 
+        public static DECK_COUNT = 1;
+        public static CARD_SUITS = ['H', 'C'];//, 'D', 'S'];
+        public static CARD_VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'];
+        private static _DECK:string[] = null;
+        public static get DECK():string[] {
+            if (!GameServiceController._DECK) {
+                var cards:string[] = _.flatten(_.map<string, string[]>(GameServiceController.CARD_VALUES, (value) => {
+                    return _.map(GameServiceController.CARD_SUITS, (suit) => value + suit);
+                }));
+
+                var all = _.clone(cards);
+                for(var i = 1; i < GameServiceController.DECK_COUNT; i++) {
+                    all.concat(_.clone(cards));
+                }
+                GameServiceController._DECK = all;
+            }
+            return GameServiceController._DECK;
+        }
+
         private static EVENTS = {
             ACTION_REMINDER: 'action:reminder',
-            ACTION_START: 'action:start',
+            ACTION_LOOP: 'action:start',
             PUSH_CARD: 'card'
         };
 
@@ -46,6 +65,11 @@ module GameServiceModule {
             this.api = api;
 
             this.onActionStart((room_id) => this.handleActionStart(room_id));
+        }
+
+        public handleShuffle(game:string, callback:(err:Error)=>any) {
+            var newDeck = _.shuffle<string>(GameServiceController.DECK);
+            this.api.game.setDeck(game, newDeck, callback);
         }
 
         public handleRoomStart(room_id, callback:(err:Error)=>any) {
@@ -66,20 +90,27 @@ module GameServiceModule {
                 },
                 'new_game': ['existing_game', (prepCb, results) => {
                     if (results.existing_game) {
-                        return prepCb(null, results.existing_game);
+                        return prepCb(null, null);
                     }
 
                     this.api.game.postGame(prepCb);
                 }],
-                'assignGame': ['existing_game', 'new_game', (prepCb, results) => {
-                    if (results.existing_game === results.new_game) {
+                'assignGame': ['new_game', (prepCb, results) => {
+                    if (!results.new_game) {
                         prepCb(null, null);
                     }
 
                     return this.api.room.setGame(room_id, results.new_game, prepCb);
                 }],
-                'player_states': ['players', 'existing_game', 'new_game', (prepCb, results) => {
-                    if (results.existing_game === results.new_game) {
+                'shuffle': ['new_game', (prepCb, results) => {
+                    if (!results.new_game) {
+                        prepCb(null, null);
+                    }
+
+                    this.handleShuffle(results.new_game, prepCb);
+                }],
+                'player_states': ['players', 'new_game', (prepCb, results) => {
+                    if (!results.new_game) {
                         return prepCb(null, null);
                     }
 
@@ -93,8 +124,8 @@ module GameServiceModule {
                     });
                     prepCb(null, null);
                 }],
-                'action_start': ['player_states', (prepCb, results) => {
-                    this.emitter.emit(GameServiceController.EVENTS.ACTION_START, results.new_game);
+                'action_start': ['player_states', 'new_game', 'existing_game', (prepCb, results) => {
+                    this.emitter.emit(GameServiceController.EVENTS.ACTION_LOOP, results.new_game || results.existing_game);
                     prepCb(null, null);
                 }]
             }, (err, results:any) => {
@@ -193,11 +224,11 @@ module GameServiceModule {
 
             async.auto({
                 'deal': [(autoCb, results) => {
-                    this.api.game.postPlayerCard(game_id, player, "XX", autoCb);
+                    this.api.game.rpoplpush(game_id, player, autoCb);
                 }],
                 'loop': ['deal', (autoCb, results) => {
                     this.setActionTimer(() => {
-                        this.emitter.emit(GameServiceController.EVENTS.ACTION_START, game_id);
+                        this.emitter.emit(GameServiceController.EVENTS.ACTION_LOOP, game_id);
                     });
                     autoCb(null, null);
                 }]
@@ -220,7 +251,7 @@ module GameServiceModule {
         }
 
         public onActionStart(callback:(room_id)=>any) {
-            this.emitter.on(GameServiceController.EVENTS.ACTION_START, callback);
+            this.emitter.on(GameServiceController.EVENTS.ACTION_LOOP, callback);
         }
 
         public onPushedCard(callback:(gameId:string, player:string, card:string)=>any) {

@@ -34,10 +34,15 @@ module DataStoreInterfaces {
     }
 
     export interface GameDataStoreInterface {
+        countDeck(gameId:string, callback:(err:Error, count:number)=>any):any;
+
         getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any;
         getPlayerStates(gameId:string, callback:(err:Error, players:{player:string; state:string}[])=>any):any;
 
+        setDeck(gameId:string, cards:string[], callback:(err:Error)=>any):any;
         setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any;
+
+        rpoplpush(gameId:string, player:string, callback:(err:Error, card:string)=>any):any;
 
         postGame(callback:(err:Error, gameId:string)=>any):any;
         postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error)=>any):any;
