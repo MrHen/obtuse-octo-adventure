@@ -188,12 +188,12 @@ module GameServiceModule {
                     }
 
                     var dealer = _.find<{player:string; state:string}>(results.states, "player", GameServiceController.DEALER);
-                    if (dealer.state === GameServiceController.PLAYER_STATES.WAITING) {
+                    if (dealer && dealer.state === GameServiceController.PLAYER_STATES.WAITING) {
                         console.log('handleActionStart chose dealer');
                         return this.api.game.setPlayerState(gameId, dealer.player, GameServiceController.PLAYER_STATES.CURRENT, autoCb);
                     }
 
-                    if (dealer.state === GameServiceController.PLAYER_STATES.CURRENT) {
+                    if (dealer && dealer.state === GameServiceController.PLAYER_STATES.CURRENT) {
                         console.log('handleActionStart chose dealer (hit)');
                         this.setActionTimer(() => {
                             return this.handleDeal(gameId, dealer.player, autoCb);
