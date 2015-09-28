@@ -67,6 +67,16 @@ module GameServiceModule {
             this.onActionStart((room_id) => this.handleActionStart(room_id));
         }
 
+        public static valueForCards(cards:string[]):number {
+            return _.sum(cards, (card) => {
+                if (+card > 0) {
+                    return +card;
+                }
+
+                return card === 'A' ? 11 : 10;
+            })
+        }
+
         public handleShuffle(game:string, callback:(err:Error)=>any) {
             var newDeck = _.shuffle<string>(GameServiceController.DECK);
             this.api.game.setDeck(game, newDeck, callback);
@@ -181,7 +191,7 @@ module GameServiceModule {
                     this.api.game.getPlayerCards(gameId, player, autoCb);
                 }],
                 'score': ['cards', (autoCb, results) => {
-                    autoCb(null, results.cards.length);
+                    autoCb(null, GameServiceController.valueForCards(results.cards));
                 }],
                 'states': [(autoCb, results) => {
                     this.api.game.getPlayerStates(gameId, autoCb)
@@ -197,7 +207,7 @@ module GameServiceModule {
                         return this.api.game.setPlayerState(gameId, player, GameServiceController.PLAYER_STATES.WAITING, autoCb);
                     }
 
-                    if (results.state === GameServiceController.PLAYER_STATES.CURRENT && results.score > GameServiceController.MAX) {
+                    if (results.score > GameServiceController.MAX) {
                         console.log('handleCardPushed saw bust');
                         return this.api.game.setPlayerState(gameId, player, GameServiceController.PLAYER_STATES.BUST, autoCb);
                     }

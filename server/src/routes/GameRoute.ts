@@ -102,10 +102,12 @@ module GameRouteModule {
                     callback(err);
                 }
 
-                var state = _.find<{player:string; state:string}>(states, "state", player);
+                var state = _.find<{player:string; state:string}>(states, "player", player).state;
                 console.log("TODO: Do something", {action: action, state: state});
 
-                callback(null);
+                if (action === 'hit') {
+                    this.api.rpoplpush(gameId, player, callback);
+                }
             });
         }
 
@@ -182,19 +184,7 @@ module GameRouteModule {
             });
         });
 
-        app.get(base + '/:game_id', (req, res) => {
-            var gameId = req.params.game_id;
-
-            controller.getGame(gameId, (err:Error, game:Game) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(game);
-            });
-        });
-
-        app.post(base + '/:game_id/actions', (req, res) => {
+        app.post(base + '/:game_id/action', (req, res) => {
             var gameId = req.params.game_id;
             var player = req.body.player;
             var action = req.body.action;
@@ -205,6 +195,18 @@ module GameRouteModule {
                 }
 
                 res.json(action);
+            });
+        });
+
+        app.get(base + '/:game_id', (req, res) => {
+            var gameId = req.params.game_id;
+
+            controller.getGame(gameId, (err:Error, game:Game) => {
+                if (err) {
+                    return sendErrorResponse(res, err);
+                }
+
+                res.json(game);
             });
         });
 
