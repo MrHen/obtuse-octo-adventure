@@ -211,6 +211,22 @@ describe('DataStore', () => {
                 });
             });
 
+            it('post card event', (done) => {
+                dataStore.game.onPushedCard((game:string, player:string, card:string) => {
+                    should.exist(game);
+                    game.should.eql(gameId);
+                    should.exist(player);
+                    player.should.eql("new player");
+                    should.exist(card);
+                    card.should.eql("AH");
+                    done();
+                });
+
+                dataStore.game.postPlayerCard(gameId, "new player", "AH", (err) => {
+                    should.not.exist(err);
+                });
+            });
+
             it('post empty card', (done) => {
                 dataStore.game.postPlayerCard(gameId, "new player", "", (err) => {
                     should.exist(err);
@@ -294,6 +310,22 @@ describe('DataStore', () => {
                             done();
                         });
                     });
+                });
+            });
+
+            it('change state event', (done) => {
+                dataStore.game.onPlayerStateChange((game:string, player:string, state:string) => {
+                    should.exist(game);
+                    game.should.eql(gameId);
+                    should.exist(player);
+                    player.should.eql("new player");
+                    should.exist(state);
+                    state.should.eql("state");
+                    done();
+                });
+
+                dataStore.game.setPlayerState(gameId, "new player", "state", (err) => {
+                    should.not.exist(err);
                 });
             });
 
