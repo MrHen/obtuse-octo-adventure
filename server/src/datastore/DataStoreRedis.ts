@@ -2,7 +2,7 @@ import _ = require('lodash');
 import events = require('events');
 import redis = require('redis');
 
-import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, RoomDataStoreInterface, EVENTS} from './DataStoreInterfaces';
+import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, RoomDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
 
 module DataStoreRedisModule {
     var redisClient:redis.RedisClient = null;
@@ -50,6 +50,10 @@ module DataStoreRedisModule {
         }
 
         public pushGlobalChat(message:string, callback:(err:Error, message:string)=>any) {
+            if (!message) {
+                return callback(new Error(ERRORS.CHAT.INVALID_MESSAGE), null);
+            }
+
             var success = redisClient.rpush(ChatRedis.KEY_GLOBALCHAT, message);
             if (!success) {
                 return callback(new Error(ERROR_UNKNOWN), null);
@@ -112,6 +116,10 @@ module DataStoreRedisModule {
         }
 
         public postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error)=>any):any {
+            if (!card) {
+                return callback(new Error(ERRORS.GAME.INVALID_CARD));
+            }
+
             var key = [GameRedis.KEY_GAME,
                        gameId,
                        GameRedis.KEY_PLAYER,
@@ -185,13 +193,17 @@ module DataStoreRedisModule {
             });
         }
 
-        putPlayer(roomId:string, player:string, callback:(err:Error)=>any):any {
+        putPlayer(roomId:string, player:string, callback:(err:Error, player:string)=>any):any {
+            if (!player) {
+                return callback(new Error(ERRORS.ROOM.INVALID_PLAYER), null);
+            }
+
             var key = [RoomRedis.KEY_ROOM, roomId, RoomRedis.KEY_PLAYER].join(DELIMETER);
             var success = redisClient.sadd(key, player);
             if (!success) {
-                return callback(new Error(ERROR_UNKNOWN));
+                return callback(new Error(ERROR_UNKNOWN), null);
             }
-            callback(null);
+            callback(null, player);
         }
 
         setGame(roomId:string, game:string, callback:(err:Error)=>any):any {
