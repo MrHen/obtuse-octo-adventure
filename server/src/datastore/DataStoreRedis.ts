@@ -18,6 +18,7 @@ module DataStoreRedisModule {
         redisSubcriber = redis.createClient(process.env.REDIS_URL);
 
         redisSubcriber.on('message', (channel, message) => {
+            console.log("DataStoreRedis pubsub hit", channel, message);
             emitter.emit(channel, message);
         });
     }
