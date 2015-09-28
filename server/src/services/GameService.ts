@@ -28,6 +28,7 @@ module GameServiceModule {
 
         public static DEALER = 'dealer';
 
+        public static DEALER_STAY = 17;
         public static MAX = 21;
 
         public static DECK_COUNT = 1;
@@ -69,11 +70,11 @@ module GameServiceModule {
 
         public static valueForCards(cards:string[]):number {
             return _.sum(cards, (card) => {
-                if (+card > 0) {
-                    return +card;
+                if (+card[0] > 0) {
+                    return +card[0];
                 }
 
-                return card === 'A' ? 11 : 10;
+                return card[0] === 'A' ? 11 : 10;
             })
         }
 
@@ -163,11 +164,14 @@ module GameServiceModule {
                     var dealing = _.find<{player:string; state:string}>(results.states, "state", GameServiceController.PLAYER_STATES.DEALING);
                     if (dealing) {
                         console.log('handleActionStart chose dealing', dealing);
-                        return this.handleDeal(gameId, dealing.player, autoCb);
+                        this.setActionTimer(() => {
+                            return this.handleDeal(gameId, dealing.player, autoCb);
+                        });
+                        return autoCb(null, null);
                     }
 
                     var current = _.find<{player:string; state:string}>(results.states, "state", GameServiceController.PLAYER_STATES.CURRENT);
-                    if (current) {
+                    if (current && current.player !== GameServiceController.DEALER) {
                         console.log('handleActionStart chose current', current);
                         var action = {player: current, action: [GameServiceController.PLAYER_ACTIONS.HIT, GameServiceController.PLAYER_ACTIONS.STAY]};
                         this.emitter.emit(GameServiceController.EVENTS.ACTION_REMINDER, action);
@@ -180,6 +184,19 @@ module GameServiceModule {
                     if (waiting) {
                         console.log('handleActionStart chose waiting', waiting);
                         return this.api.game.setPlayerState(gameId, waiting.player, GameServiceController.PLAYER_STATES.CURRENT, autoCb);
+                    }
+
+                    var dealer = _.find<{player:string; state:string}>(results.states, "player", GameServiceController.DEALER);
+                    if (dealer.state === GameServiceController.PLAYER_STATES.WAITING) {
+                        console.log('handleActionStart chose dealer');
+                        return this.api.game.setPlayerState(gameId, dealer.player, GameServiceController.PLAYER_STATES.CURRENT, autoCb);
+                    }
+
+                    if (dealer.state === GameServiceController.PLAYER_STATES.CURRENT) {
+                        console.log('handleActionStart chose dealer (hit)');
+                        this.setActionTimer(() => {
+                            return this.handleDeal(gameId, dealer.player, autoCb);
+                        });
                     }
 
                     console.log('handleActionStart chose nothing');
@@ -217,20 +234,39 @@ module GameServiceModule {
                 }],
                 'process': ['cards', 'state', (autoCb, results) => {
                     console.log('handleCardPushed process', results);
-                    if (results.state === GameServiceController.PLAYER_STATES.DEALING && results.cards.length >= 2) {
-                        console.log('handleCardPushed saw waiting');
-                        return this.api.game.setPlayerState(gameId, player, GameServiceController.PLAYER_STATES.WAITING, autoCb);
+
+                    var state = null;
+                    if (results.cards.length < 2) {
+                        console.log('handleCardPushed saw dealing');
+                        state = GameServiceController.PLAYER_STATES.DEALING;
                     }
 
-                    if (results.score > GameServiceController.MAX) {
+                    if (!state && results.score > GameServiceController.MAX) {
                         console.log('handleCardPushed saw bust');
-                        return this.api.game.setPlayerState(gameId, player, GameServiceController.PLAYER_STATES.BUST, autoCb);
+                        state = GameServiceController.PLAYER_STATES.BUST;
                     }
 
-                    autoCb(null, null)
+                    if (!state && player === GameServiceController.DEALER && results.score > GameServiceController.DEALER_STAY) {
+                        console.log('handleCardPushed saw dealer stay');
+                        state = GameServiceController.PLAYER_STATES.STAY;
+                    }
+
+                    if (!state && results.state === GameServiceController.PLAYER_STATES.DEALING && results.cards.length >= 2) {
+                        state = GameServiceController.PLAYER_STATES.WAITING;
+                    }
+
+                    if (state && state !== results.state) {
+                        this.api.game.setPlayerState(gameId, player, state, autoCb);
+                    }
+
+                    autoCb(null, null);
                 }],
                 'event': ['process', (autoCb, results) => {
                     this.emitter.emit(GameServiceController.EVENTS.PUSH_CARD, gameId, player, card);
+                    autoCb(null, null);
+                }],
+                'loop': ['process', (autoCb, results) => {
+                    this.emitter.emit(GameServiceController.EVENTS.ACTION_LOOP, gameId);
                     autoCb(null, null);
                 }]
             }, (err, results:any) => {
@@ -250,12 +286,6 @@ module GameServiceModule {
             async.auto({
                 'deal': [(autoCb, results) => {
                     this.api.game.rpoplpush(game_id, player, autoCb);
-                }],
-                'loop': ['deal', (autoCb, results) => {
-                    this.setActionTimer(() => {
-                        this.emitter.emit(GameServiceController.EVENTS.ACTION_LOOP, game_id);
-                    });
-                    autoCb(null, null);
                 }]
             }, (err, results:any) => {
                 callback(err);
