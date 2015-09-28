@@ -159,15 +159,30 @@ module GameServiceModule {
                     this.api.game.getPlayerStates(gameId, autoCb)
                 }],
                 'next_action': ['states', (autoCb, results) => {
-                    console.log('handleActionStart next_action for ' + gameId, results);
+                    console.log('handleActionStart next_action', gameId, results);
                     var dealing = _.find<{player:string; state:string}>(results.states, "state", GameServiceController.PLAYER_STATES.DEALING);
                     if (dealing) {
+                        console.log('handleActionStart chose dealing', dealing);
                         return this.handleDeal(gameId, dealing.player, autoCb);
                     }
 
                     var current = _.find<{player:string; state:string}>(results.states, "state", GameServiceController.PLAYER_STATES.CURRENT);
-                    var action = {player: current, action: [GameServiceController.PLAYER_ACTIONS.HIT, GameServiceController.PLAYER_ACTIONS.STAY]};
-                    this.emitter.emit(GameServiceController.EVENTS.ACTION_REMINDER, action);
+                    if (current) {
+                        console.log('handleActionStart chose current', current);
+                        var action = {player: current, action: [GameServiceController.PLAYER_ACTIONS.HIT, GameServiceController.PLAYER_ACTIONS.STAY]};
+                        this.emitter.emit(GameServiceController.EVENTS.ACTION_REMINDER, action);
+                        return autoCb(null, null);
+                    }
+
+                    var waiting = _.find<{player:string; state:string}>(results.states, (value) => {
+                        return value.player !== GameServiceController.DEALER && value.state === GameServiceController.PLAYER_STATES.WAITING
+                    });
+                    if (waiting) {
+                        console.log('handleActionStart chose waiting', waiting);
+                        return this.api.game.setPlayerState(gameId, waiting.player, GameServiceController.PLAYER_STATES.CURRENT, autoCb);
+                    }
+
+                    console.log('handleActionStart chose nothing');
                     autoCb(null, null);
                 }]
             }, (err, results:any) => {

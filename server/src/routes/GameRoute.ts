@@ -105,7 +105,10 @@ module GameRouteModule {
                 var state = _.find<{player:string; state:string}>(states, "player", player).state;
                 console.log("TODO: Do something", {action: action, state: state});
 
-                if (action === 'hit') {
+                if (action === PLAYER_ACTIONS.HIT) {
+                    if (state !== PLAYER_STATES.CURRENT) {
+                        return callback(new Error(GameRouteController.ERROR_INVALID_TURN));
+                    }
                     this.api.rpoplpush(gameId, player, callback);
                 }
             });
