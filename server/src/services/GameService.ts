@@ -89,7 +89,7 @@ module GameServiceModule {
                 }],
                 'card_push_listeners': ['players', 'new_game', (prepCb, results) => {
                     _.forEach(results.players, (player:string) => {
-                        this.api.game.onPushedCard(results.new_game, player, this.handleCardPushed);
+                        this.api.game.onPushedCard(this.handleCardPushed);
                     });
                     prepCb(null, null);
                 }],

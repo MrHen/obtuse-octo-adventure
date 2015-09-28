@@ -109,7 +109,7 @@ module DataStoreMemory {
             callback(null);
         }
 
-        public onPushedCard(gameId:string, player:string, callback:(gameId, player, card:string)=>any) {
+        public onPushedCard(callback:(gameId, player, card:string)=>any) {
             this.emitter.on(EVENTS.PUSHEDCARD, callback);
         }
     }

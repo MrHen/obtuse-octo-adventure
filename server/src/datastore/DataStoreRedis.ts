@@ -129,6 +129,8 @@ module DataStoreRedisModule {
                        GameRedis.KEY_CARDS].join(DELIMETER);
             var success = redisClient.rpush(key, card, (err, result:number) => {
                 console.log('DataStoreRedis.postPlayerCard resolved', err, result);
+
+                redisClient.publish(EVENTS.PUSH_CARD, JSON.stringify({game_id:gameId, player:player, card:card}));
                 return callback(err, result);
             });
         }
@@ -137,19 +139,14 @@ module DataStoreRedisModule {
             callback(null);
         }
 
-        public onPushedCard(gameId:string, player:string, handler:(gameId:string, player:string, card:string)=>any) {
-            var key = [GameRedis.KEY_GAME,
-                       gameId,
-                       GameRedis.KEY_PLAYER,
-                       player,
-                       GameRedis.KEY_CARDS].join(DELIMETER);
-
-            emitter.on(key, (card:string) => {
-                console.log("DataStoreRedis.onPushedCard resolved", gameId, player, card);
-                handler(gameId, player, card);
+        public onPushedCard(handler:(gameId:string, player:string, card:string)=>any) {
+            emitter.on(EVENTS.PUSH_CARD, (message:string) => {
+                console.log("DataStoreRedis.onPushedCard resolved", data);
+                var data = JSON.parse(message);
+                handler(data.game_id, data.player, data.card);
             });
 
-            redisSubcriber.subscribe(key);
+            redisSubcriber.subscribe(EVENTS.PUSH_CARD);
         }
     }
 
