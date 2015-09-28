@@ -88,14 +88,14 @@ module DataStoreRedisModule {
 
         public getPlayerStates(gameId:string, callback:(err:Error, players:{player:string; state:string}[])=>any):any {
             var key = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_STATE].join(DELIMETER);
-            redisClient.hgetall(key, (err, result:string[]) => {
-                console.warn('DataStoreRedis.getPlayerStates resolved', result);
+            redisClient.hgetall(key, (err, result:{[player:string]:string}) => {
                 if (err) {
                     return callback(err, null);
                 }
+                console.log('DataStoreRedis.getPlayerStates resolved', result);
 
-                callback(null, _.map(_.chunk(result, 2), (chunk) => {
-                    return {player: chunk[0], state: chunk[1]};
+                callback(null, _.map(result, (value, key) => {
+                    return {player: key, state: value};
                 }));
             });
         }
