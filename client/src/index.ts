@@ -38,6 +38,7 @@ module OctoApp {
         private static EVENT_CARD = 'card';
         private static EVENT_GLOBALCHAT = 'globalchat:created';
         private static EVENT_TIME = 'time';
+        private static EVENT_PLAYERSTATE = 'state';
 
         private static MAX_PING_MESSAGES = 5;
 
@@ -84,6 +85,7 @@ module OctoApp {
             this.Sockets.addEventListener(OctoController.EVENT_ACTIONREMINDER, this.socketActionReminderEvent);
             this.Sockets.addEventListener(OctoController.EVENT_CARD, this.socketCardEvent);
             this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
+            this.Sockets.addEventListener(OctoController.EVENT_PLAYERSTATE, this.socketPlayerStateChangeEvent);
 
             this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
 
@@ -144,6 +146,11 @@ module OctoApp {
         };
 
         private socketCardEvent = (message:string) => {
+            // TODO be smarter about loading
+            this.loadGame();
+        };
+
+        private socketPlayerStateChangeEvent = (message:string) => {
             // TODO be smarter about loading
             this.loadGame();
         };
