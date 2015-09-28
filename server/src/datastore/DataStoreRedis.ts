@@ -153,7 +153,7 @@ module DataStoreRedisModule {
 
     class RoomRedis implements RoomDataStoreInterface {
         private static KEY_ROOM = 'room';
-        private static KEY_GAME = 'player';
+        private static KEY_GAME = 'game';
         private static KEY_PLAYER = 'player';
 
         private static roomName:string = 'demo';
@@ -207,6 +207,10 @@ module DataStoreRedisModule {
         }
 
         setGame(roomId:string, game:string, callback:(err:Error)=>any):any {
+            if (!game) {
+                return callback(new Error(ERRORS.ROOM.INVALID_GAME));
+            }
+
             var key = [RoomRedis.KEY_ROOM, roomId, RoomRedis.KEY_GAME].join(DELIMETER);
             var success = redisClient.set(key, game);
             if (!success) {
