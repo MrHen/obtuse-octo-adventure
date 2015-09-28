@@ -89,6 +89,7 @@ module DataStoreRedisModule {
         public getPlayerStates(gameId:string, callback:(err:Error, players:{player:string; state:string}[])=>any):any {
             var key = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_STATE].join(DELIMETER);
             redisClient.hgetall(key, (err, result:string[]) => {
+                console.warn('DataStoreRedis.getPlayerStates resolved', result);
                 if (err) {
                     return callback(err, null);
                 }
