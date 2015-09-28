@@ -15,8 +15,8 @@ describe('DataStore', () => {
         dataStore.connect(done);
     });
 
-    afterEach(() => {
-        DataStore.reset();
+    afterEach((done) => {
+        dataStore.reset(done);
     });
 
     describe('ChatDataStore', () => {

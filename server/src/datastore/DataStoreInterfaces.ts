@@ -7,6 +7,7 @@ module DataStoreInterfaces {
         room:RoomDataStoreInterface;
 
         connect(callback:(err:Error)=>any);
+        reset(callback:(err:Error)=>any);
     }
 
     export var ERRORS = {

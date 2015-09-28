@@ -40,6 +40,14 @@ module DataStoreRedisModule {
                 process.nextTick(() => callback(e));
             }
         }
+
+        // WARNING: Deletes all data!
+        public reset(callback:(err:Error)=>any) {
+            // TODO tear down any listeners
+            if (redisClient) {
+                redisClient.flushdb(callback);
+            }
+        }
     }
 
     // Used on heroku box

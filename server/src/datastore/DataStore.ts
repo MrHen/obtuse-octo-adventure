@@ -19,13 +19,6 @@ module DataStoreModule {
 
         return instance;
     }
-
-    export function reset() {
-        if (instance) {
-            // TODO do relevant teardown for DBs/listeners
-            instance = null;
-        }
-    }
 }
 
 export = DataStoreModule;
