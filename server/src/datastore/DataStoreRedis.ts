@@ -133,6 +133,7 @@ module DataStoreRedisModule {
                 if (err) {
                     return callback(new Error(err));
                 }
+                redisClient.publish(EVENTS.PLAYERSTATE, JSON.stringify({game_id:gameId, player:player, state:state}));
             });
         }
 
@@ -175,12 +176,22 @@ module DataStoreRedisModule {
 
         public onPushedCard(handler:(gameId:string, player:string, card:string)=>any) {
             emitter.on(EVENTS.PUSHEDCARD, (message:string) => {
-                console.log("DataStoreRedis.onPushedCard resolved", data);
+                console.log("DataStoreRedis.onPushedCard resolved", message);
                 var data = JSON.parse(message);
                 handler(data.game_id, data.player, data.card);
             });
 
             redisSubcriber.subscribe(EVENTS.PUSHEDCARD);
+        }
+
+        public onPlayerStateChange(handler:(gameId:string, player:string, state:string)=>any) {
+            emitter.on(EVENTS.PLAYERSTATE, (message:string) => {
+                console.log("DataStoreRedis.onPlayerStateChange resolved", message);
+                var data = JSON.parse(message);
+                handler(data.game_id, data.player, data.state);
+            });
+
+            redisSubcriber.subscribe(EVENTS.PLAYERSTATE);
         }
     }
 

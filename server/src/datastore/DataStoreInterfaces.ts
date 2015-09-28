@@ -24,7 +24,8 @@ module DataStoreInterfaces {
 
     export var EVENTS = {
         GLOBALCHAT: 'globalchat:created',
-        PUSHEDCARD: 'card'
+        PUSHEDCARD: 'card',
+        PLAYERSTATE: 'playerstate'
     };
 
     export interface ChatDataStoreInterface {
@@ -49,6 +50,7 @@ module DataStoreInterfaces {
         postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any;
 
         onPushedCard(callback:(gameId:string, player:string, card:string)=>any):any;
+        onPlayerStateChange(callback:(gameId:string, player:string, state:string)=>any):any;
     }
 
     export interface RoomDataStoreInterface {

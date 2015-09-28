@@ -102,6 +102,7 @@ module DataStoreMemory {
 
         public setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any {
             this.getPlayer(gameId, player).state = state;
+            this.emitter.emit(EVENTS.PLAYERSTATE, gameId, player, state);
             callback(null);
         }
 
@@ -133,8 +134,12 @@ module DataStoreMemory {
             callback(null);
         }
 
-        public onPushedCard(callback:(gameId, player, card:string)=>any) {
+        public onPushedCard(callback:(gameId:string, player:string, card:string)=>any) {
             this.emitter.on(EVENTS.PUSHEDCARD, callback);
+        }
+
+        public onPlayerStateChange(callback:(gameId:string, player:string, state:string)=>any) {
+            this.emitter.on(EVENTS.PLAYERSTATE, callback);
         }
     }
 
