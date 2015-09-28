@@ -10,7 +10,7 @@ import {GameRouteInterface} from './RouteInterfaces.ts';
 
 module GameRouteModule {
     var PLAYER_STATES = {
-        CURRENT: 'current', DEALING: 'deal', DONE: 'done', WAITING: 'wait'
+        CURRENT: 'current', DEALING: 'deal', DONE: 'stay', WAITING: 'wait'
     };
 
     var PLAYER_ACTIONS = {
@@ -109,8 +109,17 @@ module GameRouteModule {
                     if (state !== PLAYER_STATES.CURRENT) {
                         return callback(new Error(GameRouteController.ERROR_INVALID_TURN));
                     }
-                    this.api.rpoplpush(gameId, player, callback);
+                    return this.api.rpoplpush(gameId, player, callback);
                 }
+
+                if (action === PLAYER_ACTIONS.STAY) {
+                    if (state !== PLAYER_STATES.CURRENT) {
+                        return callback(new Error(GameRouteController.ERROR_INVALID_TURN));
+                    }
+                    return this.api.setPlayerState(gameId, player, PLAYER_STATES.DONE, callback);
+                }
+
+                return callback(new Error(GameRouteController.ERROR_INVALID_ACTION));
             });
         }
 

@@ -28,7 +28,7 @@ module OctoApp {
         loadGame: Function;
         loadRoom: Function;
 
-        hit: Function;
+        action: Function;
     }
 
     export class OctoController {
@@ -57,7 +57,7 @@ module OctoApp {
             this.$scope.loadRoom = this.loadRoom;
             this.$scope.loadGame = this.loadGame;
 
-            this.$scope.hit = this.hit;
+            this.$scope.action = this.action;
 
             this.Config.load()
                 .then(() => this.initSockets())
@@ -131,8 +131,8 @@ module OctoApp {
             this.$scope.chatMessage = null;
         }
 
-        private hit = () => {
-            this.Api.postAction(this.$scope.room.game_id, this.$scope.player_name, 'hit');
+        private action = (action:string) => {
+            this.Api.postAction(this.$scope.room.game_id, this.$scope.player_name, action);
         }
 
         private socketActionReminderEvent = (message:string) => {
