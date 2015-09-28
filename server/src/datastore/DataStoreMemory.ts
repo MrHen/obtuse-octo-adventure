@@ -13,6 +13,14 @@ module DataStoreMemory {
         public connect(callback:(err:Error)=>any) {
             process.nextTick(() => callback(null));
         }
+
+        public reset(callback:(err:Error)=>any) {
+            // TODO tear down any listeners
+            this.chat = new ChatMemory();
+            this.game = new GameMemory();
+            this.room = new RoomMemory();
+            callback(null);
+        }
     }
 
     class ChatMemory implements ChatDataStoreInterface {
