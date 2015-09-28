@@ -23,7 +23,9 @@ module GameServiceModule {
         };
 
         public static PLAYER_ACTIONS = {
-            DEAL: 'deal', HIT: 'hit', STAY: 'stay'
+            DEAL: 'deal',
+            HIT: 'hit',
+            STAY: 'stay'
         };
 
         public static DEALER = 'dealer';
@@ -32,7 +34,7 @@ module GameServiceModule {
         public static MAX = 21;
 
         public static DECK_COUNT = 1;
-        public static CARD_SUITS = ['H', 'C'];//, 'D', 'S'];
+        public static CARD_SUITS = ['H', 'C']; //, 'D', 'S'];
         public static CARD_VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'];
         private static _DECK:string[] = null;
         public static get DECK():string[] {
@@ -42,7 +44,7 @@ module GameServiceModule {
                 }));
 
                 var all = _.clone(cards);
-                for(var i = 1; i < GameServiceController.DECK_COUNT; i++) {
+                for (var i = 1; i < GameServiceController.DECK_COUNT; i++) {
                     all.concat(_.clone(cards));
                 }
                 GameServiceController._DECK = all;
@@ -52,8 +54,7 @@ module GameServiceModule {
 
         private static EVENTS = {
             ACTION_REMINDER: 'action:reminder',
-            ACTION_LOOP: 'action:start',
-            PUSH_CARD: 'card'
+            ACTION_LOOP: 'action:start'
         };
 
         private api:DataStoreInterface = null;
@@ -144,7 +145,7 @@ module GameServiceModule {
             });
         }
 
-        public handleActionStart(gameId, callback?:(err:Error)=>any) {
+        public handleActionStart(gameId:string, callback?:(err:Error)=>any) {
             if (!callback) {
                 callback = (err:Error) => {
                     if (err) {
@@ -156,7 +157,7 @@ module GameServiceModule {
             console.log('handleActionStart started', gameId);
 
             async.auto({
-                'states': [ (autoCb, results) => {
+                'states': [(autoCb, results) => {
                     this.api.game.getPlayerStates(gameId, autoCb)
                 }],
                 'next_action': ['states', (autoCb, results) => {
@@ -261,10 +262,6 @@ module GameServiceModule {
 
                     autoCb(null, null);
                 }],
-                'event': ['process', (autoCb, results) => {
-                    this.emitter.emit(GameServiceController.EVENTS.PUSH_CARD, gameId, player, card);
-                    autoCb(null, null);
-                }],
                 'loop': ['process', (autoCb, results) => {
                     this.emitter.emit(GameServiceController.EVENTS.ACTION_LOOP, gameId);
                     autoCb(null, null);
@@ -307,10 +304,6 @@ module GameServiceModule {
 
         public onActionStart(callback:(room_id)=>any) {
             this.emitter.on(GameServiceController.EVENTS.ACTION_LOOP, callback);
-        }
-
-        public onPushedCard(callback:(gameId:string, player:string, card:string)=>any) {
-            this.emitter.on(GameServiceController.EVENTS.PUSH_CARD, callback);
         }
     }
 }
