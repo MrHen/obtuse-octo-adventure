@@ -103,7 +103,7 @@ module DataStoreRedisModule {
         public setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any {
             var key = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_STATE].join(DELIMETER);
             var success = redisClient.hset(key, player, state, (err, result) => {
-                console.log('setPlayerState resolved', err, result);
+                console.log('DataStoreRedis.setPlayerState resolved', err, result);
                 if (err) {
                     return callback(new Error(err));
                 }
@@ -126,12 +126,12 @@ module DataStoreRedisModule {
                        GameRedis.KEY_PLAYER,
                        player,
                        GameRedis.KEY_CARDS].join(DELIMETER);
-            var success = redisClient.rpush(key, card);
-
-            if (!success) {
-                return callback(new Error(ERROR_UNKNOWN));
-            }
-            callback(null);
+            var success = redisClient.rpush(key, card, (err, result) => {
+                console.log('DataStoreRedis.postPlayerCard resolved', err, result);
+                if (err) {
+                    return callback(new Error(err));
+                }
+            });
         }
 
         public postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any {
