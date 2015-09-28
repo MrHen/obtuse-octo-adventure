@@ -116,9 +116,9 @@ module DataStoreRedisModule {
             });
         }
 
-        public postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error)=>any):any {
+        public postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error, count:number)=>any):any {
             if (!card) {
-                return callback(new Error(ERRORS.GAME.INVALID_CARD));
+                return callback(new Error(ERRORS.GAME.INVALID_CARD), null);
             }
 
             var key = [GameRedis.KEY_GAME,
@@ -126,11 +126,9 @@ module DataStoreRedisModule {
                        GameRedis.KEY_PLAYER,
                        player,
                        GameRedis.KEY_CARDS].join(DELIMETER);
-            var success = redisClient.rpush(key, card, (err, result) => {
+            var success = redisClient.rpush(key, card, (err, result:number) => {
                 console.log('DataStoreRedis.postPlayerCard resolved', err, result);
-                if (err) {
-                    return callback(new Error(err));
-                }
+                return callback(err, result);
             });
         }
 
@@ -140,6 +138,7 @@ module DataStoreRedisModule {
 
         public onPushedCard(gameId:string, player:string, handler:(gameId:string, player:string, card:string)=>any) {
             emitter.on(EVENTS.PUSHEDCARD, (card:string) => {
+                console.log("DataStoreRedis.onPushedCard resolved", gameId, player, card);
                 handler(gameId, player, card);
             });
 
