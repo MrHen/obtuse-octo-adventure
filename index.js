@@ -29,6 +29,9 @@ var OctoApp;
                     });
                 });
             };
+            this.action = function (action) {
+                _this.Api.postAction(_this.$scope.room.game_id, _this.$scope.player_name, action);
+            };
             this.socketActionReminderEvent = function (message) {
                 _this.$scope.socketDebug.unshift(message);
                 if (_this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
@@ -37,6 +40,10 @@ var OctoApp;
                 _this.$scope.$apply();
             };
             this.socketCardEvent = function (message) {
+                // TODO be smarter about loading
+                _this.loadGame();
+            };
+            this.socketPlayerStateChangeEvent = function (message) {
                 // TODO be smarter about loading
                 _this.loadGame();
             };
@@ -61,6 +68,7 @@ var OctoApp;
             this.$scope.canEditPlayer = false;
             this.$scope.loadRoom = this.loadRoom;
             this.$scope.loadGame = this.loadGame;
+            this.$scope.action = this.action;
             this.Config.load()
                 .then(function () { return _this.initSockets(); })
                 .then(function () { return _this.initApi(); })
@@ -80,6 +88,7 @@ var OctoApp;
             this.Sockets.addEventListener(OctoController.EVENT_ACTIONREMINDER, this.socketActionReminderEvent);
             this.Sockets.addEventListener(OctoController.EVENT_CARD, this.socketCardEvent);
             this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
+            this.Sockets.addEventListener(OctoController.EVENT_PLAYERSTATE, this.socketPlayerStateChangeEvent);
             this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
             return this.$q.when();
         };
@@ -107,6 +116,7 @@ var OctoApp;
         OctoController.EVENT_CARD = 'card';
         OctoController.EVENT_GLOBALCHAT = 'globalchat:created';
         OctoController.EVENT_TIME = 'time';
+        OctoController.EVENT_PLAYERSTATE = 'state';
         OctoController.MAX_PING_MESSAGES = 5;
         return OctoController;
     })();

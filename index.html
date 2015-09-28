@@ -46,6 +46,10 @@
                             <td ng-bind="player.state"></td>
                             <td ng-bind="player.cards"></td>
                             <td>?</td>
+                            <td>
+                                <button ng-if="player_name === player.name" class="btn btn-default" ng-click="action('hit')">Hit</button>
+                                <button ng-if="player_name === player.name" class="btn btn-default" ng-click="action('stay')">Stay</button>
+                            </td>
                         </tr>
                     </table>
                 </div>
@@ -64,7 +68,7 @@
                         <div class="form-group">
                             <label for="settingsName" class="col-sm-2 control-label">Name</label>
                             <div class="col-sm-10">
-                                <input ng-disabled="!canEditPlayer" type="text" class="form-control" ng-model="player.name" id="settingsName" placeholder="Name">
+                                <input ng-disabled="!canEditPlayer" type="text" class="form-control" ng-model="player_name" id="settingsName" placeholder="Name">
                             </div>
                         </div>
                     </form>
