@@ -43,10 +43,14 @@ module DataStoreRedisModule {
 
         // WARNING: Deletes all data!
         public reset(callback:(err:Error)=>any) {
-            // TODO tear down any listeners
             if (redisClient) {
                 redisClient.flushdb(callback);
             }
+
+            // TODO
+            emitter.removeAllListeners(EVENTS.GLOBALCHAT);
+            emitter.removeAllListeners(EVENTS.PUSHEDCARD);
+            emitter.removeAllListeners(EVENTS.PLAYERSTATE);
         }
     }
 
