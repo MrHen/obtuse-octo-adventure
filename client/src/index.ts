@@ -154,20 +154,11 @@ module OctoApp {
             });
         };
 
-        private chatSubmit(form:angular.IFormController) {
-            var message = this.$scope.chatMessage;
-
-            if (this.$scope.player_name) {
-                message = this.$scope.player_name + ": " + message;
-            }
-
-            this.Api.postGlobalChat(message)
-                .then((messages:string[]) => {
+        private chatSubmit(message:string):angular.IPromise<string[]> {
+            return this.Api.postGlobalChat(message).then((messages:string[]) => {
                     this.$scope.globalChat = messages;
                     return messages;
                 });
-
-            this.$scope.chatMessage = null;
         }
 
         private action = (action:string) => {
@@ -212,7 +203,8 @@ module OctoApp {
             'octo.sockets.service',
             'octo.config.service',
 
-            'octo.settings'
+            'octo.settings',
+            'octo.chat'
         ])
         .controller("OctoController", OctoController);
 }

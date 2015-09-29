@@ -17,6 +17,7 @@
     <script src="sockets/sockets.service.js"></script>
 
     <script src="components/settings/settings.js"></script>
+    <script src="components/chat/chat.js"></script>
 
     <script src="index.js"></script>
 </head>
@@ -65,26 +66,7 @@
         <div class="col-sm-4">
             <octo-settings name="player_name"></octo-settings>
 
-            <div id="chat-panel" class="panel panel-default">
-                <div class="panel-heading">
-                    <h2 class="panel-title">Chat</h2>
-                </div>
-                <div class="panel-body">
-                    <form class="form-inline" name="chatform">
-                        <input class="form-control" type="text" ng-model="chatMessage" placeholder="Say something!"/>
-                        <button class="btn btn-default" type="submit" ng-click="chatSubmit(chatform)">Submit</button>
-                    </form>
-                </div>
-                <div class="panel-body">
-                    <div ng-show="!globalChat">Loading chat...</div>
-                    <div ng-show="!globalChat.length">Empty chat</div>
-                    <div ng-show="globalChat">
-                        <ul>
-                            <li ng-repeat="message in globalChat track by $index" ng-bind="message"></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            <octo-chat messages="globalChat" on-chat="chatSubmit(message)"></octo-chat>
 
             <div id="debug-panel" class="panel panel-default">
                 <div class="panel-heading">
