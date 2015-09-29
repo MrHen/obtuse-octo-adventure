@@ -8,7 +8,7 @@ import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
 
 module GameServiceModule {
     export interface RoomEventController {
-        handleRoomStart(room_id, callback:(err:Error)=>any);
+        handleNewGame(room_id:string, callback:(err:Error)=>any);
     }
 
     export class GameServiceController implements RoomEventController {
@@ -67,6 +67,7 @@ module GameServiceModule {
             this.api = api;
 
             this.onActionStart((room_id) => this.handleActionStart(room_id));
+            this.api.game.onPushedCard(this.handleCardPushed);
         }
 
         public static valueForCards(cards:string[]):number {
@@ -84,60 +85,18 @@ module GameServiceModule {
             this.api.game.setDeck(game, newDeck, callback);
         }
 
-        public handleRoomStart(room_id, callback:(err:Error)=>any) {
+        public handleNewGame(room_id, callback:(err:Error)=>any) {
             console.log('handleRoomStart started', room_id);
 
             async.auto({
-                'addDealer': [(prepCb, results) => {
-                    this.api.room.putPlayer(room_id, 'dealer', prepCb)
-                }],
-                'addPlayer': (prepCb, results) => {
-                    this.api.room.putPlayer(room_id, 'player', prepCb)
-                },
-                'players': ['addDealer', 'addPlayer', (prepCb, results) => {
-                    this.api.room.getPlayers(room_id, prepCb)
-                }],
                 'existing_game': (prepCb, results) => {
                     this.api.room.getGame(room_id, prepCb);
                 },
-                'new_game': ['existing_game', (prepCb, results) => {
-                    if (results.existing_game) {
-                        return prepCb(null, null);
-                    }
-
-                    this.api.game.postGame(prepCb);
+                'shuffle': ['existing_game', (prepCb, results) => {
+                    this.handleShuffle(results.existing_game, prepCb);
                 }],
-                'assignGame': ['new_game', (prepCb, results) => {
-                    if (!results.new_game) {
-                        return prepCb(null, null);
-                    }
-
-                    return this.api.room.setGame(room_id, results.new_game, prepCb);
-                }],
-                'shuffle': ['new_game', (prepCb, results) => {
-                    if (!results.new_game) {
-                        prepCb(null, null);
-                    }
-
-                    this.handleShuffle(results.new_game, prepCb);
-                }],
-                'player_states': ['players', 'new_game', (prepCb, results) => {
-                    if (!results.new_game) {
-                        return prepCb(null, null);
-                    }
-
-                    async.eachLimit(results.players, 3, (player:string, eachCb) => {
-                        this.api.game.setPlayerState(results.new_game, player, 'deal', eachCb)
-                    }, prepCb)
-                }],
-                'card_push_listeners': ['players', 'new_game', (prepCb, results) => {
-                    _.forEach(results.players, (player:string) => {
-                        this.api.game.onPushedCard(this.handleCardPushed);
-                    });
-                    prepCb(null, null);
-                }],
-                'action_start': ['player_states', 'new_game', 'existing_game', (prepCb, results) => {
-                    this.emitter.emit(GameServiceController.EVENTS.ACTION_LOOP, results.new_game || results.existing_game);
+                'action_start': ['existing_game', 'shuffle', (prepCb, results) => {
+                    this.emitter.emit(GameServiceController.EVENTS.ACTION_LOOP, results.existing_game);
                     prepCb(null, null);
                 }]
             }, (err, results:any) => {
@@ -267,7 +226,7 @@ module GameServiceModule {
             });
         };
 
-        public handleDeal(game_id:string, player:string, callback?:(err:Error)=>any) {
+        public handleDeal = (game_id:string, player:string, callback?:(err:Error)=>any) => {
             if (!callback) {
                 callback = (err:Error) => {
                     if (err) {
@@ -276,6 +235,7 @@ module GameServiceModule {
                 }
             }
 
+            console.log('handleDeal next_action', game_id, player);
             async.auto({
                 'deal': [(autoCb, results) => {
                     this.api.game.rpoplpush(game_id, player, autoCb);
@@ -283,7 +243,7 @@ module GameServiceModule {
             }, (err, results:any) => {
                 callback(err);
             });
-        }
+        };
 
         public setActionTimer(func:Function) {
             if (this.actionTimer) {

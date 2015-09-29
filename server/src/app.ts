@@ -41,7 +41,7 @@ async.auto({
     'routes': ['app', 'db', 'service', (autoCb, results) => {
         ChatRoute.init(results.app, '/chat', results.db.chat);
         GameRoute.init(results.app, '/game', results.db.game);
-        RoomRoute.init(results.app, '/rooms', results.db.room, results.service);
+        RoomRoute.init(results.app, '/rooms', results.db, results.service);
 
         results.app.get('/', function (req, res) {
             res.send('Hello World!');
