@@ -4,6 +4,7 @@ module DataStoreInterfaces {
     export interface DataStoreInterface {
         chat:ChatDataStoreInterface;
         game:GameDataStoreInterface;
+        result:ResultDataStoreInterface
         room:RoomDataStoreInterface;
 
         connect(callback:(err:Error)=>any);
@@ -52,6 +53,14 @@ module DataStoreInterfaces {
 
         onPushedCard(callback:(gameId:string, player:string, card:string)=>any):any;
         onPlayerStateChange(callback:(gameId:string, player:string, state:string)=>any):any;
+    }
+
+    export interface ResultDataStoreInterface {
+        pushResult(gameId:string, scores:{[player:string]:number}, callback:(err:Error)=>any):any;
+        getResults(start:number, end:number, callback:(err:Error, results:{game:string; scores:{[player:string]:number}}[])=>any):any;
+
+        addPlayerWin(player:string, callback:(err:Error, wins:number)=>any):any;
+        getPlayerWins(player:string, callback:(err:Error, wins:number)=>any):any;
     }
 
     export interface RoomDataStoreInterface {

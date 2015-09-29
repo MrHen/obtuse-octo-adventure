@@ -2,7 +2,7 @@ import _ = require('lodash');
 import events = require('events');
 import redis = require('redis');
 
-import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, RoomDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
+import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, ResultDataStoreInterface, RoomDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
 
 module DataStoreRedisModule {
     var redisClient:redis.RedisClient = null;
@@ -29,6 +29,7 @@ module DataStoreRedisModule {
         public chat = new ChatRedis();
         public game = new GameRedis();
         public room = new RoomRedis();
+        public result = new ResultRedis();
 
         public connect(callback:(err:Error)=>any) {
             if (redisClient) {
@@ -273,6 +274,31 @@ module DataStoreRedisModule {
                 return callback(new Error(ERROR_UNKNOWN));
             }
             callback(null);
+        }
+    }
+
+    class ResultRedis implements ResultDataStoreInterface {
+        private static KEY_RESULTS = 'results';
+        private static KEY_LEADERBOARD = 'leaderboard';
+
+        getResults(start:number, end:number, callback:(err:Error, results:{game:string; scores:{[player:string]:number}}[])=>any):any {
+            redisClient.lrange(ResultRedis.KEY_RESULTS, start, end, (err:Error, payloads:string[]) => {
+                if (err) {
+                    return callback(err, null);
+                }
+
+                callback(null, _.map(payloads, (payload) => JSON.parse(payload)));
+            });
+        }
+        pushResult(gameId:string, scores:{[player:string]:number}, callback:(err:Error)=>any):any {
+            redisClient.rpush(ResultRedis.KEY_RESULTS, JSON.stringify({game:gameId, scores:scores}), callback);
+        }
+
+        addPlayerWin(player:string, callback:(err:Error, wins:number)=>any):any {
+            redisClient.zincrby(ResultRedis.KEY_LEADERBOARD, 1, player, callback);
+        }
+        getPlayerWins(player:string, callback:(err:Error, wins:number)=>any):any {
+            redisClient.zscore(ResultRedis.KEY_LEADERBOARD, player, callback);
         }
     }
 }
