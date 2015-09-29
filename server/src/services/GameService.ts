@@ -255,6 +255,10 @@ module GameServiceModule {
         public onActionReminder(callback:(reminder:{player:string; actions:string[]})=>any) {
             this.emitter.on(GameServiceController.EVENTS.ACTION_REMINDER, callback);
         }
+
+        public onGameEnd(callback:(game:string)=>any) {
+            this.emitter.on(GameServiceController.EVENTS.GAME_END, callback);
+        }
     }
 }
 
