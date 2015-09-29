@@ -60,8 +60,7 @@ module GameServiceModule {
         }
 
         private static EVENTS = {
-            ACTION_REMINDER: 'action:reminder',
-            GAME_END: 'game:end'
+            ACTION_REMINDER: 'action:reminder'
         };
 
         private api:DataStoreInterface = null;
@@ -249,7 +248,6 @@ module GameServiceModule {
                     return callback(err);
                 }
                 console.log('endGame finished', gameId);
-                this.emitter.emit(GameServiceController.EVENTS.GAME_END, gameId);
                 callback(null);
             });
         };
@@ -271,10 +269,6 @@ module GameServiceModule {
 
         public onActionReminder(callback:(reminder:{player:string; actions:string[]})=>any) {
             this.emitter.on(GameServiceController.EVENTS.ACTION_REMINDER, callback);
-        }
-
-        public onGameEnd(callback:(game:string)=>any) {
-            this.emitter.on(GameServiceController.EVENTS.GAME_END, callback);
         }
     }
 }

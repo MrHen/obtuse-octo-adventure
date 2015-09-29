@@ -169,14 +169,6 @@ module OctoApp {
             this.$scope.$apply();
         };
 
-        private socketGameEndEvent = (message:string) => {
-            this.$scope.socketDebug.unshift("game ended " + message);
-            if (this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
-                this.$scope.socketDebug.pop();
-            }
-            this.$scope.$apply();
-        };
-
         private socketCardEvent = (message:string) => {
             // TODO be smarter about loading
             this.loadGame();
