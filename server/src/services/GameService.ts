@@ -8,7 +8,7 @@ import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
 
 module GameServiceModule {
     export interface RoomEventController {
-        handleNewGame(room_id:string, callback:(err:Error)=>any);
+        handleShuffle(game_id:string, callback:(err:Error)=>any);
     }
 
     export class GameServiceController implements RoomEventController {
@@ -83,25 +83,6 @@ module GameServiceModule {
         public handleShuffle(game:string, callback:(err:Error)=>any) {
             var newDeck = _.shuffle<string>(GameServiceController.DECK);
             this.api.game.setDeck(game, newDeck, callback);
-        }
-
-        public handleNewGame(room_id, callback:(err:Error)=>any) {
-            console.log('handleRoomStart started', room_id);
-
-            async.auto({
-                'existing_game': (prepCb, results) => {
-                    this.api.room.getGame(room_id, prepCb);
-                },
-                'shuffle': ['existing_game', (prepCb, results) => {
-                    this.handleShuffle(results.existing_game, prepCb);
-                }],
-                'action_start': ['existing_game', 'shuffle', (prepCb, results) => {
-                    this.emitter.emit(GameServiceController.EVENTS.ACTION_LOOP, results.existing_game);
-                    prepCb(null, null);
-                }]
-            }, (err, results:any) => {
-                callback(err);
-            });
         }
 
         public handleActionStart(gameId:string, callback?:(err:Error)=>any) {

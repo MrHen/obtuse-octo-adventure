@@ -102,7 +102,12 @@ module GameRouteModule {
                     callback(err);
                 }
 
-                var state = _.find<{player:string; state:string}>(states, "player", player).state;
+                var playerstate = _.find<{player:string; state:string}>(states, "player", player);
+                if (!playerstate) {
+                    return callback(new Error(GameRouteController.ERROR_INVALID_PLAYER));
+                }
+
+                var state = playerstate.state;
                 console.log("TODO: Do something", {action: action, state: state});
 
                 if (action === PLAYER_ACTIONS.HIT) {

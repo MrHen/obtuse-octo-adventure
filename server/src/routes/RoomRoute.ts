@@ -103,7 +103,10 @@ module RoomRoute {
                 'assignGame': ['new_game', (autoCb, results) => {
                     return this.api.room.setGame(roomId, results.new_game, autoCb);
                 }],
-                'player_states': ['players', 'new_game', (autoCb, results) => {
+                'shuffle': ['new_game', (autoCb, results) => {
+                    this.service.handleShuffle(results.new_game, autoCb);
+                }],
+                'player_states': ['players', 'new_game', 'shuffle', (autoCb, results) => {
                     var players = results.players.concat('dealer');
 
                     return autoCb(null, _.map(players, (player) => {
@@ -116,10 +119,7 @@ module RoomRoute {
                 'set_states': ['player_states', (autoCb, results) => {
                     async.eachLimit<PlayerState>(results.player_states, 3, (state, eachCb) => {
                         this.api.game.setPlayerState(results.new_game, state.player, state.state, eachCb)
-                    }, autoCb)
-                }],
-                'action_loop': ['new_game', 'assignGame', 'player_states', (autoCb, results) => {
-                    this.service.handleNewGame(roomId, autoCb);
+                    }, autoCb);
                 }]
             }, (err, results:any) => {
                 if (err) {
