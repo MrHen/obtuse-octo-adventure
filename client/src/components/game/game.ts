@@ -22,7 +22,8 @@ module Game {
             this.scope = {
                 game: "=",
                 player: "=",
-                onAction: '&'
+                onAction: '&',
+                onNewGame: '&'
             };
             this.controller = GameController;
             this.controllerAs = "vm";
@@ -34,10 +35,17 @@ module Game {
         public game: ApiService.GameResponse;
 
         public onAction: Function;
+        public onNewGame: Function;
 
-        action(action:string) {
+        public action(action:string) {
             if(this.onAction) {
                 this.onAction({action: action});
+            }
+        }
+
+        public newGame() {
+            if (this.onNewGame) {
+                this.onNewGame();
             }
         }
     }

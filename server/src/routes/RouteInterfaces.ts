@@ -40,6 +40,7 @@ module RouteInterfaces {
     export interface GameResponse {
         id: string;
         players: {[name:string]:GamePlayerResponse};
+        ended: boolean;
     }
 
     export interface GamePlayerResponse {

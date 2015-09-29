@@ -5,8 +5,9 @@ import async = require('async');
 import express = require('express');
 import http_status = require('http-status');
 
-import {GameDataStoreInterface} from '../datastore/DataStoreInterfaces.ts';
-import {GameRouteInterface} from './RouteInterfaces.ts';
+import {GameDataStoreInterface} from '../datastore/DataStoreInterfaces';
+import {GameRouteInterface, GameResponse, GamePlayerResponse, GameCurrentTurnResponse} from './RouteInterfaces';
+import {GameServiceInterface} from '../services/GameService'
 
 module GameRouteModule {
     var PLAYER_STATES = {
@@ -19,21 +20,6 @@ module GameRouteModule {
 
     var DEALER = 'dealer';
 
-    export interface Game {
-        id: string;
-        players: {[name:string]:GamePlayer};
-    }
-
-    export interface GamePlayer {
-        state: string;
-        cards: string[];
-    }
-
-    export interface GameCurrentTurn {
-        player: string;
-        actions: string[];
-    }
-
     export class GameRouteController implements GameRouteInterface {
         public static ERROR_INVALID_ACTION = 'Invalid action';
         public static ERROR_INVALID_GAME = 'Invalid game';
@@ -42,12 +28,14 @@ module GameRouteModule {
         public static ERROR_INVALID_TURN = 'Different player turn';
 
         private api:GameDataStoreInterface = null;
+        private service:GameServiceInterface = null;
 
-        public constructor(api:GameDataStoreInterface) {
+        public constructor(api:GameDataStoreInterface, service:GameServiceInterface) {
             this.api = api;
+            this.service = service;
         }
 
-        public getGame(gameId:string, callback:(err:Error, game:Game)=>any):any {
+        public getGame(gameId:string, callback:(err:Error, game:GameResponse)=>any):any {
             async.auto({
                 'states': (autoCb, results) => this.api.getPlayerStates(gameId, autoCb),
                 'players': ['states', (autoCb, results) => autoCb(null, _.pluck(results.states, 'player'))],
@@ -59,7 +47,7 @@ module GameRouteModule {
                     callback(err, null);
                 }
 
-                var players:{[name:string]:GamePlayer} = {};
+                var players:{[name:string]:GamePlayerResponse} = {};
 
                 _.forEach<{player:string; state:string}>(results.states, (value, key) => {
                     players[value.player] = {
@@ -68,16 +56,17 @@ module GameRouteModule {
                     }
                 });
 
-                var game:Game = {
+                var game:GameResponse = {
                     id: gameId,
-                    players: players
+                    players: players,
+                    ended: this.service.isGameEnded(results.states)
                 };
 
                 callback(null, game);
             });
         }
 
-        public getCurrentTurn(gameId:string, callback:(err:Error, currentTurn:GameCurrentTurn)=>any):any {
+        public getCurrentTurn(gameId:string, callback:(err:Error, currentTurn:GameCurrentTurnResponse)=>any):any {
             this.api.getPlayerStates(gameId, (err:Error, states:{player:string; state:string}[]) => {
                 if (err) {
                     callback(err, null);
@@ -145,13 +134,13 @@ module GameRouteModule {
         return res.status(status).send({message: message});
     }
 
-    export var init = (app:express.Express, base:string, api:GameDataStoreInterface) => {
-        var controller = new GameRouteController(api);
+    export var init = (app:express.Express, base:string, api:GameDataStoreInterface, service:GameServiceInterface) => {
+        var controller = new GameRouteController(api, service);
 
         app.get(base + '/:game_id/current', (req, res) => {
             var gameId = req.params.game_id;
 
-            controller.getCurrentTurn(gameId, (err:Error, currentTurn:GameCurrentTurn) => {
+            controller.getCurrentTurn(gameId, (err:Error, currentTurn:GameCurrentTurnResponse) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }
@@ -177,7 +166,7 @@ module GameRouteModule {
         app.get(base + '/:game_id', (req, res) => {
             var gameId = req.params.game_id;
 
-            controller.getGame(gameId, (err:Error, game:Game) => {
+            controller.getGame(gameId, (err:Error, game:GameResponse) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }

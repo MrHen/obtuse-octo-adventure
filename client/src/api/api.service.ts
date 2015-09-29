@@ -15,6 +15,7 @@ module ApiService {
                 cards: string[];
             }
         };
+        ended: boolean;
     }
 
     export class Api {

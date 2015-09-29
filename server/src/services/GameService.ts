@@ -11,7 +11,11 @@ module GameServiceModule {
         handleShuffle(game_id:string, callback:(err:Error)=>any);
     }
 
-    export class GameServiceController implements RoomEventController {
+    export interface GameServiceInterface {
+        isGameEnded(states:{player:string; state:string}[]):boolean;
+    }
+
+    export class GameServiceController implements GameServiceInterface, RoomEventController {
         private static ACTION_DELAY:number = 2000; // time between actions controlled by game (e.g., dealer)
 
         public static PLAYER_STATES = {
@@ -238,10 +242,20 @@ module GameServiceModule {
                     }, autoCb);
                 }]
             }, (err, results:any) => {
+                if (err) {
+                    return callback(err);
+                }
+                console.log('endGame finished', gameId);
                 this.emitter.emit(GameServiceController.EVENTS.GAME_END, gameId);
-                callback(err);
+                callback(null);
             });
         };
+
+        public isGameEnded(states:{player:string; state:string}[]):boolean {
+            var playing = _.pluck(states, 'state');
+            playing = _.without(playing, 'bust', 'stay');
+            return _.isEmpty(playing);
+        }
 
         public setActionTimer(func:Function) {
             if (this.actionTimer) {

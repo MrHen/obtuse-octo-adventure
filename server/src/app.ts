@@ -42,7 +42,7 @@ async.auto({
     },
     'routes': ['app', 'db', 'service', (autoCb, results) => {
         ChatRoute.init(results.app, '/chat', results.db.chat);
-        GameRoute.init(results.app, '/game', results.db.game);
+        GameRoute.init(results.app, '/game', results.db.game, results.service);
         RoomRoute.init(results.app, '/rooms', results.db, results.service);
         ResultRoute.init(results.app, '/results', results.db.result);
         LeaderboardRoute.init(results.app, '/leaderboard', results.db.result);

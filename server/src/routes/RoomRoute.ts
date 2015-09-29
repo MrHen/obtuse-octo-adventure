@@ -137,7 +137,8 @@ module RoomRoute {
 
                 var game = {
                     id: results.new_game,
-                    players: players
+                    players: players,
+                    ended: false // TODO auto-end on dealer 21
                 };
 
                 callback(null, game);
