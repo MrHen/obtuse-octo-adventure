@@ -26,8 +26,9 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-12">
-            <div class="page-header">
+            <div class="page-header text-center">
                 <h1>Obtuse Octo Adventure</h1>
+                <p><small>(because that is what you get when you let GitHub name your project)</small></p>
             </div>
         </div>
     </div>
@@ -36,12 +37,14 @@
         <div class="col-sm-8">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <p class="lead">A simple blackjack implementation.</p>
-                    <p>Implementation specifics:</p>
+                    <p class="lead">A simple blackjack implementation</p>
+                    <p>Rule specifics:</p>
                     <ul>
                         <li>Dealer stays on 17</li>
                         <li>Player wins if they beat the dealer (without going bust)</li>
                         <li>Dealer wins if no players win</li>
+                        <li>Dealer automatically wins on 21</li>
+                        <li>Aces are worth exactly 11</li>
                     </ul>
                 </div>
                 <div class="list-group" ng-if="!game">
