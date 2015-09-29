@@ -632,4 +632,81 @@ describe('DataStore', () => {
             });
         });
     });
+
+    describe('ResultDataStore', () => {
+        describe('player wins', () => {
+            it('record win', (done) => {
+                dataStore.result.addPlayerWin('player', (err:Error, wins:number) => {
+                    should.not.exist(err);
+                    should.exist(wins);
+                    wins.should.eql(1);
+
+                    dataStore.result.getPlayerWins('player', (err:Error, wins:number) => {
+                        should.not.exist(err);
+                        should.exist(wins);
+                        wins.should.eql(1);
+                        done();
+                    });
+                });
+            });
+
+            it('record multiple wins', (done) => {
+                dataStore.result.addPlayerWin('player', (err:Error, wins:number) => {
+                    should.not.exist(err);
+
+                    dataStore.result.addPlayerWin('player', (err:Error, wins:number) => {
+                        should.not.exist(err);
+
+                        dataStore.result.getPlayerWins('player', (err:Error, wins:number) => {
+                            should.not.exist(err);
+                            should.exist(wins);
+                            wins.should.eql(2);
+                            done();
+                        });
+                    });
+                });
+            });
+
+            it('record wins for multiple players', (done) => {
+                dataStore.result.addPlayerWin('player', (err:Error, wins:number) => {
+                    should.not.exist(err);
+
+                    dataStore.result.addPlayerWin('other', (err:Error, wins:number) => {
+                        should.not.exist(err);
+
+                        dataStore.result.getPlayerWins('player', (err:Error, wins:number) => {
+                            should.not.exist(err);
+                            should.exist(wins);
+                            wins.should.eql(1);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        describe('results', () => {
+            it('set and get results', (done) => {
+                dataStore.result.pushResult('game', {'dealer': 20, 'player': 18}, (err:Error) => {
+                    should.not.exist(err);
+
+                    dataStore.result.getResults(-1, -1, (err:Error, results:{game:string; scores:{[player:string]:number}}[]) => {
+                        should.not.exist(err);
+                        should.exist(results);
+                        results.should.containEql({game: 'game', scores: {'dealer': 20, 'player': 18}});
+                        done();
+                    });
+                });
+            });
+
+            it('bad range', (done) => {
+                dataStore.result.getResults(0, 10, (err:Error, results:{game:string; scores:{[player:string]:number}}[]) => {
+                    should.not.exist(err);
+                    should.exist(results);
+                    results.should.eql([]);
+                    done();
+                });
+            });
+        });
+    });
 });

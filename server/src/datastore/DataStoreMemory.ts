@@ -1,7 +1,7 @@
 import _ = require('lodash');
 import events = require('events');
 
-import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, RoomDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
+import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, ResultDataStoreInterface, RoomDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
 
 // Used for local development
 module DataStoreMemory {
@@ -9,6 +9,7 @@ module DataStoreMemory {
         public chat = new ChatMemory();
         public game = new GameMemory();
         public room = new RoomMemory();
+        public result = new ResultMemory();
 
         public connect(callback:(err:Error)=>any) {
             process.nextTick(() => callback(null));
@@ -19,6 +20,7 @@ module DataStoreMemory {
             this.chat = new ChatMemory();
             this.game = new GameMemory();
             this.room = new RoomMemory();
+            this.result = new ResultMemory();
             callback(null);
         }
     }
@@ -198,6 +200,32 @@ module DataStoreMemory {
 
             this.games[roomId] = game;
             callback(null);
+        }
+    }
+
+    class ResultMemory implements ResultDataStoreInterface {
+        // mimic how redis will store this info
+        private results:string[] = [];
+
+        private wins:Dict<number> = {};
+
+        getResults(start:number, end:number, callback:(err:Error, results:{game:string; scores:{[player:string]:number}}[])=>any):any {
+            var realEnd = end === -1 ? this.results.length : end + 1; // redis uses inclusive matching so adjust accordingly
+            var payloads = this.results.slice(start, realEnd);
+            console.log("payloads", payloads);
+            callback(null, _.map(payloads, (payload) => JSON.parse(payload)));
+        }
+
+        pushResult(gameId:string, scores:{[player:string]:number}, callback:(err:Error)=>any):any {
+            this.results.push(JSON.stringify({game:gameId, scores:scores}));
+            callback(null);
+        }
+        addPlayerWin(player:string, callback:(err:Error, wins:number)=>any):any {
+            this.wins[player] ? this.wins[player]++ : (this.wins[player] = 1);
+            callback(null, this.wins[player]);
+        }
+        getPlayerWins(player:string, callback:(err:Error, wins:number)=>any):any {
+            callback(null, this.wins[player]);
         }
     }
 
