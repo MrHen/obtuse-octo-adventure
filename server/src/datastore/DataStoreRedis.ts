@@ -1,4 +1,5 @@
 import _ = require('lodash');
+import async = require('async');
 import events = require('events');
 import redis = require('redis');
 
