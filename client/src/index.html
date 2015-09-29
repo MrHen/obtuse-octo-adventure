@@ -11,9 +11,13 @@
     <script src="bower_components/socket.io-client/socket.io.js"></script>
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/restangular/src/restangular.js"></script>
+
     <script src="config/config.service.js"></script>
     <script src="api/api.service.js"></script>
     <script src="sockets/sockets.service.js"></script>
+
+    <script src="components/settings/settings.js"></script>
+
     <script src="index.js"></script>
 </head>
 <body ng-controller="OctoController">
@@ -59,21 +63,7 @@
         </div>
 
         <div class="col-sm-4">
-            <div id="settings-panel" class="panel panel-default">
-                <div class="panel-heading">
-                    <h2 class="panel-title">Settings</h2>
-                </div>
-                <div class="panel-body">
-                    <form class="form-horizontal" name="settingsform">
-                        <div class="form-group">
-                            <label for="settingsName" class="col-sm-2 control-label">Name</label>
-                            <div class="col-sm-10">
-                                <input ng-disabled="!canEditPlayer" type="text" class="form-control" ng-model="player_name" id="settingsName" placeholder="Name">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <octo-settings name="player_name"></octo-settings>
 
             <div id="chat-panel" class="panel panel-default">
                 <div class="panel-heading">

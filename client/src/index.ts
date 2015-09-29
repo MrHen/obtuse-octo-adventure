@@ -172,7 +172,7 @@ module OctoApp {
 
         private action = (action:string) => {
             this.Api.postAction(this.$scope.room.game_id, this.$scope.player_name, action);
-        }
+        };
 
         private socketActionReminderEvent = (message:string) => {
             this.$scope.socketDebug.unshift(message);
@@ -207,6 +207,12 @@ module OctoApp {
     }
 
     var app = angular
-        .module("octo", ['octo.api.service', 'octo.sockets.service', 'octo.config.service'])
+        .module("octo", [
+            'octo.api.service',
+            'octo.sockets.service',
+            'octo.config.service',
+
+            'octo.settings'
+        ])
         .controller("OctoController", OctoController);
 }
