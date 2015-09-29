@@ -25,7 +25,7 @@ module DataStoreRedisModule {
                     redisClient = redis.createClient(process.env.REDIS_URL);
                     redisSubcriber = redis.createClient(process.env.REDIS_URL);
                 } catch (e) {
-                    process.nextTick(() => callback(e));
+                    return process.nextTick(() => callback(e));
                 }
             }
 
@@ -40,14 +40,15 @@ module DataStoreRedisModule {
         // WARNING: Deletes all data!
         public reset(callback:(err:Error)=>any) {
             if (redisClient) {
-                redisClient.flushdb(callback);
+                emitter.removeAllListeners(EVENTS.GLOBALCHAT);
+                emitter.removeAllListeners(EVENTS.PUSHEDCARD);
+                emitter.removeAllListeners(EVENTS.PLAYERSTATE);
+
+                async.series([
+                    (cb) => redisClient.flushdb(cb),
+                    (cb) => redisSubcriber.unsubscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE, cb)
+                ], callback);
             }
-
-            emitter.removeAllListeners(EVENTS.GLOBALCHAT);
-            emitter.removeAllListeners(EVENTS.PUSHEDCARD);
-            emitter.removeAllListeners(EVENTS.PLAYERSTATE);
-
-            redisSubcriber.unsubscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE, callback);
         }
     }
 
