@@ -183,7 +183,7 @@ module GameServiceModule {
                         state = GameServiceController.PLAYER_STATES.BUST;
                     }
 
-                    if (!state && player === GameServiceController.DEALER && results.score > GameServiceController.DEALER_STAY) {
+                    if (!state && player === GameServiceController.DEALER && results.score >= GameServiceController.DEALER_STAY) {
                         console.log('handleCardPushed saw dealer stay');
                         state = GameServiceController.PLAYER_STATES.STAY;
                     }
