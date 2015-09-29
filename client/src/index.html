@@ -18,6 +18,7 @@
 
     <script src="components/settings/settings.js"></script>
     <script src="components/chat/chat.js"></script>
+    <script src="components/game/game.js"></script>
 
     <script src="index.js"></script>
 </head>
@@ -33,34 +34,7 @@
 
     <div class="row">
         <div class="col-sm-8">
-            <div>
-                <div ng-show="!room">
-                    <p>Loading room...</p>
-                </div>
-                <div ng-show="room">
-                    <p>{{room.game_id}}</p>
-                    <table class="table">
-                        <tr>
-                            <th>Player</th>
-                            <th>State</th>
-                            <th>Cards</th>
-                            <th>Score</th>
-                        </tr>
-                        <tr ng-repeat="player in players track by $index">
-                            <td ng-bind="player.name"></td>
-                            <td ng-bind="player.state"></td>
-                            <td ng-bind="player.cards"></td>
-                            <td>?</td>
-                            <td>
-                                <button ng-if="player_name === player.name" class="btn btn-default" ng-click="action('hit')">Hit</button>
-                                <button ng-if="player_name === player.name" class="btn btn-default" ng-click="action('stay')">Stay</button>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-            <p>Content goes here. {{player.name}}</p>
+            <octo-game game="game" player="player_name" on-action="action(action)"></octo-game>
         </div>
 
         <div class="col-sm-4">

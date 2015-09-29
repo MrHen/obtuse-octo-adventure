@@ -24,6 +24,7 @@ module OctoApp {
         room: ApiService.RoomResponse;
 
         players: PlayerListItem[]
+        game: ApiService.GameResponse;
 
         newGame: Function;
         loadGame: Function;
@@ -144,13 +145,7 @@ module OctoApp {
 
             return this.Api.getGame(this.$scope.room.game_id).then((game:ApiService.GameResponse) => {
                 console.log('loadGame resolved', (<any>game).plain());
-                this.$scope.players = _.map(game.players, (value, key) => {
-                    return {
-                        name: key,
-                        state: value.state,
-                        cards: value.cards
-                    }
-                })
+                this.$scope.game = game;
             });
         };
 
@@ -204,7 +199,8 @@ module OctoApp {
             'octo.config.service',
 
             'octo.settings',
-            'octo.chat'
+            'octo.chat',
+            'octo.game'
         ])
         .controller("OctoController", OctoController);
 }
