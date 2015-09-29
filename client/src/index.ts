@@ -30,7 +30,7 @@ module OctoApp {
         loadGame: Function;
         loadRoom: Function;
 
-        action: Function;
+        doAction: Function;
     }
 
     export class OctoController {
@@ -62,7 +62,7 @@ module OctoApp {
             this.$scope.loadGame = this.loadGame;
             this.$scope.newGame = this.newGame;
 
-            this.$scope.action = this.action;
+            this.$scope.doAction = this.doAction;
 
             this.Config.load()
                 .then(() => this.initSockets())
@@ -157,9 +157,9 @@ module OctoApp {
                 });
         }
 
-        private action = (action:string) => {
+        public doAction = (action:string) => {
             this.Api.postAction(this.$scope.room.game_id, this.$scope.player_name, action);
-        };
+        }
 
         private socketActionReminderEvent = (message:string) => {
             this.$scope.socketDebug.unshift(message);
