@@ -91,7 +91,7 @@ module DataStoreMemory {
         }
 
         public getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any {
-            callback(null, this.getPlayer(gameId, player).cards || []);
+            callback(null, _.clone(this.getPlayer(gameId, player).cards) || []);
         }
 
         public getPlayerStates(gameId:string, callback:(err:Error, players:{player:string; state:string}[])=>any):any {
@@ -101,7 +101,7 @@ module DataStoreMemory {
                 return {player: key, state:value.state};
             });
 
-            callback(null, mapped);
+            callback(null, _.clone(mapped));
         }
 
         public setDeck(gameId:string, cards:string[], callback:(err:Error)=>any):any {
