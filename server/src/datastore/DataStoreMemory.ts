@@ -210,6 +210,7 @@ module DataStoreMemory {
         private wins:Dict<number> = {};
 
         getResults(start:number, end:number, callback:(err:Error, results:{game:string; scores:{[player:string]:number}}[])=>any):any {
+            console.log("getResults", start, end, this.results);
             var realEnd = end === -1 ? this.results.length : end + 1; // redis uses inclusive matching so adjust accordingly
             var payloads = this.results.slice(start, realEnd);
             console.log("payloads", payloads);

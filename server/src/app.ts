@@ -15,6 +15,8 @@ import {GameServiceController} from './services/GameService';
 import ChatRoute = require('./routes/ChatRoute');
 import GameRoute = require('./routes/GameRoute');
 import RoomRoute = require('./routes/RoomRoute');
+import ResultRoute = require('./routes/ResultRoute');
+import LeaderboardRoute = require('./routes/LeaderboardRoute');
 
 import Sockets = require('./services/Sockets');
 
@@ -42,6 +44,8 @@ async.auto({
         ChatRoute.init(results.app, '/chat', results.db.chat);
         GameRoute.init(results.app, '/game', results.db.game);
         RoomRoute.init(results.app, '/rooms', results.db, results.service);
+        ResultRoute.init(results.app, '/results', results.db.result);
+        LeaderboardRoute.init(results.app, '/leaderboard', results.db.result);
 
         results.app.get('/', function (req, res) {
             res.send('Hello World!');

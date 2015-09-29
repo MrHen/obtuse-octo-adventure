@@ -19,6 +19,24 @@ module RouteInterfaces {
         postGame(roomId:string, callback:(err:Error, game:GameResponse)=>any):any;
     }
 
+    export interface ResultResponse {
+        game:string;
+        scores:{[player:string]:number}
+    }
+
+    export interface ResultRouteInterface {
+        getResults(skip:number, limit:number, callback:(err:Error, results:ResultResponse[])=>any):any;
+    }
+
+    export interface LeaderboardResponse {
+        player: string;
+        wins: number;
+    }
+
+    export interface LeaderboardRouteInterface {
+        getPlayer(player:string, callback:(err:Error, results:LeaderboardResponse)=>any):any;
+    }
+
     export interface GameResponse {
         id: string;
         players: {[name:string]:GamePlayerResponse};
