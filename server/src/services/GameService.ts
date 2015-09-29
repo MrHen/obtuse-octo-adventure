@@ -54,7 +54,7 @@ module GameServiceModule {
 
         private static EVENTS = {
             ACTION_REMINDER: 'action:reminder',
-            ACTION_LOOP: 'action:start'
+            GAME_END: 'game:end'
         };
 
         private api:DataStoreInterface = null;
@@ -136,8 +136,7 @@ module GameServiceModule {
                         });
                     }
 
-                    console.log('handleActionStart chose nothing');
-                    autoCb(null, null);
+                    this.endGame(gameId, autoCb);
                 }]
             }, (err, results:any) => {
                 callback(err);
@@ -199,6 +198,47 @@ module GameServiceModule {
                     this.handleActionStart(gameId, autoCb);
                 }]
             }, (err, results:any) => {
+                callback(err);
+            });
+        };
+
+        public endGame = (gameId:string, callback:(err:Error)=>any) => {
+            console.log('endGame started', gameId);
+
+            async.auto({
+                'states': [(autoCb, results) => {
+                    this.api.game.getPlayerStates(gameId, autoCb)
+                }],
+                'players': ['states', (autoCb, results) => {
+                    autoCb(null, _.pluck(results.states, 'player'));
+                }],
+                'cards': ['players', (autoCb, results) => {
+                    async.mapLimit(results.players, 3, (player:string, mapCb) => this.api.game.getPlayerCards(gameId, player, mapCb), autoCb);
+                }],
+                'scores': ['cards', (autoCb, results) => {
+                    autoCb(null, _.map(results.cards, (cards:string[]) => GameServiceController.valueForCards(cards)));
+                }],
+                'player_scores': ['scores', (autoCb, results) => {
+                    autoCb(null, _.zipObject<{[player:string]:number}>(results.players, results.scores));
+                }],
+                'save_scores': ['player_scores', (autoCb, results) => {
+                    this.api.result.pushResult(gameId,results.player_scores, autoCb);
+                }],
+                'winners': ['player_scores', (autoCb, results:any) => {
+                    var dealerScore = results.player_scores[GameServiceController.DEALER];
+
+                    var winners = _.filter(results.players, (player:string) => results.player_scores[player] > dealerScore && results.player_scores[player] < GameServiceController.MAX);
+
+                    if (!winners.length) {
+                        winners = [GameServiceController.DEALER];
+                    }
+
+                    async.eachLimit(winners, 3, (winner:string, eachCb) => {
+                        this.api.result.addPlayerWin(winner, eachCb);
+                    }, autoCb);
+                }]
+            }, (err, results:any) => {
+                this.emitter.emit(GameServiceController.EVENTS.GAME_END, gameId);
                 callback(err);
             });
         };
