@@ -12,19 +12,6 @@ module DataStoreRedisModule {
     var DELIMETER = ':';
     var ERROR_UNKNOWN = 'Unknown redis failure';
 
-    function init() {
-        emitter = new events.EventEmitter();
-        redisClient = redis.createClient(process.env.REDIS_URL);
-        redisSubcriber = redis.createClient(process.env.REDIS_URL);
-
-        redisSubcriber.on('message', (channel, message) => {
-            console.log("DataStoreRedis pubsub hit", channel, message);
-            emitter.emit(channel, message);
-        });
-
-        redisSubcriber.subscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE);
-    }
-
     export class RedisDataStore implements DataStoreInterface {
         public chat = new ChatRedis();
         public game = new GameRedis();
@@ -32,16 +19,23 @@ module DataStoreRedisModule {
         public result = new ResultRedis();
 
         public connect(callback:(err:Error)=>any) {
-            if (redisClient) {
-                return process.nextTick(() => callback(null));
+            if (!redisClient) {
+                emitter = new events.EventEmitter();
+                try {
+                    redisClient = redis.createClient(process.env.REDIS_URL);
+                    redisSubcriber = redis.createClient(process.env.REDIS_URL);
+                } catch (e) {
+                    process.nextTick(() => callback(e));
+                }
             }
 
-            try {
-                init();
-                process.nextTick(() => callback(null));
-            } catch (e) {
-                process.nextTick(() => callback(e));
-            }
+            redisSubcriber.on('message', (channel, message) => {
+                console.log("DataStoreRedis pubsub hit", channel, message);
+                emitter.emit(channel, message);
+            });
+
+            redisSubcriber.subscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE);
+            return process.nextTick(() => callback(null));
         }
 
         // WARNING: Deletes all data!
