@@ -65,9 +65,6 @@ module GameServiceModule {
 
         public constructor(api:DataStoreInterface) {
             this.api = api;
-
-            this.onActionStart((room_id) => this.handleActionStart(room_id));
-            this.api.game.onPushedCard(this.handleCardPushed);
         }
 
         public static valueForCards(cards:string[]):number {
@@ -105,10 +102,9 @@ module GameServiceModule {
                     var dealing = _.find<{player:string; state:string}>(results.states, "state", GameServiceController.PLAYER_STATES.DEALING);
                     if (dealing) {
                         console.log('handleActionStart chose dealing', dealing);
-                        this.setActionTimer(() => {
-                            return this.handleDeal(gameId, dealing.player, autoCb);
+                        return this.setActionTimer(() => {
+                            return this.api.game.rpoplpush(gameId, dealing.player, autoCb);
                         });
-                        return autoCb(null, null);
                     }
 
                     var current = _.find<{player:string; state:string}>(results.states, "state", GameServiceController.PLAYER_STATES.CURRENT);
@@ -135,8 +131,8 @@ module GameServiceModule {
 
                     if (dealer && dealer.state === GameServiceController.PLAYER_STATES.CURRENT) {
                         console.log('handleActionStart chose dealer (hit)');
-                        this.setActionTimer(() => {
-                            return this.handleDeal(gameId, dealer.player, autoCb);
+                        return this.setActionTimer(() => {
+                            return this.api.game.rpoplpush(gameId, dealer.player, autoCb);
                         });
                     }
 
@@ -207,25 +203,6 @@ module GameServiceModule {
             });
         };
 
-        public handleDeal = (game_id:string, player:string, callback?:(err:Error)=>any) => {
-            if (!callback) {
-                callback = (err:Error) => {
-                    if (err) {
-                        console.warn("Saw unprocessed error from handleDeal", err);
-                    }
-                }
-            }
-
-            console.log('handleDeal next_action', game_id, player);
-            async.auto({
-                'deal': [(autoCb, results) => {
-                    this.api.game.rpoplpush(game_id, player, autoCb);
-                }]
-            }, (err, results:any) => {
-                callback(err);
-            });
-        };
-
         public setActionTimer(func:Function) {
             if (this.actionTimer) {
                 clearTimeout(this.actionTimer);
@@ -237,10 +214,6 @@ module GameServiceModule {
 
         public onActionReminder(callback:(reminder:{player:string; actions:string[]})=>any) {
             this.emitter.on(GameServiceController.EVENTS.ACTION_REMINDER, callback);
-        }
-
-        public onActionStart(callback:(room_id)=>any) {
-            this.emitter.on(GameServiceController.EVENTS.ACTION_LOOP, callback);
         }
     }
 }
