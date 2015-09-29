@@ -41,7 +41,7 @@
   "scripts": {
     "test": "gulp test",
     "start": "node app/app.js",
-    "postinstall": "gulp build"
+    "postinstall": "gulp test"
   },
   "repository": {
     "type": "git",
