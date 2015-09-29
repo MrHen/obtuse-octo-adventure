@@ -41,7 +41,6 @@ module OctoApp {
         private static EVENT_GLOBALCHAT = 'globalchat:created';
         private static EVENT_TIME = 'time';
         private static EVENT_PLAYERSTATE = 'state';
-        private static EVENT_GAMEEND = 'gameend';
 
         private static MAX_PING_MESSAGES = 5;
 
@@ -91,7 +90,6 @@ module OctoApp {
             this.Sockets.addEventListener(OctoController.EVENT_CARD, this.socketCardEvent);
             this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
             this.Sockets.addEventListener(OctoController.EVENT_PLAYERSTATE, this.socketPlayerStateChangeEvent);
-            this.Sockets.addEventListener(OctoController.EVENT_GAMEEND, this.socketGameEndEvent);
             this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
 
             return this.$q.when();
