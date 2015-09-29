@@ -34,7 +34,6 @@ module DataStoreRedisModule {
                 console.log("DataStoreRedis pubsub hit", channel, message);
                 emitter.emit(channel, message);
             });
-
             redisSubcriber.subscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE, callback);
         }
 
@@ -44,6 +43,7 @@ module DataStoreRedisModule {
                 emitter.removeAllListeners(EVENTS.GLOBALCHAT);
                 emitter.removeAllListeners(EVENTS.PUSHEDCARD);
                 emitter.removeAllListeners(EVENTS.PLAYERSTATE);
+                redisSubcriber.removeAllListeners('message');
 
                 async.series([
                     (cb) => redisClient.flushdb(cb),
