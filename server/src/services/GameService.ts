@@ -10,10 +10,12 @@ module GameServiceModule {
     export interface RoomEventController {
         handleShuffle(game_id:string, callback:(err:Error)=>any);
         isGameEnded(states:{player:string; state:string}[]):boolean;
+        valueForCards(cards:string[]):number;
     }
 
     export interface GameServiceInterface {
         isGameEnded(states:{player:string; state:string}[]):boolean;
+        valueForCards(cards:string[]):number;
     }
 
     export class GameServiceController implements GameServiceInterface, RoomEventController {
@@ -72,7 +74,7 @@ module GameServiceModule {
             this.api = api;
         }
 
-        public static valueForCards(cards:string[]):number {
+        public valueForCards(cards:string[]):number {
             return _.sum(cards, (card) => {
                 if (+card[0] > 0) {
                     return +card[0];
@@ -164,7 +166,7 @@ module GameServiceModule {
                     this.api.game.getPlayerCards(gameId, player, autoCb);
                 }],
                 'score': ['cards', (autoCb, results) => {
-                    autoCb(null, GameServiceController.valueForCards(results.cards));
+                    autoCb(null, this.valueForCards(results.cards));
                 }],
                 'states': [(autoCb, results) => {
                     this.api.game.getPlayerStates(gameId, autoCb)
@@ -221,7 +223,7 @@ module GameServiceModule {
                     async.mapLimit(results.players, 3, (player:string, mapCb) => this.api.game.getPlayerCards(gameId, player, mapCb), autoCb);
                 }],
                 'scores': ['cards', (autoCb, results) => {
-                    autoCb(null, _.map(results.cards, (cards:string[]) => GameServiceController.valueForCards(cards)));
+                    autoCb(null, _.map(results.cards, (cards:string[]) => this.valueForCards(cards)));
                 }],
                 'player_scores': ['scores', (autoCb, results) => {
                     autoCb(null, _.zipObject<{[player:string]:number}>(results.players, results.scores));

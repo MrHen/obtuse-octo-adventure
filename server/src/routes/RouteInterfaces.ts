@@ -46,6 +46,7 @@ module RouteInterfaces {
     export interface GamePlayerResponse {
         state: string;
         cards: string[];
+        score?: number;
     }
 
     export interface GameCurrentTurnResponse {

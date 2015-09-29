@@ -52,7 +52,8 @@ module GameRouteModule {
                 _.forEach<{player:string; state:string}>(results.states, (value, key) => {
                     players[value.player] = {
                         state: value.state,
-                        cards: results.cards[key]
+                        cards: results.cards[key],
+                        score: this.service.valueForCards(results.cards[key])
                     }
                 });
 

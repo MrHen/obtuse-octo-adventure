@@ -19,10 +19,12 @@
             <td ng-bind="player"></td>
             <td ng-bind="value.state"></td>
             <td ng-bind="value.cards"></td>
-            <td>?</td>
-            <td>
+            <td ng-bind="value.score" ng-class="{'bg-danger':(value.state === 'bust')}"></td>
+            <td ng-if="!vm.game.ended">
                 <button ng-if="vm.player === player" class="btn btn-default btn-xs" ng-click="vm.action('hit')">Hit</button>
                 <button ng-if="vm.player === player" class="btn btn-default btn-xs" ng-click="vm.action('stay')">Stay</button>
+            </td>
+            <td ng-if="vm.game.ended">
             </td>
         </tr>
     </table>

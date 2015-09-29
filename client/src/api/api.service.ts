@@ -13,6 +13,7 @@ module ApiService {
             [name:string]:{
                 state: string;
                 cards: string[];
+                score?: number;
             }
         };
         ended: boolean;
