@@ -9,6 +9,7 @@ import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
 module GameServiceModule {
     export interface RoomEventController {
         handleShuffle(game_id:string, callback:(err:Error)=>any);
+        isGameEnded(states:{player:string; state:string}[]):boolean;
     }
 
     export interface GameServiceInterface {

@@ -88,8 +88,11 @@ module RoomRoute {
             async.auto({
                 'game': [(autoCb, results) => this.api.room.getGame(roomId, autoCb)],
                 'players': [(autoCb, results) => this.api.room.getPlayers(roomId, autoCb)],
+                'states': ['game', (autoCb, results) => this.api.game.getPlayerStates(results.game, autoCb)],
                 'new_game': ['game', 'players', (autoCb, results) => {
-                    if (results.game) {
+                    var gameEnded = this.service.isGameEnded(results.states);
+
+                    if (results.game && !gameEnded) {
                         // TODO reset game -- mark game as a loss/quit? detect "ended" game?
                         return autoCb(new Error(RoomRouteController.ERROR_GAME_EXISTS), null);
                     }
