@@ -1,26 +1,29 @@
-<div>
-    <div ng-show="!vm.game">
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <div class="pull-right text-muted" ng-show="vm.game">#{{vm.game.id}}</div>
+        <h2 class="panel-title">Current game</h2>
+    </div>
+
+    <div class="panel-body" ng-show="!vm.game">
         <p>Loading game...</p>
     </div>
-    <div ng-show="vm.game">
-        <!--<div ng-bind="vm.game.id"></div>-->
-        <table class="table">
-            <tr>
-                <th>Player</th>
-                <th>State</th>
-                <th>Cards</th>
-                <th>Score</th>
-            </tr>
-            <tr ng-repeat="(player, value) in vm.game.players">
-                <td ng-bind="player"></td>
-                <td ng-bind="value.state"></td>
-                <td ng-bind="value.cards"></td>
-                <td>?</td>
-                <td>
-                    <button ng-if="vm.player === player" class="btn btn-default" ng-click="vm.action('hit')">Hit</button>
-                    <button ng-if="vm.player === player" class="btn btn-default" ng-click="vm.action('stay')">Stay</button>
-                </td>
-            </tr>
-        </table>
-    </div>
+    <table class="table table-responsive" ng-show="vm.game">
+        <tr>
+            <th>Player</th>
+            <th>State</th>
+            <th>Cards</th>
+            <th>Score</th>
+            <th>Actions</th>
+        </tr>
+        <tr ng-repeat="(player, value) in vm.game.players">
+            <td ng-bind="player"></td>
+            <td ng-bind="value.state"></td>
+            <td ng-bind="value.cards"></td>
+            <td>?</td>
+            <td>
+                <button ng-if="vm.player === player" class="btn btn-default btn-xs" ng-click="vm.action('hit')">Hit</button>
+                <button ng-if="vm.player === player" class="btn btn-default btn-xs" ng-click="vm.action('stay')">Stay</button>
+            </td>
+        </tr>
+    </table>
 </div>

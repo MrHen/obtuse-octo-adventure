@@ -34,6 +34,21 @@
 
     <div class="row">
         <div class="col-sm-8">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <p class="lead">A simple blackjack implementation.</p>
+                    <p>Implementation specifics:</p>
+                    <ul>
+                        <li>Dealer stays on 17</li>
+                        <li>Player wins if they beat the dealer (without going bust)</li>
+                        <li>Dealer wins if no players win</li>
+                    </ul>
+                </div>
+                <div class="list-group" ng-if="!game">
+                    <button class="list-group-item list-group-item-info" ng-click="newGame()"><div class="text-center">New Game</div></button>
+                </div>
+            </div>
+
             <octo-game game="game" player="player_name" on-action="action(action)"></octo-game>
         </div>
 
@@ -44,15 +59,18 @@
 
             <div id="debug-panel" class="panel panel-default">
                 <div class="panel-heading">
+                    <h2 class="panel-title">Debug</h2>
+                </div>
+                <div class="list-group">
+                    <button class="list-group-item" ng-click="loadRoom()"><div class="text-center">Load Room</div></button>
+                    <button class="list-group-item" ng-click="loadGame()"><div class="text-center">Load Game</div></button>
+                    <button class="list-group-item" ng-click="newGame()"><div class="text-center">New Game</div></button>
+                </div>
+                <div class="panel-heading">
                     <h2 class="panel-title">Socket pings</h2>
                 </div>
                 <div class="panel-body">
-                    <button class="btn btn-default" ng-click="loadRoom()">Load Room</button>
-                    <button class="btn btn-default" ng-click="loadGame()">Load Game</button>
-                    <button class="btn btn-default" ng-click="newGame()">New Game</button>
-                </div>
-                <div class="panel-body">
-                    <ul>
+                    <ul class="list-unstyled">
                         <li ng-repeat="message in socketDebug track by $index" ng-bind="message"></li>
                     </ul>
                 </div>
