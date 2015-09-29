@@ -63,6 +63,18 @@ module GameRouteModule {
                     ended: this.service.isGameEnded(results.states)
                 };
 
+                if (!game.ended) {
+                    var states = _.reject(results.states, {player: 'dealer'});
+                    states = _.reject(states, {'state': PLAYER_STATES.DONE});
+                    states = _.reject(states, {'state': 'bust'});
+                    if (states.length) {
+                        players['dealer'].score = null;
+                        if (players['dealer'].cards.length > 1) {
+                            players['dealer'].cards[0] = 'XX';
+                        }
+                    }
+                }
+
                 callback(null, game);
             });
         }
