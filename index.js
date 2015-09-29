@@ -14,10 +14,39 @@ var OctoApp;
             this.Sockets = Sockets;
             this.loadRoom = function () {
                 return _this.Api.getRooms().then(function (rooms) {
+                    console.log('loadRoom resolved', _.map(rooms, function (room) { return room.plain(); }));
                     _this.$scope.room = rooms && rooms.length ? rooms[0] : null;
                 });
             };
+            this.joinRoom = function () {
+                if (!_this.$scope.room) {
+                    return _this.$q.when();
+                }
+                return _this.Api.joinRoom(_this.$scope.room.room_id, _this.$scope.player_name).then(function (player) {
+                    console.log('joinRoom resolved', player);
+                });
+            };
+            this.newGame = function () {
+                if (!_this.$scope.room) {
+                    return _this.$q.when();
+                }
+                return _this.Api.newGame(_this.$scope.room.room_id).then(function (game) {
+                    console.log('newGame resolved', game.plain());
+                    _this.$scope.room.game_id = game.id;
+                    _this.$scope.players = _.map(game.players, function (value, key) {
+                        return {
+                            name: key,
+                            state: value.state,
+                            cards: value.cards
+                        };
+                    });
+                });
+            };
             this.loadGame = function () {
+                if (!_this.$scope.room || !_this.$scope.room.game_id) {
+                    console.log('loadGame stopped');
+                    return _this.$q.when();
+                }
                 return _this.Api.getGame(_this.$scope.room.game_id).then(function (game) {
                     console.log('loadGame resolved', game.plain());
                     _this.$scope.players = _.map(game.players, function (value, key) {
@@ -68,12 +97,14 @@ var OctoApp;
             this.$scope.canEditPlayer = false;
             this.$scope.loadRoom = this.loadRoom;
             this.$scope.loadGame = this.loadGame;
+            this.$scope.newGame = this.newGame;
             this.$scope.action = this.action;
             this.Config.load()
                 .then(function () { return _this.initSockets(); })
                 .then(function () { return _this.initApi(); })
                 .then(function () { return _this.loadChat(); })
                 .then(function () { return _this.loadRoom(); })
+                .then(function () { return _this.joinRoom(); })
                 .then(function () { return _this.loadGame(); });
             // TODO load global chat
         }

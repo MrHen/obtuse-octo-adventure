@@ -8,6 +8,12 @@ var ApiService;
         Api.prototype.init = function (baseUrl) {
             this.Restangular.setBaseUrl(baseUrl);
         };
+        Api.prototype.newGame = function (room_id) {
+            return this.Restangular.one('rooms', room_id).post('game', {});
+        };
+        Api.prototype.joinRoom = function (room_id, player) {
+            return this.Restangular.one('rooms', room_id).one('players', player).put();
+        };
         Api.prototype.getGame = function (game_id) {
             return this.Restangular.all('game').get(game_id);
         };
