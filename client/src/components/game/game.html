@@ -21,8 +21,8 @@
             <td ng-bind="value.cards"></td>
             <td ng-bind="value.score" ng-class="{'bg-danger':(value.state === 'bust')}"></td>
             <td>
-                <button ng-if="vm.player === player" class="btn btn-default btn-xs" ng-click="vm.action('hit')">Hit</button>
-                <button ng-if="vm.player === player" class="btn btn-default btn-xs" ng-click="vm.action('stay')">Stay</button>
+                <button ng-if="vm.player === player" class="btn btn-default btn-xs" ng-disabled="value.state !== 'current'" ng-click="vm.action('hit')">Hit</button>
+                <button ng-if="vm.player === player" class="btn btn-default btn-xs" ng-disabled="value.state !== 'current'" ng-click="vm.action('stay')">Stay</button>
             </td>
         </tr>
     </table>
