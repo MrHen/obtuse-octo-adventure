@@ -34,8 +34,7 @@ module DataStoreRedisModule {
                 emitter.emit(channel, message);
             });
 
-            redisSubcriber.subscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE);
-            return process.nextTick(() => callback(null));
+            redisSubcriber.subscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE, callback);
         }
 
         // WARNING: Deletes all data!
@@ -48,7 +47,7 @@ module DataStoreRedisModule {
             emitter.removeAllListeners(EVENTS.PUSHEDCARD);
             emitter.removeAllListeners(EVENTS.PLAYERSTATE);
 
-            redisSubcriber.unsubscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE);
+            redisSubcriber.unsubscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE, callback);
         }
     }
 
