@@ -84,7 +84,7 @@ async.auto({
         });
 
         results.db.game.onPlayerStateChange((gameId:string, player:string, state:string) => {
-            results.service.handleActionStart(gameId);
+            results.service.handleActionStart(gameId, player, state);
             results.sockets.emitPlayerStateChange(gameId, player, state);
         });
 

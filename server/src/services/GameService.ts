@@ -26,7 +26,8 @@ module GameServiceModule {
             CURRENT: 'current',
             DEALING: 'deal',
             STAY: 'stay',
-            WAITING: 'wait'
+            WAITING: 'wait',
+            WIN: 'win'
         };
 
         public static PLAYER_ACTIONS = {
@@ -41,7 +42,7 @@ module GameServiceModule {
         public static MAX = 21;
 
         public static DECK_COUNT = 1;
-        public static CARD_SUITS = ['H', 'C']; //, 'D', 'S'];
+        public static CARD_SUITS = ['H', 'C', 'D', 'S'];
         public static CARD_VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'];
         private static _DECK:string[] = null;
         public static get DECK():string[] {
@@ -88,7 +89,7 @@ module GameServiceModule {
             this.api.game.setDeck(game, newDeck, callback);
         }
 
-        public handleActionStart(gameId:string, callback?:(err:Error)=>any) {
+        public handleActionStart(gameId:string, player:string, state:string, callback?:(err:Error)=>any) {
             if (!callback) {
                 callback = (err:Error) => {
                     if (err) {
@@ -97,7 +98,12 @@ module GameServiceModule {
                 }
             }
 
-            console.log('handleActionStart started', gameId);
+            console.log('handleActionStart started', gameId, player, state);
+
+            // Ignore WIN state change since that only happens after the game has already ended
+            if (state === GameServiceController.PLAYER_STATES.WIN) {
+                return callback(null);
+            }
 
             async.auto({
                 'states': [(autoCb, results) => {
@@ -201,7 +207,7 @@ module GameServiceModule {
                         return this.api.game.setPlayerState(gameId, player, state, autoCb);
                     }
 
-                    this.handleActionStart(gameId, autoCb);
+                    this.handleActionStart(gameId, null, null, autoCb);
                 }]
             }, (err, results:any) => {
                 callback(err);
@@ -238,9 +244,16 @@ module GameServiceModule {
                     if (!winners.length) {
                         winners = [GameServiceController.DEALER];
                     }
-
-                    async.eachLimit(winners, 3, (winner:string, eachCb) => {
+                    autoCb(null, winners);
+                }],
+                'leaderboard': ['winners', (autoCb, results:any) => {
+                    async.eachLimit(results.winners, 3, (winner:string, eachCb) => {
                         this.api.result.addPlayerWin(winner, eachCb);
+                    }, autoCb);
+                }],
+                'winState': ['winners', (autoCb, results:any) => {
+                    async.eachLimit(results.winners, 3, (winner:string, eachCb) => {
+                        this.api.game.setPlayerState(gameId, winner, GameServiceController.PLAYER_STATES.WIN, eachCb);
                     }, autoCb);
                 }]
             }, (err, results:any) => {
@@ -254,7 +267,7 @@ module GameServiceModule {
 
         public isGameEnded(states:{player:string; state:string}[]):boolean {
             var playing = _.pluck(states, 'state');
-            playing = _.without(playing, 'bust', 'stay');
+            playing = _.without(playing, 'bust', 'stay', 'win');
             return _.isEmpty(playing);
         }
 

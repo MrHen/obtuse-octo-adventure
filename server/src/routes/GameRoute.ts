@@ -11,7 +11,10 @@ import {GameServiceInterface} from '../services/GameService'
 
 module GameRouteModule {
     var PLAYER_STATES = {
-        CURRENT: 'current', DEALING: 'deal', DONE: 'stay', WAITING: 'wait'
+        CURRENT: 'current',
+        DEALING: 'deal',
+        DONE: 'stay',
+        WAITING: 'wait'
     };
 
     var PLAYER_ACTIONS = {

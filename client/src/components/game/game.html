@@ -15,16 +15,14 @@
             <th>Score</th>
             <th>Actions</th>
         </tr>
-        <tr ng-repeat="(player, value) in vm.game.players">
+        <tr ng-repeat="(player, value) in vm.game.players" ng-class="{'success':(value.state === 'win')}">
             <td ng-bind="player"></td>
             <td ng-bind="value.state"></td>
             <td ng-bind="value.cards"></td>
             <td ng-bind="value.score" ng-class="{'bg-danger':(value.state === 'bust')}"></td>
-            <td ng-if="!vm.game.ended">
+            <td>
                 <button ng-if="vm.player === player" class="btn btn-default btn-xs" ng-click="vm.action('hit')">Hit</button>
                 <button ng-if="vm.player === player" class="btn btn-default btn-xs" ng-click="vm.action('stay')">Stay</button>
-            </td>
-            <td ng-if="vm.game.ended">
             </td>
         </tr>
     </table>
