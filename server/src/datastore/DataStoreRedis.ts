@@ -21,6 +21,8 @@ module DataStoreRedisModule {
             console.log("DataStoreRedis pubsub hit", channel, message);
             emitter.emit(channel, message);
         });
+
+        redisSubcriber.subscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE);
     }
 
     export class RedisDataStore implements DataStoreInterface {
@@ -47,10 +49,11 @@ module DataStoreRedisModule {
                 redisClient.flushdb(callback);
             }
 
-            // TODO
             emitter.removeAllListeners(EVENTS.GLOBALCHAT);
             emitter.removeAllListeners(EVENTS.PUSHEDCARD);
             emitter.removeAllListeners(EVENTS.PLAYERSTATE);
+
+            redisSubcriber.unsubscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE);
         }
     }
 
@@ -67,20 +70,18 @@ module DataStoreRedisModule {
                 return callback(new Error(ERRORS.CHAT.INVALID_MESSAGE), null);
             }
 
-            var success = redisClient.rpush(ChatRedis.KEY_GLOBALCHAT, message);
-            if (!success) {
-                return callback(new Error(ERROR_UNKNOWN), null);
-            }
+            redisClient.rpush(ChatRedis.KEY_GLOBALCHAT, message, (err:Error, result:string) => {
+                if (err) {
+                    return callback(err, null);
+                }
 
-            redisClient.publish(EVENTS.GLOBALCHAT, message);
-            callback(null, message);
+                redisClient.publish(EVENTS.GLOBALCHAT, message);
+                callback(null, message);
+            });
         }
 
         public onGlobalChat(handler:(message:string)=>any) {
             emitter.on(EVENTS.GLOBALCHAT, handler);
-
-            // TODO should only sub once
-            redisSubcriber.subscribe(EVENTS.GLOBALCHAT);
         }
     }
 
@@ -195,8 +196,6 @@ module DataStoreRedisModule {
                 var data = JSON.parse(message);
                 handler(data.game_id, data.player, data.card);
             });
-
-            redisSubcriber.subscribe(EVENTS.PUSHEDCARD);
         }
 
         public onPlayerStateChange(handler:(gameId:string, player:string, state:string)=>any) {
@@ -205,8 +204,6 @@ module DataStoreRedisModule {
                 var data = JSON.parse(message);
                 handler(data.game_id, data.player, data.state);
             });
-
-            redisSubcriber.subscribe(EVENTS.PLAYERSTATE);
         }
     }
 

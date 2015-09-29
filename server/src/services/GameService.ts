@@ -8,7 +8,7 @@ import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
 
 module GameServiceModule {
     export interface RoomEventController {
-        handleRoomStart(room_id, callback:(err:Error)=>any);
+        handleShuffle(game_id:string, callback:(err:Error)=>any);
     }
 
     export class GameServiceController implements RoomEventController {
@@ -65,8 +65,6 @@ module GameServiceModule {
 
         public constructor(api:DataStoreInterface) {
             this.api = api;
-
-            this.onActionStart((room_id) => this.handleActionStart(room_id));
         }
 
         public static valueForCards(cards:string[]):number {
@@ -82,67 +80,6 @@ module GameServiceModule {
         public handleShuffle(game:string, callback:(err:Error)=>any) {
             var newDeck = _.shuffle<string>(GameServiceController.DECK);
             this.api.game.setDeck(game, newDeck, callback);
-        }
-
-        public handleRoomStart(room_id, callback:(err:Error)=>any) {
-            console.log('handleRoomStart started', room_id);
-
-            async.auto({
-                'addDealer': [(prepCb, results) => {
-                    this.api.room.putPlayer(room_id, 'dealer', prepCb)
-                }],
-                'addPlayer': (prepCb, results) => {
-                    this.api.room.putPlayer(room_id, 'player', prepCb)
-                },
-                'players': ['addDealer', 'addPlayer', (prepCb, results) => {
-                    this.api.room.getPlayers(room_id, prepCb)
-                }],
-                'existing_game': (prepCb, results) => {
-                    this.api.room.getGame(room_id, prepCb);
-                },
-                'new_game': ['existing_game', (prepCb, results) => {
-                    if (results.existing_game) {
-                        return prepCb(null, null);
-                    }
-
-                    this.api.game.postGame(prepCb);
-                }],
-                'assignGame': ['new_game', (prepCb, results) => {
-                    if (!results.new_game) {
-                        return prepCb(null, null);
-                    }
-
-                    return this.api.room.setGame(room_id, results.new_game, prepCb);
-                }],
-                'shuffle': ['new_game', (prepCb, results) => {
-                    if (!results.new_game) {
-                        prepCb(null, null);
-                    }
-
-                    this.handleShuffle(results.new_game, prepCb);
-                }],
-                'player_states': ['players', 'new_game', (prepCb, results) => {
-                    if (!results.new_game) {
-                        return prepCb(null, null);
-                    }
-
-                    async.eachLimit(results.players, 3, (player:string, eachCb) => {
-                        this.api.game.setPlayerState(results.new_game, player, 'deal', eachCb)
-                    }, prepCb)
-                }],
-                'card_push_listeners': ['players', 'new_game', (prepCb, results) => {
-                    _.forEach(results.players, (player:string) => {
-                        this.api.game.onPushedCard(this.handleCardPushed);
-                    });
-                    prepCb(null, null);
-                }],
-                'action_start': ['player_states', 'new_game', 'existing_game', (prepCb, results) => {
-                    this.emitter.emit(GameServiceController.EVENTS.ACTION_LOOP, results.new_game || results.existing_game);
-                    prepCb(null, null);
-                }]
-            }, (err, results:any) => {
-                callback(err);
-            });
         }
 
         public handleActionStart(gameId:string, callback?:(err:Error)=>any) {
@@ -165,10 +102,9 @@ module GameServiceModule {
                     var dealing = _.find<{player:string; state:string}>(results.states, "state", GameServiceController.PLAYER_STATES.DEALING);
                     if (dealing) {
                         console.log('handleActionStart chose dealing', dealing);
-                        this.setActionTimer(() => {
-                            return this.handleDeal(gameId, dealing.player, autoCb);
+                        return this.setActionTimer(() => {
+                            return this.api.game.rpoplpush(gameId, dealing.player, autoCb);
                         });
-                        return autoCb(null, null);
                     }
 
                     var current = _.find<{player:string; state:string}>(results.states, "state", GameServiceController.PLAYER_STATES.CURRENT);
@@ -195,8 +131,8 @@ module GameServiceModule {
 
                     if (dealer && dealer.state === GameServiceController.PLAYER_STATES.CURRENT) {
                         console.log('handleActionStart chose dealer (hit)');
-                        this.setActionTimer(() => {
-                            return this.handleDeal(gameId, dealer.player, autoCb);
+                        return this.setActionTimer(() => {
+                            return this.api.game.rpoplpush(gameId, dealer.player, autoCb);
                         });
                     }
 
@@ -247,7 +183,7 @@ module GameServiceModule {
                         state = GameServiceController.PLAYER_STATES.BUST;
                     }
 
-                    if (!state && player === GameServiceController.DEALER && results.score > GameServiceController.DEALER_STAY) {
+                    if (!state && player === GameServiceController.DEALER && results.score >= GameServiceController.DEALER_STAY) {
                         console.log('handleCardPushed saw dealer stay');
                         state = GameServiceController.PLAYER_STATES.STAY;
                     }
@@ -267,24 +203,6 @@ module GameServiceModule {
             });
         };
 
-        public handleDeal(game_id:string, player:string, callback?:(err:Error)=>any) {
-            if (!callback) {
-                callback = (err:Error) => {
-                    if (err) {
-                        console.warn("Saw unprocessed error from handleDeal", err);
-                    }
-                }
-            }
-
-            async.auto({
-                'deal': [(autoCb, results) => {
-                    this.api.game.rpoplpush(game_id, player, autoCb);
-                }]
-            }, (err, results:any) => {
-                callback(err);
-            });
-        }
-
         public setActionTimer(func:Function) {
             if (this.actionTimer) {
                 clearTimeout(this.actionTimer);
@@ -296,10 +214,6 @@ module GameServiceModule {
 
         public onActionReminder(callback:(reminder:{player:string; actions:string[]})=>any) {
             this.emitter.on(GameServiceController.EVENTS.ACTION_REMINDER, callback);
-        }
-
-        public onActionStart(callback:(room_id)=>any) {
-            this.emitter.on(GameServiceController.EVENTS.ACTION_LOOP, callback);
         }
     }
 }

@@ -2,6 +2,7 @@
 
 module ApiService {
     export interface RoomResponse {
+        room_id: string;
         game_id: string;
         players: string[];
     }
@@ -24,6 +25,14 @@ module ApiService {
 
         init(baseUrl:string) {
             this.Restangular.setBaseUrl(baseUrl);
+        }
+
+        newGame(room_id:string):angular.IPromise<GameResponse> {
+            return this.Restangular.one('rooms', room_id).post('game', {});
+        }
+
+        joinRoom(room_id:string, player:string):angular.IPromise<any> {
+            return this.Restangular.one('rooms', room_id).one('players', player).put();
         }
 
         getGame(game_id:string):angular.IPromise<GameResponse> {

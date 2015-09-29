@@ -1,31 +1,50 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
+import _ = require('lodash');
 import async = require('async');
 import express = require('express');
 import http_status = require('http-status');
 
 import {RoomEventController} from '../services/GameService';
-import {RoomDataStoreInterface} from '../datastore/DataStoreInterfaces';
-import {RoomRouteInterface, RoomResponse} from './RouteInterfaces';
+import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
+import {RoomRouteInterface, GameResponse, RoomResponse} from './RouteInterfaces';
 
 module RoomRoute {
+    export interface Game {
+        id: string;
+        players: {[name:string]:GamePlayer};
+    }
+
+    export interface GamePlayer {
+        state: string;
+        cards: string[];
+    }
+
+    export interface PlayerState {
+        player: string;
+        state: string;
+    }
+
     export class RoomRouteController implements RoomRouteInterface {
         private static DEALER = 'dealer';
         private static PLAYER = 'player';
 
-        private api:RoomDataStoreInterface = null;
+        public static ERROR_GAME_EXISTS = 'Game started';
+        public static ERROR_MISSING_PLAYER = 'No players';
+        public static ERROR_INVALID_PLAYER = 'Invalid player';
+
+        private api:DataStoreInterface = null;
         private service:RoomEventController = null;
 
-        constructor(api:RoomDataStoreInterface, service:RoomEventController) {
+        constructor(api:DataStoreInterface, service:RoomEventController) {
             this.api = api;
             this.service = service;
         }
 
         getRoom(roomId:string, callback:(err:Error, room:RoomResponse)=>any):any {
             async.auto({
-                'roomstart': (autoCb, results) => this.service.handleRoomStart(roomId, autoCb),
-                'game': ['roomstart', (autoCb, results) => this.api.getGame(roomId, autoCb)],
-                'players': ['roomstart', (autoCb, results) => this.api.getPlayers(roomId, autoCb)]
+                'game': [(autoCb, results) => this.api.room.getGame(roomId, autoCb)],
+                'players': [(autoCb, results) => this.api.room.getPlayers(roomId, autoCb)]
             }, (err, results) => {
                 if (err) {
                     return callback(err, null);
@@ -43,7 +62,7 @@ module RoomRoute {
         getRooms(callback:(err:Error, rooms:RoomResponse[])=>any):any {
 
             async.auto({
-                'roomIds': (autoCb, results) => this.api.getRooms(autoCb),
+                'roomIds': (autoCb, results) => this.api.room.getRooms(autoCb),
                 'rooms': ['roomIds', (autoCb, results) => {
                     async.mapLimit(results.roomIds, 10, (roomId:string, mapCb) => {
                         this.getRoom(roomId, mapCb)
@@ -57,9 +76,71 @@ module RoomRoute {
                 callback(null, results.rooms);
             });
         }
-        postPlayer(roomId:string, callback:(err:Error, player:string)=>any):any {
-            this.api.getPlayers(roomId, (err, players:string[]) => {
-                callback(err, _.first(players));
+
+        postPlayer(roomId:string, player:string, callback:(err:Error, player:string)=>any):any {
+            if (player !== 'player') {
+                return callback(new Error(RoomRouteController.ERROR_INVALID_PLAYER), null);
+            }
+            this.api.room.putPlayer(roomId, player, callback);
+        }
+
+        postGame(roomId:string, callback:(err:Error, game:GameResponse)=>any):any {
+            async.auto({
+                'game': [(autoCb, results) => this.api.room.getGame(roomId, autoCb)],
+                'players': [(autoCb, results) => this.api.room.getPlayers(roomId, autoCb)],
+                'new_game': ['game', 'players', (autoCb, results) => {
+                    if (results.game) {
+                        // TODO reset game -- mark game as a loss/quit? detect "ended" game?
+                        return autoCb(new Error(RoomRouteController.ERROR_GAME_EXISTS), null);
+                    }
+
+                    if (!results.players || !results.players.length) {
+                        return autoCb(new Error(RoomRouteController.ERROR_MISSING_PLAYER), null);
+                    }
+
+                    this.api.game.postGame(autoCb);
+                }],
+                'assignGame': ['new_game', (autoCb, results) => {
+                    return this.api.room.setGame(roomId, results.new_game, autoCb);
+                }],
+                'shuffle': ['new_game', (autoCb, results) => {
+                    this.service.handleShuffle(results.new_game, autoCb);
+                }],
+                'player_states': ['players', 'new_game', 'shuffle', (autoCb, results) => {
+                    var players = results.players.concat('dealer');
+
+                    return autoCb(null, _.map(players, (player) => {
+                        return {
+                            player: player,
+                            state: 'deal'
+                        };
+                    }));
+                }],
+                'set_states': ['player_states', (autoCb, results) => {
+                    async.eachLimit<PlayerState>(results.player_states, 3, (state, eachCb) => {
+                        this.api.game.setPlayerState(results.new_game, state.player, state.state, eachCb)
+                    }, autoCb);
+                }]
+            }, (err, results:any) => {
+                if (err) {
+                    return callback(err, null);
+                }
+
+                var players:{[name:string]:GamePlayer} = {};
+
+                _.forEach<{player:string; state:string}>(results.player_states, (value, key) => {
+                    players[value.player] = {
+                        state: value.state,
+                        cards: []
+                    }
+                });
+
+                var game = {
+                    id: results.new_game,
+                    players: players
+                };
+
+                callback(null, game);
             });
         }
     }
@@ -75,18 +156,31 @@ module RoomRoute {
         return res.status(status).send({message:message});
     }
 
-    export function init(app:express.Express, base:string, api:RoomDataStoreInterface, service:RoomEventController) {
+    export function init(app:express.Express, base:string, api:DataStoreInterface, service:RoomEventController) {
         var controller = new RoomRouteController(api, service);
 
-        app.post(base + '/:room_id/players', function (req, res) {
+        app.put(base + '/:room_id/players/:player_id', function (req, res) {
             var roomId = req.params.room_id;
+            var playerId = req.params.player_id;
 
-            controller.postPlayer(roomId, (err:Error, message:string) => {
+            controller.postPlayer(roomId, playerId, (err:Error, message:string) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }
 
                 res.send(message);
+            });
+        });
+
+        app.post(base + '/:room_id/game', function (req, res) {
+            var roomId = req.params.room_id;
+
+            controller.postGame(roomId, (err:Error, game:GameResponse) => {
+                if (err) {
+                    return sendErrorResponse(res, err);
+                }
+
+                res.send(game);
             });
         });
 

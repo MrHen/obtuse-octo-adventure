@@ -15,7 +15,8 @@ module RouteInterfaces {
     export interface RoomRouteInterface {
         getRoom(roomId:string, callback:(err:Error, room:RoomResponse)=>any):any;
         getRooms(callback:(err:Error, rooms:RoomResponse[])=>any):any;
-        postPlayer(roomId:string, callback:(err:Error, player:string)=>any):any;
+        postPlayer(roomId:string, player:string, callback:(err:Error, player:string)=>any):any;
+        postGame(roomId:string, callback:(err:Error, game:GameResponse)=>any):any;
     }
 
     export interface GameResponse {
@@ -37,7 +38,6 @@ module RouteInterfaces {
         getGame(gameId:string, callback:(err:Error, game:GameResponse)=>any):any;
         getCurrentTurn(gameId:string, callback:(err:Error, currentTurn:GameCurrentTurnResponse)=>any):any;
         postAction(gameId:string, player:string, action:string, callback:(err:Error)=>any):any;
-        //postGame(newPlayers:string[], callback:(err:Error, game:GameResponse)=>any):any;
     }
 }
 

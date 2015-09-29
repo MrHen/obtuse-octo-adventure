@@ -25,6 +25,7 @@ module OctoApp {
 
         players: PlayerListItem[]
 
+        newGame: Function;
         loadGame: Function;
         loadRoom: Function;
 
@@ -57,6 +58,7 @@ module OctoApp {
 
             this.$scope.loadRoom = this.loadRoom;
             this.$scope.loadGame = this.loadGame;
+            this.$scope.newGame = this.newGame;
 
             this.$scope.action = this.action;
 
@@ -65,6 +67,7 @@ module OctoApp {
                 .then(() => this.initApi())
                 .then(() => this.loadChat())
                 .then(() => this.loadRoom())
+                .then(() => this.joinRoom())
                 .then(() => this.loadGame());
 
             // TODO load global chat
@@ -100,11 +103,45 @@ module OctoApp {
 
         private loadRoom = ():angular.IPromise<void> => {
             return this.Api.getRooms().then((rooms:ApiService.RoomResponse[]) => {
+                console.log('loadRoom resolved', _.map(rooms, (room) => (<any>room).plain()));
                 this.$scope.room = rooms && rooms.length ? rooms[0] : null;
             });
         };
 
+        private joinRoom = ():angular.IPromise<void> => {
+            if (!this.$scope.room) {
+                return this.$q.when();
+            }
+
+            return this.Api.joinRoom(this.$scope.room.room_id, this.$scope.player_name).then((player:string) => {
+                console.log('joinRoom resolved', player);
+            });
+        };
+
+        private newGame = ():angular.IPromise<void> => {
+            if (!this.$scope.room) {
+                return this.$q.when();
+            }
+
+            return this.Api.newGame(this.$scope.room.room_id).then((game:ApiService.GameResponse) => {
+                console.log('newGame resolved', (<any>game).plain());
+                this.$scope.room.game_id = game.id;
+                this.$scope.players = _.map(game.players, (value, key) => {
+                    return {
+                        name: key,
+                        state: value.state,
+                        cards: value.cards
+                    }
+                })
+            });
+        };
+
         private loadGame = ():angular.IPromise<void> => {
+            if (!this.$scope.room || !this.$scope.room.game_id) {
+                console.log('loadGame stopped');
+                return this.$q.when();
+            }
+
             return this.Api.getGame(this.$scope.room.game_id).then((game:ApiService.GameResponse) => {
                 console.log('loadGame resolved', (<any>game).plain());
                 this.$scope.players = _.map(game.players, (value, key) => {
