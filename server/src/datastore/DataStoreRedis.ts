@@ -290,10 +290,22 @@ module DataStoreRedisModule {
         }
 
         addPlayerWin(player:string, callback:(err:Error, wins:number)=>any):any {
-            redisClient.zincrby(ResultRedis.KEY_LEADERBOARD, 1, player, callback);
+            redisClient.zincrby(ResultRedis.KEY_LEADERBOARD, 1, player, (err:Error, result:string) => {
+                if (err) {
+                    return callback(err, null);
+                }
+
+                callback(null, +result);
+            });
         }
         getPlayerWins(player:string, callback:(err:Error, wins:number)=>any):any {
-            redisClient.zscore(ResultRedis.KEY_LEADERBOARD, player, callback);
+            redisClient.zscore(ResultRedis.KEY_LEADERBOARD, player, (err:Error, result:string) => {
+                if (err) {
+                    return callback(err, null);
+                }
+
+                callback(null, +result);
+            });
         }
     }
 }
