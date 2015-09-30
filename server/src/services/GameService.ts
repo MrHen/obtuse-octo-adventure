@@ -57,8 +57,10 @@ module GameServiceModule {
                         return this.actionLoop(gameId);
                     });
                 } else {
+                    // The dealer will automatically change state to STAY when appropriate so if we got this far, they
+                    // should get another card.
                     this.setActionTimer(() => {
-                        return this.api.game.rpoplpush(gameId, playerState.player, callback); // dealer hit
+                        return this.api.game.rpoplpush(gameId, playerState.player, callback);
                     });
                 }
                 return callback(null);
@@ -79,10 +81,9 @@ module GameServiceModule {
                 return dealing;
             }
 
-            // If no one needs cards, remind the current player it is their turn (unless it is the dealer, which
-            // we control.
+            // If no one needs cards, remind the current player it is their turn
             var current = _.find<{player:string; state:string}>(states, "state", GameConstants.PLAYER_STATES.CURRENT);
-            if (current && current.player !== GameConstants.DEALER) {
+            if (current) {
                 return current;
             }
 
@@ -90,7 +91,7 @@ module GameServiceModule {
             // TODO The current player could theoretically alternate after every action. This behavior should be
             // configurable and the "current player" should switch back to WAIT state after relevant actions.
             var waiting = _.find<{player:string; state:string}>(states, (value) => {
-                return value.player !== GameConstants.DEALER && value.state === GameConstants.PLAYER_STATES.WAITING
+                return value && value.player !== GameConstants.DEALER && value.state === GameConstants.PLAYER_STATES.WAITING
             });
             if (waiting) {
                 return waiting;
@@ -99,12 +100,6 @@ module GameServiceModule {
             // The only player left to act is the dealer, so make them the current player
             var dealer = _.find<{player:string; state:string}>(states, "player", GameConstants.DEALER);
             if (dealer && dealer.state === GameConstants.PLAYER_STATES.WAITING) {
-                return dealer;
-            }
-
-            // The dealer will automatically change state to STAY when appropriate so if we got this far, they
-            // should get another card.
-            if (dealer && dealer.state === GameConstants.PLAYER_STATES.CURRENT) {
                 return dealer;
             }
 

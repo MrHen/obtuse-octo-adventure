@@ -32,6 +32,86 @@ describe('GameService', () => {
         sandbox.restore();
     });
 
+    describe('findNextActionableState', () => {
+        data_driven([
+            {
+                label: 'all bust',
+                states: [{player: 'player', state: 'bust'}, {player: 'dealer', state: 'bust'}],
+                expected: null
+            },
+            {
+                label: 'all stay',
+                states: [{player: 'player', state: 'stay'}, {player: 'dealer', state: 'stay'}],
+                expected: null
+            },
+            {
+                label: 'wait > stay',
+                states: [{player: 'player', state: 'wait'}, {player: 'dealer', state: 'stay'}],
+                expected: {player: 'player', state: 'wait'}
+            },
+            {
+                label: 'current > stay',
+                states: [{player: 'player', state: 'current'}, {player: 'dealer', state: 'stay'}],
+                expected: {player: 'player', state: 'current'}
+            },
+            {
+                label: 'wait > win',
+                states: [{player: 'player', state: 'wait'}, {player: 'dealer', state: 'win'}],
+                expected: {player: 'player', state: 'wait'}
+            },
+            {
+                label: 'deal > stay',
+                states: [{player: 'player', state: 'deal'}, {player: 'dealer', state: 'stay'}],
+                expected: {player: 'player', state: 'deal'}
+            },
+            {
+                label: 'player wait > dealer wait',
+                states: [{player: 'player', state: 'wait'}, {player: 'dealer', state: 'wait'}],
+                expected: {player: 'player', state: 'wait'}
+            },
+            {
+                label: 'dealer deal > player wait',
+                states: [{player: 'player', state: 'wait'}, {player: 'dealer', state: 'deal'}],
+                expected: {player: 'dealer', state: 'deal'}
+            },
+            {
+                label: 'dealer wait > player bust',
+                states: [{player: 'player', state: 'bust'}, {player: 'dealer', state: 'wait'}],
+                expected: {player: 'dealer', state: 'wait'}
+            },
+            {
+                label: 'dealer current > player wait',
+                states: [{player: 'player', state: 'wait'}, {player: 'dealer', state: 'current'}],
+                expected: {player: 'dealer', state: 'current'}
+            },
+            {
+                label: 'survives empty states',
+                states: [],
+                expected: null
+            },
+            {
+                label: 'survives null states',
+                states: null,
+                expected: null
+            },
+            {
+                label: 'survives null state',
+                states: [null],
+                expected: null
+            }
+        ], () => {
+            it('{label}', (context) => {
+                var actual = gameService.findNextActionableState(context.states);
+                if (context.expected) {
+                    should.exist(actual);
+                    actual.should.eql(context.expected);
+                } else {
+                    should.not.exist(actual);
+                }
+            });
+        });
+    });
+
     describe('getWinners', () => {
         data_driven([
             {
