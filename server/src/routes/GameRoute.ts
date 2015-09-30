@@ -1,12 +1,14 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
+/// <reference path="../../../common/api.d.ts" />
+
 import _ = require('lodash');
 import async = require('async');
 import express = require('express');
 import http_status = require('http-status');
 
 import {GameDataStoreInterface} from '../datastore/DataStoreInterfaces';
-import {GameRouteInterface, GameResponse, GamePlayerResponse, GameCurrentTurnResponse} from './RouteInterfaces';
+import {GameRouteInterface} from './RouteInterfaces';
 import {GameServiceInterface} from '../services/GameService'
 
 module GameRouteModule {
@@ -38,7 +40,7 @@ module GameRouteModule {
             this.service = service;
         }
 
-        public getGame(gameId:string, callback:(err:Error, game:GameResponse)=>any):any {
+        public getGame(gameId:string, callback:(err:Error, game:ApiResponses.GameResponse)=>any):any {
             async.auto({
                 'states': (autoCb, results) => this.api.getPlayerStates(gameId, autoCb),
                 'players': ['states', (autoCb, results) => autoCb(null, _.pluck(results.states, 'player'))],
@@ -50,7 +52,7 @@ module GameRouteModule {
                     callback(err, null);
                 }
 
-                var players:{[name:string]:GamePlayerResponse} = {};
+                var players:{[name:string]:ApiResponses.GamePlayerResponse} = {};
 
                 _.forEach<{player:string; state:string}>(results.states, (value, key) => {
                     players[value.player] = {
@@ -60,7 +62,7 @@ module GameRouteModule {
                     }
                 });
 
-                var game:GameResponse = {
+                var game:ApiResponses.GameResponse = {
                     id: gameId,
                     players: players,
                     ended: this.service.isGameEnded(results.states)
@@ -82,7 +84,7 @@ module GameRouteModule {
             });
         }
 
-        public getCurrentTurn(gameId:string, callback:(err:Error, currentTurn:GameCurrentTurnResponse)=>any):any {
+        public getCurrentTurn(gameId:string, callback:(err:Error, currentTurn:ApiResponses.GameCurrentTurnResponse)=>any):any {
             this.api.getPlayerStates(gameId, (err:Error, states:{player:string; state:string}[]) => {
                 if (err) {
                     callback(err, null);
@@ -156,7 +158,7 @@ module GameRouteModule {
         app.get(base + '/:game_id/current', (req, res) => {
             var gameId = req.params.game_id;
 
-            controller.getCurrentTurn(gameId, (err:Error, currentTurn:GameCurrentTurnResponse) => {
+            controller.getCurrentTurn(gameId, (err:Error, currentTurn:ApiResponses.GameCurrentTurnResponse) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }
@@ -182,7 +184,7 @@ module GameRouteModule {
         app.get(base + '/:game_id', (req, res) => {
             var gameId = req.params.game_id;
 
-            controller.getGame(gameId, (err:Error, game:GameResponse) => {
+            controller.getGame(gameId, (err:Error, game:ApiResponses.GameResponse) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }

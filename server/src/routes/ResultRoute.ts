@@ -1,10 +1,12 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
+/// <reference path="../../../common/api.d.ts" />
+
 import express = require('express');
 import http_status = require('http-status');
 
 import {ResultDataStoreInterface} from '../datastore/DataStoreInterfaces';
-import {ResultRouteInterface, ResultResponse} from './RouteInterfaces';
+import {ResultRouteInterface} from './RouteInterfaces';
 
 module ResultRoute {
     export class ResultRouteController implements ResultRouteInterface {
@@ -16,7 +18,7 @@ module ResultRoute {
             this.api = api;
         }
 
-        getResults(skip:number, limit:number, callback:(err:Error, result:ResultResponse[])=>any) {
+        getResults(skip:number, limit:number, callback:(err:Error, result:ApiResponses.ResultResponse[])=>any) {
             this.api.getResults(skip, skip + limit, callback);
         }
     }
@@ -50,7 +52,7 @@ module ResultRoute {
 
             console.log('get results', req.query);
 
-            controller.getResults(skip, limit, (err:Error, results:ResultResponse[]) => {
+            controller.getResults(skip, limit, (err:Error, results:ApiResponses.ResultResponse[]) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }

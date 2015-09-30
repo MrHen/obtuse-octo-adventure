@@ -1,6 +1,6 @@
 /// <reference path="../../../typings/tsd.d.ts" />
 
-/// <reference path="../../api/api.service.ts" />
+/// <reference path="../../../../common/api.d.ts" />
 
 module Game {
     var app = angular
@@ -32,7 +32,7 @@ module Game {
     }
 
     export class GameController {
-        public game: ApiService.GameResponse;
+        public game: ApiResponses.GameResponse;
 
         public onAction: Function;
         public onNewGame: Function;

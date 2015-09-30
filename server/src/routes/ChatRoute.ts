@@ -1,5 +1,7 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
+/// <reference path="../../../common/api.d.ts" />
+
 import express = require('express');
 import http_status = require('http-status');
 
@@ -16,11 +18,11 @@ module ChatRoute {
             this.api = api;
         }
 
-        getMessages(callback:(err:Error, result:string[])=>any) {
+        getMessages(callback:(err:Error, result:ApiResponses.ChatResponse[])=>any) {
             this.api.getGlobalChat(20, callback);
         }
 
-        postMessage(request:{message:string}, callback:(err:Error, result:string)=>any) {
+        postMessage(request:{message:string}, callback:(err:Error, result:ApiResponses.ChatResponse)=>any) {
             if (!request || !request.message) {
                 return callback(new Error(ChatRouteController.ERROR_INVALID_MESSAGE), null);
             }
@@ -47,7 +49,7 @@ module ChatRoute {
         var controller = new ChatRouteController(api);
 
         app.get(base, function (req, res) {
-            controller.getMessages((err:Error, messages:string[]) => {
+            controller.getMessages((err:Error, messages:ApiResponses.ChatResponse[]) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }
@@ -61,7 +63,7 @@ module ChatRoute {
                 message: req.body.message
             };
 
-            controller.postMessage(chatRequest, (err:Error, message:string) => {
+            controller.postMessage(chatRequest, (err:Error, message:ApiResponses.ChatResponse) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }

@@ -1,5 +1,7 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
+/// <reference path="../../../common/api.d.ts" />
+
 import _ = require('lodash');
 import async = require('async');
 import express = require('express');
@@ -7,7 +9,7 @@ import http_status = require('http-status');
 
 import {RoomEventController} from '../services/GameService';
 import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
-import {RoomRouteInterface, GameResponse, RoomResponse} from './RouteInterfaces';
+import {RoomRouteInterface} from './RouteInterfaces';
 
 module RoomRoute {
     export interface Game {
@@ -41,7 +43,7 @@ module RoomRoute {
             this.service = service;
         }
 
-        getRoom(roomId:string, callback:(err:Error, room:RoomResponse)=>any):any {
+        getRoom(roomId:string, callback:(err:Error, room:ApiResponses.RoomResponse)=>any):any {
             async.auto({
                 'game': [(autoCb, results) => this.api.room.getGame(roomId, autoCb)],
                 'players': [(autoCb, results) => this.api.room.getPlayers(roomId, autoCb)]
@@ -50,7 +52,7 @@ module RoomRoute {
                     return callback(err, null);
                 }
 
-                var response:RoomResponse = {
+                var response:ApiResponses.RoomResponse = {
                     room_id: roomId,
                     game_id: results.game,
                     players: results.players
@@ -59,7 +61,7 @@ module RoomRoute {
                 callback(null, response);
             });
         }
-        getRooms(callback:(err:Error, rooms:RoomResponse[])=>any):any {
+        getRooms(callback:(err:Error, rooms:ApiResponses.RoomResponse[])=>any):any {
 
             async.auto({
                 'roomIds': (autoCb, results) => this.api.room.getRooms(autoCb),
@@ -84,7 +86,7 @@ module RoomRoute {
             this.api.room.putPlayer(roomId, player, callback);
         }
 
-        postGame(roomId:string, callback:(err:Error, game:GameResponse)=>any):any {
+        postGame(roomId:string, callback:(err:Error, game:ApiResponses.GameResponse)=>any):any {
             async.auto({
                 'game': [(autoCb, results) => this.api.room.getGame(roomId, autoCb)],
                 'players': [(autoCb, results) => this.api.room.getPlayers(roomId, autoCb)],
@@ -179,7 +181,7 @@ module RoomRoute {
         app.post(base + '/:room_id/game', function (req, res) {
             var roomId = req.params.room_id;
 
-            controller.postGame(roomId, (err:Error, game:GameResponse) => {
+            controller.postGame(roomId, (err:Error, game:ApiResponses.GameResponse) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }
@@ -191,7 +193,7 @@ module RoomRoute {
         app.get(base + '/:room_id', function (req, res) {
             var roomId = req.params.room_id;
 
-            controller.getRoom(roomId, (err:Error, room:RoomResponse) => {
+            controller.getRoom(roomId, (err:Error, room:ApiResponses.RoomResponse) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }
@@ -201,7 +203,7 @@ module RoomRoute {
         });
 
         app.get(base, function (req, res) {
-            controller.getRooms((err:Error, messages:RoomResponse[]) => {
+            controller.getRooms((err:Error, messages:ApiResponses.RoomResponse[]) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }
