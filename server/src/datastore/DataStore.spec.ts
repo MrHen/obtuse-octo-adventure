@@ -7,6 +7,9 @@ import DataStore = require('./DataStore');
 import DataStoreModule = require('./DataStoreInterfaces');
 import DataStoreInterface = DataStoreModule.DataStoreInterface;
 
+// These tests run against whichever data store is active for the environment. Using `gulp deploy` will endure the tests
+// run on heroku/redis before the deploy is accepted.
+
 describe('DataStore', () => {
     var dataStore:DataStoreInterface = null;
 

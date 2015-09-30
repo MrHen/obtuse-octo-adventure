@@ -5,6 +5,10 @@ import redis = require('redis');
 
 import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, ResultDataStoreInterface, RoomDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
 
+// Used on heroku box
+
+// All of the Redis data classes are in one file so they can reference the same redis client and constants. Ideally they
+// would be split up into seperate files like the in-memory data classes.
 module DataStoreRedisModule {
     var redisClient:redis.RedisClient = null;
     var redisSubcriber:redis.RedisClient = null;
@@ -53,7 +57,6 @@ module DataStoreRedisModule {
         }
     }
 
-    // Used on heroku box
     class ChatRedis implements ChatDataStoreInterface {
         private static KEY_GLOBALCHAT = 'globalchat';
 
