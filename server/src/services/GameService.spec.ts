@@ -78,7 +78,7 @@ describe('GameService', () => {
             },
             {
                 label: 'survives null states',
-                states: [],
+                states: null,
                 scores: {'player': 20, 'dealer': 19, 'other': 20},
                 expected: ['dealer']
             },
@@ -101,6 +101,55 @@ describe('GameService', () => {
                 actual.should.containDeep(context.expected);
             });
         });
+    });
 
+    describe('isGameEnded', () => {
+        data_driven([
+            {
+                label: 'all bust',
+                states: [{player: 'player', state: 'bust'}, {player: 'dealer', state: 'bust'}],
+                expected: true
+            },
+            {
+                label: 'all stay',
+                states: [{player: 'player', state: 'stay'}, {player: 'dealer', state: 'stay'}],
+                expected: true
+            },
+            {
+                label: 'wait + stay',
+                states: [{player: 'player', state: 'wait'}, {player: 'dealer', state: 'stay'}],
+                expected: false
+            },
+            {
+                label: 'current + stay',
+                states: [{player: 'player', state: 'current'}, {player: 'dealer', state: 'stay'}],
+                expected: false
+            },
+            {
+                label: 'wait + win',
+                states: [{player: 'player', state: 'wait'}, {player: 'dealer', state: 'win'}],
+                expected: true
+            },
+            {
+                label: 'deal + stay',
+                states: [{player: 'player', state: 'deal'}, {player: 'dealer', state: 'stay'}],
+                expected: false
+            },
+            {
+                label: 'survives empty states',
+                states: [],
+                expected: true
+            },
+            {
+                label: 'survives null states',
+                states: null,
+                expected: true
+            }
+        ], () => {
+            it('{label}', (context) => {
+                var actual = gameService.isGameEnded(context.states);
+                should.equal(actual, context.expected);
+            });
+        });
     });
 });
