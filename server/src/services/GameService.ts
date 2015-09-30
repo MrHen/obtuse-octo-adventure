@@ -183,7 +183,8 @@ module GameServiceModule {
                 'process': ['cards', 'state', (autoCb, results) => {
                     console.log('handleCardPushed process', results);
 
-                    var state = null;
+                    var state:string = null;
+                    var end:boolean = false;
                     if (results.cards.length < 2) {
                         console.log('handleCardPushed saw dealing');
                         state = GameServiceController.PLAYER_STATES.DEALING;
@@ -196,11 +197,16 @@ module GameServiceModule {
 
                     if (!state && player === GameServiceController.DEALER && results.score >= GameServiceController.DEALER_STAY) {
                         console.log('handleCardPushed saw dealer stay');
+                        end = results.score === GameServiceController.MAX;
                         state = GameServiceController.PLAYER_STATES.STAY;
                     }
 
                     if (!state && results.state === GameServiceController.PLAYER_STATES.DEALING && results.cards.length >= 2) {
                         state = GameServiceController.PLAYER_STATES.WAITING;
+                    }
+
+                    if (end) {
+                        return this.endGame(gameId, autoCb);
                     }
 
                     if (state && state !== results.state) {
@@ -234,17 +240,10 @@ module GameServiceModule {
                     autoCb(null, _.zipObject<{[player:string]:number}>(results.players, results.scores));
                 }],
                 'save_scores': ['player_scores', (autoCb, results) => {
-                    this.api.result.pushResult(gameId,results.player_scores, autoCb);
+                    this.api.result.pushResult(gameId, results.player_scores, autoCb);
                 }],
                 'winners': ['player_scores', (autoCb, results:any) => {
-                    var dealerScore = results.player_scores[GameServiceController.DEALER];
-
-                    var winners = _.filter(results.players, (player:string) => results.player_scores[player] > dealerScore && results.player_scores[player] < GameServiceController.MAX);
-
-                    if (!winners.length) {
-                        winners = [GameServiceController.DEALER];
-                    }
-                    autoCb(null, winners);
+                    autoCb(null, this.getWinners(results.states, results.player_scores));
                 }],
                 'leaderboard': ['winners', (autoCb, results:any) => {
                     async.eachLimit(results.winners, 3, (winner:string, eachCb) => {
@@ -267,8 +266,27 @@ module GameServiceModule {
 
         public isGameEnded(states:{player:string; state:string}[]):boolean {
             var playing = _.pluck(states, 'state');
+            if (_.include(playing, 'win')) {
+                return true;
+            }
             playing = _.without(playing, 'bust', 'stay', 'win');
             return _.isEmpty(playing);
+        }
+
+        public getWinners(states:{player:string; state:string}[], scores:{[player:string]:number}):string[] {
+            var winners = _.pluck(_.reject(states, {'state': GameServiceController.PLAYER_STATES.BUST}), 'player');
+
+            var dealerBust = !_.includes(winners, GameServiceController.DEALER);
+
+            if (!dealerBust) {
+                var dealerScore = scores[GameServiceController.DEALER];
+                winners = _.filter(winners, (player:string) => scores[player] > dealerScore);
+            }
+
+            if (!winners.length) {
+                winners = [GameServiceController.DEALER];
+            }
+            return winners;
         }
 
         public setActionTimer(func:Function) {
