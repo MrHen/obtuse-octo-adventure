@@ -17,8 +17,8 @@ import Routes = require('./routes/Routes');
 import ChatRouteController = require('./routes/ChatRouteController');
 import GameRouteController = require('./routes/GameRouteController');
 import LeaderboardRouteController = require('./routes/LeaderboardRouteController');
+import ResultRouteController = require('./routes/ResultRouteController');
 import RoomRoute = require('./routes/RoomRoute');
-import ResultRoute = require('./routes/ResultRoute');
 
 import Sockets = require('./services/Sockets');
 
@@ -46,7 +46,7 @@ async.auto({
         var chatController = new ChatRouteController(results.db.chat);
         var gameController = new GameRouteController(results.db.game, results.service);
         var leaderboardController = new LeaderboardRouteController(results.db.result);
-        var resultController = new ResultRoute.ResultRouteController(results.db.result);
+        var resultController = new ResultRouteController(results.db.result);
         var roomController = new RoomRoute.RoomRouteController(results.db, results.service);
 
         Routes.initChat('/chat', results.app, chatController);
