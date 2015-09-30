@@ -18,6 +18,7 @@ The app is split into `client` and `server` folders but could be split into two 
   * Deployed at https://murmuring-tundra-3318.herokuapp.com/ (no exposed server dashboard at this time)
     * Hosted on Heroku
     * Be gentle; it can take some time to wake up the Heroku instance
+    * Deploy using `gulp deploy` from the server directory
     * Uses `npm postinstall` hook to build TypeScript and run tests
   * REST API
      * Behavior declared using [controller interfaces](https://github.com/MrHen/obtuse-octo-adventure/blob/master/server/src/routes/Routes.ts)
