@@ -4,6 +4,7 @@ module ConfigService {
     export interface ConfigInterface {
         api_base?: string;
         websocket_host?: string;
+        max_socket_debug?: number;
     }
 
     export class Config {
