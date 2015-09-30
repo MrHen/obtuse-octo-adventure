@@ -230,12 +230,11 @@ module DataStoreMemory {
         }
 
         getMostWins(start:number, end:number, callback:(err:Error, results:{player:string; wins:number}[])=>any):any {
-            var realEnd = end === -1 ? this.results.length : end + 1; // redis uses inclusive matching so adjust accordingly
-
             var leaderboard = _.map(this.wins, (wins:number, player:string) => {
                 return {player:player, wins: wins};
             });
             leaderboard = _.sortBy(leaderboard, 'wins').reverse();
+            var realEnd = end === -1 ? leaderboard.length : end + 1; // redis uses inclusive matching so adjust accordingly
             callback(null, leaderboard.slice(start, realEnd));
         }
     }
