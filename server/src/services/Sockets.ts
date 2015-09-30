@@ -5,27 +5,22 @@ import http = require('http');
 import socket_io = require('socket.io');
 
 module Sockets {
-    export interface SocketsConfigInterface {
-    }
+    export var EVENTS = {
+        CLIENT: {
+            ACTION_REMINDER: 'action',
+            CARD: 'card',
+            GLOBAL_CHAT: 'globalchat:created',
+            PLAYER_STATE: 'state',
+            PING: 'time'
+        }
+    };
 
     export class Sockets {
-        private static config_defaults:SocketsConfigInterface = {};
-
-        private config:SocketsConfigInterface = {};
-
         private socketServer:SocketIO.Server = null;
 
         private connected:SocketIO.Socket[] = [];
 
-        private static EVENT_GLOBALCHAT = 'globalchat:created';
-        private static EVENT_TIME = 'time';
-        private static EVENT_ACTIONREMINDER = 'action';
-        private static EVENT_CARD = 'card';
-        private static EVENT_PLAYERSTATE = 'state';
-
-        public constructor(server:http.Server, options?:SocketsConfigInterface) {
-            this.config = _.defaults(options || {}, Sockets.config_defaults);
-
+        public constructor(server:http.Server) {
             this.socketServer = socket_io(server);
 
             this.socketServer.on("connection", this.onConnection);
@@ -35,9 +30,7 @@ module Sockets {
             this.connected.push(socket);
 
             var id = setInterval(() => {
-                socket.emit(Sockets.EVENT_TIME, JSON.stringify(new Date()), () => {
-
-                })
+                socket.emit(EVENTS.CLIENT.PING, JSON.stringify(new Date()), () => {})
             }, 1000);
 
             console.log("websocket connection open");
@@ -49,31 +42,27 @@ module Sockets {
             })
         };
 
+        private emitAllClients = (event:string, message:string) => {
+            _.forEach(this.connected, (client) => client.emit(event, message));
+        };
+
         public emitGlobalChat = (message) => {
             console.log("emitting chat", {clients:this.connected.length});
-            _.forEach(this.connected, (client) => {
-                client.emit(Sockets.EVENT_GLOBALCHAT, message);
-            })
+            this.emitAllClients(EVENTS.CLIENT.GLOBAL_CHAT, message);
         };
 
         public emitActionReminder = (reminder:{player:string; actions:string[]}) => {
-            _.forEach(this.connected, (client) => {
-                client.emit(Sockets.EVENT_ACTIONREMINDER, JSON.stringify(reminder));
-            })
+            this.emitAllClients(EVENTS.CLIENT.ACTION_REMINDER, JSON.stringify(reminder));
         };
 
         public emitCardPushed = (gameId:string, player:string, card:string) => {
             // TODO not every user needs every update
-            _.forEach(this.connected, (client) => {
-                client.emit(Sockets.EVENT_CARD, JSON.stringify({gameId: gameId, player:player, card:card}));
-            })
+            this.emitAllClients(EVENTS.CLIENT.CARD, JSON.stringify({gameId: gameId, player:player, card:card}));
         };
 
         public emitPlayerStateChange = (gameId:string, player:string, state:string) => {
             // TODO not every user needs every update
-            _.forEach(this.connected, (client) => {
-                client.emit(Sockets.EVENT_PLAYERSTATE, JSON.stringify({gameId: gameId, player:player, state:state}));
-            })
+            this.emitAllClients(EVENTS.CLIENT.PLAYER_STATE, JSON.stringify({gameId: gameId, player:player, state:state}));
         };
     }
 }
