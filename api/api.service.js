@@ -1,4 +1,5 @@
 /// <reference path="../../typings/tsd.d.ts" />
+/// <reference path="../../../server/src/api.d.ts" />
 var ApiService;
 (function (ApiService) {
     var Api = (function () {

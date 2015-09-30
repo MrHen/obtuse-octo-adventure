@@ -1,5 +1,5 @@
 /// <reference path="../../../typings/tsd.d.ts" />
-/// <reference path="../../api/api.service.ts" />
+/// <reference path="../../../../server/src/api.d.ts" />
 var Game;
 (function (Game) {
     var app = angular

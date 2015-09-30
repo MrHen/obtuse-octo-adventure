@@ -1,3 +1,4 @@
+/// <reference path="../../server/src/api.d.ts" />
 /// <reference path="../typings/tsd.d.ts" />
 /// <reference path="./api/api.service.ts" />
 /// <reference path="./config/config.service.ts" />
@@ -50,6 +51,9 @@ var OctoApp;
                 return _this.Api.getGame(_this.$scope.room.game_id).then(function (game) {
                     console.log('loadGame resolved', game.plain());
                     _this.$scope.game = game;
+                    if (game.ended) {
+                        _this.loadLeaderboard();
+                    }
                 });
             };
             this.loadLeaderboard = function () {
