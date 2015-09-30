@@ -1,7 +1,5 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
-import _ = require('lodash');
-
 module GameConstants {
     export var DEFAULT_ROOM = 'demo';
     export var DEFAULT_PLAYER = 'player';
@@ -49,16 +47,6 @@ module GameConstants {
     export var DEALER_STAY = 17;
     export var DECK_COUNT = 1;
     export var MAX = 21;
-
-    export function valueForCards(cards:string[]):number {
-        return _.sum(cards, (card:string) => {
-            if (+card[0] > 0) {
-                return +card[0];
-            }
-
-            return card[0] === 'A' ? 11 : 10;
-        })
-    }
 }
 
 export = GameConstants;

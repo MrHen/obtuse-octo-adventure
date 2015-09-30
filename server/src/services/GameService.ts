@@ -8,16 +8,13 @@ import GameConstants = require('./GameConstants');
 import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
 
 module GameServiceModule {
-    export interface RoomEventController {
+    export interface GameServiceInterface {
         shuffle(game_id:string, callback:(err:Error)=>any);
         isGameEnded(states:{player:string; state:string}[]):boolean;
+        valueForCards(cards:string[]):number;
     }
 
-    export interface GameServiceInterface {
-        isGameEnded(states:{player:string; state:string}[]):boolean;
-    }
-
-    export class GameServiceController implements GameServiceInterface, RoomEventController {
+    export class GameServiceController implements GameServiceInterface {
         private static ACTION_DELAY:number = 2000; // time between actions controlled by game (e.g., dealer)
 
         private static _DECK:string[] = null;
@@ -36,14 +33,52 @@ module GameServiceModule {
             return GameServiceController._DECK;
         }
 
-        private api:DataStoreInterface = null;
+        // Used to artificially limit user interaction (for suspense!)
+        private actionTimer:number = null;
 
         private emitter:events.EventEmitter = new events.EventEmitter();
 
-        private actionTimer;
-
-        public constructor(api:DataStoreInterface) {
+        public constructor(private api:DataStoreInterface) {
             this.api = api;
+        }
+
+        public getWinners(states:{player:string; state:string}[], scores:{[player:string]:number}):string[] {
+            var winners = _.pluck(_.reject(states, {'state': GameConstants.PLAYER_STATES.BUST}), 'player');
+
+            var dealerBust = !_.includes(winners, GameConstants.DEALER);
+
+            if (!dealerBust) {
+                var dealerScore = scores[GameConstants.DEALER];
+                winners = _.filter(winners, (player:string) => scores[player] > dealerScore);
+            }
+
+            if (!winners.length) {
+                winners = [GameConstants.DEALER];
+            }
+            return winners;
+        }
+
+        // Player was dealt a card; check if a state change is necessary
+        public handleCardPushed = (cardPush:ApiResponses.CardDealtResponse, callback?:(err:Error)=>any) => {
+            this.updatePlayerState(cardPush.gameId, cardPush.player);
+        };
+
+        // Kick off the main action loop after every state change.
+        // TODO Make this scaling friendly by pulling from a queue instead of listening to events.
+        public handleStateChange = (playerState:ApiResponses.PlayerStateResponse) => {
+            // Ignore WIN state change since that only happens after the game has already ended
+            if (playerState.state !== GameConstants.PLAYER_STATES.WIN) {
+                this.actionLoop(playerState.gameId);
+            }
+        };
+
+        public isGameEnded(states:{player:string; state:string}[]):boolean {
+            var playing = _.pluck(states, 'state');
+            if (_.include(playing, GameConstants.PLAYER_STATES.WIN)) {
+                return true;
+            }
+            playing = _.without(playing, GameConstants.PLAYER_STATES.BUST, GameConstants.PLAYER_STATES.STAY, GameConstants.PLAYER_STATES.WIN);
+            return _.isEmpty(playing);
         }
 
         public shuffle(game:string, callback:(err:Error)=>any) {
@@ -51,6 +86,17 @@ module GameServiceModule {
             this.api.game.setDeck(game, newDeck, callback);
         }
 
+        public valueForCards(cards:string[]):number {
+            return _.sum(cards, (card:string) => {
+                if (+card[0] > 0) {
+                    return +card[0];
+                }
+
+                return card[0] === 'A' ? 11 : 10;
+            })
+        }
+
+        // The main action loop. This will check a particular game and identify the next actor
         public actionLoop = (gameId:string, callback?:(err:Error)=>any) => {
             if (!callback) {
                 callback = (err:Error) => {
@@ -68,6 +114,8 @@ module GameServiceModule {
                 }],
                 'next_action': ['states', (autoCb, results) => {
                     console.log('actionLoop next_action', gameId, results);
+                    // Check if someone needs to be dealt a card.
+                    // TODO Mimic standard dealing patterns
                     var dealing = _.find<{player:string; state:string}>(results.states, "state", GameConstants.PLAYER_STATES.DEALING);
                     if (dealing) {
                         console.log('actionLoop chose dealing', dealing);
@@ -76,6 +124,8 @@ module GameServiceModule {
                         });
                     }
 
+                    // If no one needs cards, remind the current player it is their turn (unless it is the dealer, which
+                    // we control.
                     var current = _.find<{player:string; state:string}>(results.states, "state", GameConstants.PLAYER_STATES.CURRENT);
                     if (current && current.player !== GameConstants.DEALER) {
                         console.log('actionLoop chose current', current);
@@ -87,6 +137,9 @@ module GameServiceModule {
                         return autoCb(null, null);
                     }
 
+                    // If it is nobody's turn, look for a non-dealer to make the current player
+                    // TODO The current player could theoretically alternate after every action. This behavior should be
+                    // configurable and the "current player" should switch back to WAIT state after relevant actions.
                     var waiting = _.find<{player:string; state:string}>(results.states, (value) => {
                         return value.player !== GameConstants.DEALER && value.state === GameConstants.PLAYER_STATES.WAITING
                     });
@@ -95,12 +148,15 @@ module GameServiceModule {
                         return this.api.game.setPlayerState(gameId, waiting.player, GameConstants.PLAYER_STATES.CURRENT, autoCb);
                     }
 
+                    // The only player left to act is the dealer, so make them the current player
                     var dealer = _.find<{player:string; state:string}>(results.states, "player", GameConstants.DEALER);
                     if (dealer && dealer.state === GameConstants.PLAYER_STATES.WAITING) {
                         console.log('actionLoop chose dealer');
                         return this.api.game.setPlayerState(gameId, dealer.player, GameConstants.PLAYER_STATES.CURRENT, autoCb);
                     }
 
+                    // The dealer will automatically change state to STAY when appropriate so if we got this far, they
+                    // should get another card.
                     if (dealer && dealer.state === GameConstants.PLAYER_STATES.CURRENT) {
                         console.log('actionLoop chose dealer (hit)');
                         return this.setActionTimer(() => {
@@ -108,6 +164,7 @@ module GameServiceModule {
                         });
                     }
 
+                    // No further actions to take
                     this.endGame(gameId, autoCb);
                 }]
             }, (err, results:any) => {
@@ -115,24 +172,7 @@ module GameServiceModule {
             });
         };
 
-        public handleStateChange = (playerState:ApiResponses.PlayerStateResponse, callback?:(err:Error)=>any) => {
-            if (!callback) {
-                callback = (err:Error) => {
-                    if (err) {
-                        console.warn("Saw unprocessed error from handleStateChange", err);
-                    }
-                }
-            }
-
-            // Ignore WIN state change since that only happens after the game has already ended
-            if (playerState.state === GameConstants.PLAYER_STATES.WIN) {
-                return callback(null);
-            }
-
-            return this.actionLoop(playerState.gameId, callback);
-        };
-
-        public handleCardPushed = (cardPush:ApiResponses.CardDealtResponse, callback?:(err:Error)=>any) => {
+        public updatePlayerState = (gameId:string, player:string, callback?:(err:Error)=>any) => {
             if (!callback) {
                 callback = (err:Error) => {
                     if (err) {
@@ -141,56 +181,62 @@ module GameServiceModule {
                 }
             }
 
-            console.log('handleCardPushed started', cardPush);
+            console.log('updatePlayerState started', gameId, player);
 
             async.auto({
                 'cards': [(autoCb, results) => {
-                    this.api.game.getPlayerCards(cardPush.gameId, cardPush.player, autoCb);
+                    this.api.game.getPlayerCards(gameId, player, autoCb);
                 }],
                 'score': ['cards', (autoCb, results) => {
-                    autoCb(null, GameConstants.valueForCards(results.cards));
+                    autoCb(null, this.valueForCards(results.cards));
                 }],
                 'states': [(autoCb, results) => {
-                    this.api.game.getPlayerStates(cardPush.gameId, autoCb)
+                    this.api.game.getPlayerStates(gameId, autoCb)
                 }],
                 'state': ['states', (autoCb, results) => {
-                    console.log('handleCardPushed state', results);
-                    autoCb(null, _.find<{player:string; state:string}>(results.states, 'player', cardPush.player).state);
+                    console.log('updatePlayerState state', results);
+                    autoCb(null, _.find<{player:string; state:string}>(results.states, 'player', player).state);
                 }],
                 'process': ['cards', 'state', (autoCb, results) => {
-                    console.log('handleCardPushed process', results);
+                    console.log('updatePlayerState process', results);
 
                     var state:string = null;
                     var end:boolean = false;
+
                     if (results.cards.length < 2) {
-                        console.log('handleCardPushed saw dealing');
+                        console.log('updatePlayerState saw dealing');
                         state = GameConstants.PLAYER_STATES.DEALING;
                     }
 
                     if (!state && results.score > GameConstants.MAX) {
-                        console.log('handleCardPushed saw bust');
+                        console.log('updatePlayerState saw bust');
                         state = GameConstants.PLAYER_STATES.BUST;
                     }
 
-                    if (!state && cardPush.player === GameConstants.DEALER && results.score >= GameConstants.DEALER_STAY) {
-                        console.log('handleCardPushed saw dealer stay');
-                        end = results.score === GameConstants.MAX;
+                    if (!state && player === GameConstants.DEALER && results.score >= GameConstants.DEALER_STAY) {
+                        console.log('updatePlayerState saw dealer stay');
+                        end = results.score === GameConstants.MAX; // Prematurely end the game once the dealer hits max
                         state = GameConstants.PLAYER_STATES.STAY;
                     }
 
+                    // If we were waiting for cards and got enough, update to WAITING state
                     if (!state && results.state === GameConstants.PLAYER_STATES.DEALING && results.cards.length >= 2) {
                         state = GameConstants.PLAYER_STATES.WAITING;
                     }
 
+                    // Don't bother updating the player state before ending the game. endGame() will update things
+                    // appropriately
                     if (end) {
-                        return this.endGame(cardPush.gameId, autoCb);
+                        return this.endGame(gameId, autoCb);
                     }
 
                     if (state && state !== results.state) {
-                        return this.api.game.setPlayerState(cardPush.gameId, cardPush.player, state, autoCb);
+                        return this.api.game.setPlayerState(gameId, player, state, autoCb);
                     }
 
-                    this.actionLoop(cardPush.gameId, autoCb);
+                    // If no state changes hit, run the action loop again. If a state change _did_ hit, the listener
+                    // will automatically detect it.
+                    this.actionLoop(gameId, autoCb);
                 }]
             }, (err, results:any) => {
                 callback(err);
@@ -211,7 +257,7 @@ module GameServiceModule {
                     async.mapLimit(results.players, 3, (player:string, mapCb) => this.api.game.getPlayerCards(gameId, player, mapCb), autoCb);
                 }],
                 'scores': ['cards', (autoCb, results) => {
-                    autoCb(null, _.map(results.cards, (cards:string[]) => GameConstants.valueForCards(cards)));
+                    autoCb(null, _.map(results.cards, (cards:string[]) => this.valueForCards(cards)));
                 }],
                 'player_scores': ['scores', (autoCb, results) => {
                     autoCb(null, _.zipObject<{[player:string]:number}>(results.players, results.scores));
@@ -241,32 +287,7 @@ module GameServiceModule {
             });
         };
 
-        public isGameEnded(states:{player:string; state:string}[]):boolean {
-            var playing = _.pluck(states, 'state');
-            if (_.include(playing, GameConstants.PLAYER_STATES.WIN)) {
-                return true;
-            }
-            playing = _.without(playing, GameConstants.PLAYER_STATES.BUST, GameConstants.PLAYER_STATES.STAY, GameConstants.PLAYER_STATES.WIN);
-            return _.isEmpty(playing);
-        }
-
-        public getWinners(states:{player:string; state:string}[], scores:{[player:string]:number}):string[] {
-            var winners = _.pluck(_.reject(states, {'state': GameConstants.PLAYER_STATES.BUST}), 'player');
-
-            var dealerBust = !_.includes(winners, GameConstants.DEALER);
-
-            if (!dealerBust) {
-                var dealerScore = scores[GameConstants.DEALER];
-                winners = _.filter(winners, (player:string) => scores[player] > dealerScore);
-            }
-
-            if (!winners.length) {
-                winners = [GameConstants.DEALER];
-            }
-            return winners;
-        }
-
-        public setActionTimer(func:Function) {
+        private setActionTimer(func:Function) {
             if (this.actionTimer) {
                 clearTimeout(this.actionTimer);
                 this.actionTimer = null;

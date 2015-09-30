@@ -40,7 +40,7 @@ class GameRouteController implements GameRouteControllerInterface {
                 players[value.player] = {
                     state: value.state,
                     cards: results.cards[key],
-                    score: GameConstants.valueForCards(results.cards[key])
+                    score: this.service.valueForCards(results.cards[key])
                 }
             });
 

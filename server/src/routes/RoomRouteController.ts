@@ -6,7 +6,7 @@ import _ = require('lodash');
 import async = require('async');
 
 import GameConstants = require('../services/GameConstants');
-import {RoomEventController} from '../services/GameService';
+import {GameServiceInterface} from '../services/GameService';
 import {DataStoreInterface, PlayerState} from '../datastore/DataStoreInterfaces';
 import {RoomRouteControllerInterface} from './Routes';
 
@@ -14,9 +14,9 @@ import RouteErrors = require('./RouteErrors');
 
 class RoomRouteController implements RoomRouteControllerInterface {
     private api:DataStoreInterface = null;
-    private service:RoomEventController = null;
+    private service:GameServiceInterface = null;
 
-    constructor(api:DataStoreInterface, service:RoomEventController) {
+    constructor(api:DataStoreInterface, service:GameServiceInterface) {
         this.api = api;
         this.service = service;
     }
