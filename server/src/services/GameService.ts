@@ -47,7 +47,7 @@ module GameServiceModule {
 
             var dealerBust = !_.includes(winners, GameConstants.DEALER);
 
-            if (!dealerBust) {
+            if (!dealerBust && scores) {
                 var dealerScore = scores[GameConstants.DEALER];
                 winners = _.filter(winners, (player:string) => scores[player] > dealerScore);
             }
