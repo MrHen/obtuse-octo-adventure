@@ -29,6 +29,9 @@ var ApiService;
         Api.prototype.postGlobalChat = function (message) {
             return this.Restangular.all('chat').post({ message: message });
         };
+        Api.prototype.getMostWins = function () {
+            return this.Restangular.all('leaderboard').getList();
+        };
         Api.$inject = ["Restangular"];
         return Api;
     })();

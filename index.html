@@ -11,102 +11,70 @@
     <script src="bower_components/socket.io-client/socket.io.js"></script>
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/restangular/src/restangular.js"></script>
+
     <script src="config/config.service.js"></script>
     <script src="api/api.service.js"></script>
     <script src="sockets/sockets.service.js"></script>
+
+    <script src="components/settings/settings.js"></script>
+    <script src="components/chat/chat.js"></script>
+    <script src="components/game/game.js"></script>
+    <script src="components/leaderboard/leaderboard.js"></script>
+
     <script src="index.js"></script>
 </head>
 <body ng-controller="OctoController">
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-12">
-            <div class="page-header">
+        <div class="col-md-12">
+            <div class="page-header text-center">
                 <h1>Obtuse Octo Adventure</h1>
+                <p><small>(because that is what you get when you let GitHub name your project)</small></p>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-sm-8">
-            <div>
-                <div ng-show="!room">
-                    <p>Loading room...</p>
-                </div>
-                <div ng-show="room">
-                    <p>{{room.game_id}}</p>
-                    <table class="table">
-                        <tr>
-                            <th>Player</th>
-                            <th>State</th>
-                            <th>Cards</th>
-                            <th>Score</th>
-                        </tr>
-                        <tr ng-repeat="player in players track by $index">
-                            <td ng-bind="player.name"></td>
-                            <td ng-bind="player.state"></td>
-                            <td ng-bind="player.cards"></td>
-                            <td>?</td>
-                            <td>
-                                <button ng-if="player_name === player.name" class="btn btn-default" ng-click="action('hit')">Hit</button>
-                                <button ng-if="player_name === player.name" class="btn btn-default" ng-click="action('stay')">Stay</button>
-                            </td>
-                        </tr>
-                    </table>
+        <div class="col-md-8 col-sm-10">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <p class="lead">A simple blackjack implementation</p>
+                    <p>Rule specifics:</p>
+                    <ul>
+                        <li>Dealer always stays on 17 or higher</li>
+                        <li>Dealer always hits on 16 or higher</li>
+                        <li>Player wins if they beat the dealer (without going bust)</li>
+                        <li>Dealer wins if no players win</li>
+                        <li>Dealer automatically wins on 21</li>
+                        <li>Aces are worth exactly 11</li>
+                    </ul>
                 </div>
             </div>
 
-            <p>Content goes here. {{player.name}}</p>
+            <octo-game game="game" player="player_name" on-new-game="newGame()" on-action="doAction(action)"></octo-game>
+
+            <octo-leaderboard players="leaderboard"></octo-leaderboard>
         </div>
 
-        <div class="col-sm-4">
-            <div id="settings-panel" class="panel panel-default">
-                <div class="panel-heading">
-                    <h2 class="panel-title">Settings</h2>
-                </div>
-                <div class="panel-body">
-                    <form class="form-horizontal" name="settingsform">
-                        <div class="form-group">
-                            <label for="settingsName" class="col-sm-2 control-label">Name</label>
-                            <div class="col-sm-10">
-                                <input ng-disabled="!canEditPlayer" type="text" class="form-control" ng-model="player_name" id="settingsName" placeholder="Name">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <div class="col-md-4 hidden-xs hidden-sm">
+            <octo-settings name="player_name"></octo-settings>
 
-            <div id="chat-panel" class="panel panel-default">
-                <div class="panel-heading">
-                    <h2 class="panel-title">Chat</h2>
-                </div>
-                <div class="panel-body">
-                    <form class="form-inline" name="chatform">
-                        <input class="form-control" type="text" ng-model="chatMessage" placeholder="Say something!"/>
-                        <button class="btn btn-default" type="submit" ng-click="chatSubmit(chatform)">Submit</button>
-                    </form>
-                </div>
-                <div class="panel-body">
-                    <div ng-show="!globalChat">Loading chat...</div>
-                    <div ng-show="!globalChat.length">Empty chat</div>
-                    <div ng-show="globalChat">
-                        <ul>
-                            <li ng-repeat="message in globalChat track by $index" ng-bind="message"></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            <octo-chat messages="globalChat" on-chat="chatSubmit(message)"></octo-chat>
 
             <div id="debug-panel" class="panel panel-default">
+                <div class="panel-heading">
+                    <h2 class="panel-title">Debug</h2>
+                </div>
+                <div class="list-group">
+                    <button class="list-group-item" ng-click="loadRoom()"><div class="text-center">Load Room</div></button>
+                    <button class="list-group-item" ng-click="loadGame()"><div class="text-center">Load Game</div></button>
+                    <button class="list-group-item" ng-click="newGame()"><div class="text-center">New Game</div></button>
+                </div>
                 <div class="panel-heading">
                     <h2 class="panel-title">Socket pings</h2>
                 </div>
                 <div class="panel-body">
-                    <button class="btn btn-default" ng-click="loadRoom()">Load Room</button>
-                    <button class="btn btn-default" ng-click="loadGame()">Load Game</button>
-                    <button class="btn btn-default" ng-click="newGame()">New Game</button>
-                </div>
-                <div class="panel-body">
-                    <ul>
+                    <ul class="list-unstyled">
                         <li ng-repeat="message in socketDebug track by $index" ng-bind="message"></li>
                     </ul>
                 </div>

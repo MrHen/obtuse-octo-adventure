@@ -49,16 +49,16 @@ var OctoApp;
                 }
                 return _this.Api.getGame(_this.$scope.room.game_id).then(function (game) {
                     console.log('loadGame resolved', game.plain());
-                    _this.$scope.players = _.map(game.players, function (value, key) {
-                        return {
-                            name: key,
-                            state: value.state,
-                            cards: value.cards
-                        };
-                    });
+                    _this.$scope.game = game;
                 });
             };
-            this.action = function (action) {
+            this.loadLeaderboard = function () {
+                return _this.Api.getMostWins().then(function (leaderboard) {
+                    console.log('loadLeaderboard resolved', _.map(leaderboard, function (leader) { return leader.plain(); }));
+                    _this.$scope.leaderboard = leaderboard;
+                });
+            };
+            this.doAction = function (action) {
                 _this.Api.postAction(_this.$scope.room.game_id, _this.$scope.player_name, action);
             };
             this.socketActionReminderEvent = function (message) {
@@ -98,15 +98,16 @@ var OctoApp;
             this.$scope.loadRoom = this.loadRoom;
             this.$scope.loadGame = this.loadGame;
             this.$scope.newGame = this.newGame;
-            this.$scope.action = this.action;
+            this.$scope.doAction = this.doAction;
+            // TODO split up this chain
             this.Config.load()
                 .then(function () { return _this.initSockets(); })
                 .then(function () { return _this.initApi(); })
                 .then(function () { return _this.loadChat(); })
                 .then(function () { return _this.loadRoom(); })
                 .then(function () { return _this.joinRoom(); })
-                .then(function () { return _this.loadGame(); });
-            // TODO load global chat
+                .then(function () { return _this.loadGame(); })
+                .then(function () { return _this.loadLeaderboard(); });
         }
         OctoController.prototype.initApi = function () {
             var deferred = this.$q.defer();
@@ -129,18 +130,12 @@ var OctoApp;
                 _this.$scope.globalChat = messages;
             });
         };
-        OctoController.prototype.chatSubmit = function (form) {
+        OctoController.prototype.chatSubmit = function (message) {
             var _this = this;
-            var message = this.$scope.chatMessage;
-            if (this.$scope.player_name) {
-                message = this.$scope.player_name + ": " + message;
-            }
-            this.Api.postGlobalChat(message)
-                .then(function (messages) {
+            return this.Api.postGlobalChat(message).then(function (messages) {
                 _this.$scope.globalChat = messages;
                 return messages;
             });
-            this.$scope.chatMessage = null;
         };
         OctoController.$inject = ["$q", "$scope", "Api", "Config", "Sockets"];
         OctoController.EVENT_ACTIONREMINDER = 'action';
@@ -153,6 +148,14 @@ var OctoApp;
     })();
     OctoApp.OctoController = OctoController;
     var app = angular
-        .module("octo", ['octo.api.service', 'octo.sockets.service', 'octo.config.service'])
+        .module("octo", [
+        'octo.api.service',
+        'octo.sockets.service',
+        'octo.config.service',
+        'octo.settings',
+        'octo.chat',
+        'octo.game',
+        'octo.leaderboard'
+    ])
         .controller("OctoController", OctoController);
 })(OctoApp || (OctoApp = {}));
