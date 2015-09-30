@@ -683,6 +683,30 @@ describe('DataStore', () => {
                     });
                 });
             });
+
+            it('leaderboard', (done) => {
+                dataStore.result.addPlayerWin('player', (err:Error, wins:number) => {
+                    should.not.exist(err);
+
+                    dataStore.result.addPlayerWin('other', (err:Error, wins:number) => {
+                        should.not.exist(err);
+
+                        dataStore.result.addPlayerWin('player', (err:Error, wins:number) => {
+                            should.not.exist(err);
+
+                            dataStore.result.getMostWins(0, -1, (err:Error, leaderboard:{player:string;wins:number}[]) => {
+                                should.not.exist(err);
+                                should.exist(leaderboard);
+
+                                leaderboard.length.should.eql(2);
+                                leaderboard[0].should.eql({player:'player', wins:2});
+                                leaderboard[1].should.eql({player:'other', wins:1});
+                                done();
+                            });
+                        });
+                    });
+                });
+            });
         });
 
         describe('results', () => {

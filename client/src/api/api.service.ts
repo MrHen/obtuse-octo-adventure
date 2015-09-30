@@ -13,8 +13,15 @@ module ApiService {
             [name:string]:{
                 state: string;
                 cards: string[];
+                score?: number;
             }
         };
+        ended: boolean;
+    }
+
+    export interface LeaderboardResponse {
+        player: string;
+        wins: number;
     }
 
     export class Api {
@@ -53,6 +60,10 @@ module ApiService {
 
         postGlobalChat(message:string):angular.IPromise<string[]> {
             return this.Restangular.all('chat').post({message:message});
+        }
+
+        getMostWins():angular.IPromise<LeaderboardResponse[]> {
+            return this.Restangular.all('leaderboard').getList();
         }
     }
 

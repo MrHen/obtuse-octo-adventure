@@ -91,7 +91,7 @@ module DataStoreMemory {
         }
 
         public getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any {
-            callback(null, this.getPlayer(gameId, player).cards || []);
+            callback(null, _.clone(this.getPlayer(gameId, player).cards) || []);
         }
 
         public getPlayerStates(gameId:string, callback:(err:Error, players:{player:string; state:string}[])=>any):any {
@@ -101,7 +101,7 @@ module DataStoreMemory {
                 return {player: key, state:value.state};
             });
 
-            callback(null, mapped);
+            callback(null, _.clone(mapped));
         }
 
         public setDeck(gameId:string, cards:string[], callback:(err:Error)=>any):any {
@@ -210,6 +210,7 @@ module DataStoreMemory {
         private wins:Dict<number> = {};
 
         getResults(start:number, end:number, callback:(err:Error, results:{game:string; scores:{[player:string]:number}}[])=>any):any {
+            console.log("getResults", start, end, this.results);
             var realEnd = end === -1 ? this.results.length : end + 1; // redis uses inclusive matching so adjust accordingly
             var payloads = this.results.slice(start, realEnd);
             console.log("payloads", payloads);
@@ -226,6 +227,15 @@ module DataStoreMemory {
         }
         getPlayerWins(player:string, callback:(err:Error, wins:number)=>any):any {
             callback(null, this.wins[player]);
+        }
+
+        getMostWins(start:number, end:number, callback:(err:Error, results:{player:string; wins:number}[])=>any):any {
+            var leaderboard = _.map(this.wins, (wins:number, player:string) => {
+                return {player:player, wins: wins};
+            });
+            leaderboard = _.sortBy(leaderboard, 'wins').reverse();
+            var realEnd = end === -1 ? leaderboard.length : end + 1; // redis uses inclusive matching so adjust accordingly
+            callback(null, leaderboard.slice(start, realEnd));
         }
     }
 

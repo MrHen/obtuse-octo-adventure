@@ -42,7 +42,7 @@ module Sockets {
 
             console.log("websocket connection open");
 
-            socket.on("close", () => {
+            socket.on("disconnect", () => {
                 console.log("websocket connection close");
                 this.connected = _.without(this.connected, socket);
                 clearInterval(id)
@@ -74,7 +74,7 @@ module Sockets {
             _.forEach(this.connected, (client) => {
                 client.emit(Sockets.EVENT_PLAYERSTATE, JSON.stringify({gameId: gameId, player:player, state:state}));
             })
-        }
+        };
     }
 }
 

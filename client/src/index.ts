@@ -23,13 +23,16 @@ module OctoApp {
 
         room: ApiService.RoomResponse;
 
-        players: PlayerListItem[]
+        players: PlayerListItem[];
+        game: ApiService.GameResponse;
+
+        leaderboard: ApiService.LeaderboardResponse[];
 
         newGame: Function;
         loadGame: Function;
         loadRoom: Function;
 
-        action: Function;
+        doAction: Function;
     }
 
     export class OctoController {
@@ -60,17 +63,17 @@ module OctoApp {
             this.$scope.loadGame = this.loadGame;
             this.$scope.newGame = this.newGame;
 
-            this.$scope.action = this.action;
+            this.$scope.doAction = this.doAction;
 
+            // TODO split up this chain
             this.Config.load()
                 .then(() => this.initSockets())
                 .then(() => this.initApi())
                 .then(() => this.loadChat())
                 .then(() => this.loadRoom())
                 .then(() => this.joinRoom())
-                .then(() => this.loadGame());
-
-            // TODO load global chat
+                .then(() => this.loadGame())
+                .then(() => this.loadLeaderboard());
         }
 
         private initApi():angular.IPromise<void> {
@@ -89,7 +92,6 @@ module OctoApp {
             this.Sockets.addEventListener(OctoController.EVENT_CARD, this.socketCardEvent);
             this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
             this.Sockets.addEventListener(OctoController.EVENT_PLAYERSTATE, this.socketPlayerStateChangeEvent);
-
             this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
 
             return this.$q.when();
@@ -144,35 +146,27 @@ module OctoApp {
 
             return this.Api.getGame(this.$scope.room.game_id).then((game:ApiService.GameResponse) => {
                 console.log('loadGame resolved', (<any>game).plain());
-                this.$scope.players = _.map(game.players, (value, key) => {
-                    return {
-                        name: key,
-                        state: value.state,
-                        cards: value.cards
-                    }
-                })
+                this.$scope.game = game;
             });
         };
 
-        private chatSubmit(form:angular.IFormController) {
-            var message = this.$scope.chatMessage;
+        private loadLeaderboard = ():angular.IPromise<void> => {
+            return this.Api.getMostWins().then((leaderboard:ApiService.LeaderboardResponse[]) => {
+                console.log('loadLeaderboard resolved', _.map(leaderboard, (leader) => (<any>leader).plain()));
+                this.$scope.leaderboard = leaderboard;
+            });
+        };
 
-            if (this.$scope.player_name) {
-                message = this.$scope.player_name + ": " + message;
-            }
-
-            this.Api.postGlobalChat(message)
-                .then((messages:string[]) => {
+        private chatSubmit(message:string):angular.IPromise<string[]> {
+            return this.Api.postGlobalChat(message).then((messages:string[]) => {
                     this.$scope.globalChat = messages;
                     return messages;
                 });
-
-            this.$scope.chatMessage = null;
         }
 
-        private action = (action:string) => {
+        public doAction = (action:string) => {
             this.Api.postAction(this.$scope.room.game_id, this.$scope.player_name, action);
-        }
+        };
 
         private socketActionReminderEvent = (message:string) => {
             this.$scope.socketDebug.unshift(message);
@@ -207,6 +201,15 @@ module OctoApp {
     }
 
     var app = angular
-        .module("octo", ['octo.api.service', 'octo.sockets.service', 'octo.config.service'])
+        .module("octo", [
+            'octo.api.service',
+            'octo.sockets.service',
+            'octo.config.service',
+
+            'octo.settings',
+            'octo.chat',
+            'octo.game',
+            'octo.leaderboard'
+        ])
         .controller("OctoController", OctoController);
 }
