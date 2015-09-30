@@ -1,7 +1,5 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
-import _ = require('lodash');
-
 module GameConstants {
     export var DEFAULT_ROOM = 'demo';
     export var DEFAULT_PLAYER = 'player';
@@ -28,23 +26,27 @@ module GameConstants {
     export var CARD_HIDDEN = 'XX'; // used to hide dealer cards when necessary
 
     export var EVENTS = {
-        ACTION_REMINDER: 'action:reminder'
+        DATA: {
+            GLOBAL_CHAT: 'globalchat:created',
+            PUSHED_CARD: 'card',
+            PLAYER_STATE: 'playerstate'
+        },
+        GAME: {
+            ACTION_REMINDER: 'action:reminder'
+        },
+        CLIENT: {
+            ACTION_REMINDER: 'action',
+            CARD: 'card',
+            GLOBAL_CHAT: 'globalchat:created',
+            PLAYER_STATE: 'state',
+            PING: 'time'
+        }
     };
 
     // These three could theoretically be configurable but for now they are locked
     export var DEALER_STAY = 17;
     export var DECK_COUNT = 1;
     export var MAX = 21;
-
-    export function valueForCards(cards:string[]):number {
-        return _.sum(cards, (card:string) => {
-            if (+card[0] > 0) {
-                return +card[0];
-            }
-
-            return card[0] === 'A' ? 11 : 10;
-        })
-    }
 }
 
 export = GameConstants;

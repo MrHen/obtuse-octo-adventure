@@ -32,5 +32,17 @@ declare module ApiResponses {
         scores:{[player:string]:number}
     }
 
-    export type ChatResponse = string;
+    export interface CardDealtResponse {
+        gameId:string;
+        player:string;
+        card:string
+    }
+
+    export interface PlayerStateResponse {
+        gameId:string;
+        player:string;
+        state:string
+    }
+
+export type ChatResponse = string;
 }

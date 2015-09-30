@@ -3,7 +3,8 @@
 import _ = require('lodash');
 import events = require('events');
 
-import {GameDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
+import {EVENTS} from '../services/GameConstants';
+import {GameDataStoreInterface, ERRORS} from './DataStoreInterfaces';
 
 interface Dict<T> {[index:string]:T}
 
@@ -64,7 +65,7 @@ class GameMemory implements GameDataStoreInterface {
 
     public setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any {
         this.getPlayer(gameId, player).state = state;
-        this.emitter.emit(EVENTS.PLAYERSTATE, gameId, player, state);
+        this.emitter.emit(EVENTS.DATA.PLAYER_STATE, {gameId:gameId, player:player, state:state});
         callback(null);
     }
 
@@ -89,19 +90,16 @@ class GameMemory implements GameDataStoreInterface {
             playerData.cards = [];
         }
         playerData.cards.unshift(card);
-        this.emitter.emit(EVENTS.PUSHEDCARD, gameId, player, card);
+        this.emitter.emit(EVENTS.DATA.PUSHED_CARD, {gameId:gameId, player:player, card:card});
         callback(null, card);
     }
-    public postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any {
-        callback(null);
+
+    public onPushedCard(callback:(pushedCard:{gameId:string; player:string; card:string})=>any) {
+        this.emitter.on(EVENTS.DATA.PUSHED_CARD, callback);
     }
 
-    public onPushedCard(callback:(gameId:string, player:string, card:string)=>any) {
-        this.emitter.on(EVENTS.PUSHEDCARD, callback);
-    }
-
-    public onPlayerStateChange(callback:(gameId:string, player:string, state:string)=>any) {
-        this.emitter.on(EVENTS.PLAYERSTATE, callback);
+    public onPlayerStateChange(callback:(playerState:{gameId:string; player:string; state:string})=>any) {
+        this.emitter.on(EVENTS.DATA.PLAYER_STATE, callback);
     }
 }
 

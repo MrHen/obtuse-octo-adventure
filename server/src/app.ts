@@ -78,23 +78,15 @@ async.auto({
         });
     }],
     'pubsub': ['db', 'service', 'sockets', (autoCb, results) => {
-        results.db.chat.onGlobalChat((message) => {
-            results.sockets.emitGlobalChat(message);
-        });
+        results.db.chat.onGlobalChat(results.sockets.emitGlobalChat);
 
-        results.service.onActionReminder((reminder) => {
-            results.sockets.emitActionReminder(reminder);
-        });
+        results.service.onActionReminder(results.sockets.emitActionReminder);
 
-        results.db.game.onPushedCard((gameId:string, player:string, card:string) => {
-            results.service.handleCardPushed(gameId, player, card);
-            results.sockets.emitCardPushed(gameId, player, card);
-        });
+        results.db.game.onPushedCard(results.service.handleCardPushed);
+        results.db.game.onPushedCard(results.sockets.emitCardPushed);
 
-        results.db.game.onPlayerStateChange((gameId:string, player:string, state:string) => {
-            results.service.handleActionStart(gameId, player, state);
-            results.sockets.emitPlayerStateChange(gameId, player, state);
-        });
+        results.db.game.onPlayerStateChange(results.service.handleStateChange);
+        results.db.game.onPlayerStateChange(results.sockets.emitPlayerStateChange);
 
         autoCb(null, null);
     }]

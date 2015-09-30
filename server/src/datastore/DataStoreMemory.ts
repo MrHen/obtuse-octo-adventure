@@ -8,7 +8,7 @@ import GameMemory = require('./GameMemory');
 import ResultMemory = require('./ResultMemory');
 import RoomMemory = require('./RoomMemory');
 
-import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, ResultDataStoreInterface, RoomDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
+import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, ResultDataStoreInterface, RoomDataStoreInterface} from './DataStoreInterfaces';
 
 // Used for local development. It would be more ideal to run a local redis instance in order to mimic production. Until
 // then, use this.
