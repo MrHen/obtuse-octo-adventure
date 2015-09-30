@@ -65,7 +65,7 @@ class GameMemory implements GameDataStoreInterface {
 
     public setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any {
         this.getPlayer(gameId, player).state = state;
-        this.emitter.emit(EVENTS.DATA.PLAYER_STATE, gameId, player, state);
+        this.emitter.emit(EVENTS.DATA.PLAYER_STATE, {gameId:gameId, player:player, state:state});
         callback(null);
     }
 
@@ -90,7 +90,7 @@ class GameMemory implements GameDataStoreInterface {
             playerData.cards = [];
         }
         playerData.cards.unshift(card);
-        this.emitter.emit(EVENTS.DATA.PUSHED_CARD, gameId, player, card);
+        this.emitter.emit(EVENTS.DATA.PUSHED_CARD, {gameId:gameId, player:player, card:card});
         callback(null, card);
     }
 

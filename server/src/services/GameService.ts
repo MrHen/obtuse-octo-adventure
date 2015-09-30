@@ -9,7 +9,7 @@ import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
 
 module GameServiceModule {
     export interface RoomEventController {
-        handleShuffle(game_id:string, callback:(err:Error)=>any);
+        shuffle(game_id:string, callback:(err:Error)=>any);
         isGameEnded(states:{player:string; state:string}[]):boolean;
     }
 
@@ -46,36 +46,31 @@ module GameServiceModule {
             this.api = api;
         }
 
-        public handleShuffle(game:string, callback:(err:Error)=>any) {
+        public shuffle(game:string, callback:(err:Error)=>any) {
             var newDeck = _.shuffle<string>(GameServiceController.DECK);
             this.api.game.setDeck(game, newDeck, callback);
         }
 
-        public handleActionStart = (gameId:string, player:string, state:string, callback?:(err:Error)=>any) => {
+        public actionLoop = (gameId:string, callback?:(err:Error)=>any) => {
             if (!callback) {
                 callback = (err:Error) => {
                     if (err) {
-                        console.warn("Saw unprocessed error from handleActionStart", err);
+                        console.warn("Saw unprocessed error from actionLoop", err);
                     }
                 }
             }
 
-            console.log('handleActionStart started', gameId, player, state);
-
-            // Ignore WIN state change since that only happens after the game has already ended
-            if (state === GameConstants.PLAYER_STATES.WIN) {
-                return callback(null);
-            }
+            console.log('actionLoop started', gameId);
 
             async.auto({
                 'states': [(autoCb, results) => {
                     this.api.game.getPlayerStates(gameId, autoCb)
                 }],
                 'next_action': ['states', (autoCb, results) => {
-                    console.log('handleActionStart next_action', gameId, results);
+                    console.log('actionLoop next_action', gameId, results);
                     var dealing = _.find<{player:string; state:string}>(results.states, "state", GameConstants.PLAYER_STATES.DEALING);
                     if (dealing) {
-                        console.log('handleActionStart chose dealing', dealing);
+                        console.log('actionLoop chose dealing', dealing);
                         return this.setActionTimer(() => {
                             return this.api.game.rpoplpush(gameId, dealing.player, autoCb);
                         });
@@ -83,11 +78,11 @@ module GameServiceModule {
 
                     var current = _.find<{player:string; state:string}>(results.states, "state", GameConstants.PLAYER_STATES.CURRENT);
                     if (current && current.player !== GameConstants.DEALER) {
-                        console.log('handleActionStart chose current', current);
+                        console.log('actionLoop chose current', current);
                         var action = {player: current, action: [GameConstants.PLAYER_ACTIONS.HIT, GameConstants.PLAYER_ACTIONS.STAY]};
                         this.emitter.emit(GameConstants.EVENTS.GAME.ACTION_REMINDER, action);
                         this.setActionTimer(() => {
-                            return this.handleActionStart(gameId, current.player, null, autoCb);
+                            return this.actionLoop(gameId);
                         });
                         return autoCb(null, null);
                     }
@@ -96,18 +91,18 @@ module GameServiceModule {
                         return value.player !== GameConstants.DEALER && value.state === GameConstants.PLAYER_STATES.WAITING
                     });
                     if (waiting) {
-                        console.log('handleActionStart chose waiting', waiting);
+                        console.log('actionLoop chose waiting', waiting);
                         return this.api.game.setPlayerState(gameId, waiting.player, GameConstants.PLAYER_STATES.CURRENT, autoCb);
                     }
 
                     var dealer = _.find<{player:string; state:string}>(results.states, "player", GameConstants.DEALER);
                     if (dealer && dealer.state === GameConstants.PLAYER_STATES.WAITING) {
-                        console.log('handleActionStart chose dealer');
+                        console.log('actionLoop chose dealer');
                         return this.api.game.setPlayerState(gameId, dealer.player, GameConstants.PLAYER_STATES.CURRENT, autoCb);
                     }
 
                     if (dealer && dealer.state === GameConstants.PLAYER_STATES.CURRENT) {
-                        console.log('handleActionStart chose dealer (hit)');
+                        console.log('actionLoop chose dealer (hit)');
                         return this.setActionTimer(() => {
                             return this.api.game.rpoplpush(gameId, dealer.player, autoCb);
                         });
@@ -118,9 +113,26 @@ module GameServiceModule {
             }, (err, results:any) => {
                 callback(err);
             });
-        }
+        };
 
-        public handleCardPushed = (gameId:string, player:string, card:string, callback?:(err:Error)=>any) => {
+        public handleStateChange = (playerState:ApiResponses.PlayerStateResponse, callback?:(err:Error)=>any) => {
+            if (!callback) {
+                callback = (err:Error) => {
+                    if (err) {
+                        console.warn("Saw unprocessed error from handleStateChange", err);
+                    }
+                }
+            }
+
+            // Ignore WIN state change since that only happens after the game has already ended
+            if (playerState.state === GameConstants.PLAYER_STATES.WIN) {
+                return callback(null);
+            }
+
+            return this.actionLoop(playerState.gameId, callback);
+        };
+
+        public handleCardPushed = (cardPush:ApiResponses.CardDealtResponse, callback?:(err:Error)=>any) => {
             if (!callback) {
                 callback = (err:Error) => {
                     if (err) {
@@ -129,21 +141,21 @@ module GameServiceModule {
                 }
             }
 
-            console.log('handleCardPushed started', gameId, player, card);
+            console.log('handleCardPushed started', cardPush);
 
             async.auto({
                 'cards': [(autoCb, results) => {
-                    this.api.game.getPlayerCards(gameId, player, autoCb);
+                    this.api.game.getPlayerCards(cardPush.gameId, cardPush.player, autoCb);
                 }],
                 'score': ['cards', (autoCb, results) => {
                     autoCb(null, GameConstants.valueForCards(results.cards));
                 }],
                 'states': [(autoCb, results) => {
-                    this.api.game.getPlayerStates(gameId, autoCb)
+                    this.api.game.getPlayerStates(cardPush.gameId, autoCb)
                 }],
                 'state': ['states', (autoCb, results) => {
                     console.log('handleCardPushed state', results);
-                    autoCb(null, _.find<{player:string; state:string}>(results.states, 'player', player).state);
+                    autoCb(null, _.find<{player:string; state:string}>(results.states, 'player', cardPush.player).state);
                 }],
                 'process': ['cards', 'state', (autoCb, results) => {
                     console.log('handleCardPushed process', results);
@@ -160,7 +172,7 @@ module GameServiceModule {
                         state = GameConstants.PLAYER_STATES.BUST;
                     }
 
-                    if (!state && player === GameConstants.DEALER && results.score >= GameConstants.DEALER_STAY) {
+                    if (!state && cardPush.player === GameConstants.DEALER && results.score >= GameConstants.DEALER_STAY) {
                         console.log('handleCardPushed saw dealer stay');
                         end = results.score === GameConstants.MAX;
                         state = GameConstants.PLAYER_STATES.STAY;
@@ -171,14 +183,14 @@ module GameServiceModule {
                     }
 
                     if (end) {
-                        return this.endGame(gameId, autoCb);
+                        return this.endGame(cardPush.gameId, autoCb);
                     }
 
                     if (state && state !== results.state) {
-                        return this.api.game.setPlayerState(gameId, player, state, autoCb);
+                        return this.api.game.setPlayerState(cardPush.gameId, cardPush.player, state, autoCb);
                     }
 
-                    this.handleActionStart(gameId, null, null, autoCb);
+                    this.actionLoop(cardPush.gameId, autoCb);
                 }]
             }, (err, results:any) => {
                 callback(err);

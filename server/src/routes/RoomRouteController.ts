@@ -88,7 +88,7 @@ class RoomRouteController implements RoomRouteControllerInterface {
                 return this.api.room.setGame(roomId, results.new_game, autoCb);
             }],
             'shuffle': ['new_game', (autoCb, results) => {
-                this.service.handleShuffle(results.new_game, autoCb);
+                this.service.shuffle(results.new_game, autoCb);
             }],
             'player_states': ['players', 'new_game', 'shuffle', (autoCb, results) => {
                 var players = results.players.concat(GameConstants.DEALER);

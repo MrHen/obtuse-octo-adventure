@@ -85,7 +85,7 @@ async.auto({
         results.db.game.onPushedCard(results.service.handleCardPushed);
         results.db.game.onPushedCard(results.sockets.emitCardPushed);
 
-        results.db.game.onPlayerStateChange(results.service.handleActionStart);
+        results.db.game.onPlayerStateChange(results.service.handleStateChange);
         results.db.game.onPlayerStateChange(results.sockets.emitPlayerStateChange);
 
         autoCb(null, null);
