@@ -5,7 +5,7 @@
 import _ = require('lodash');
 import async = require('async');
 
-import {RoomEventController} from '../services/GameService';
+import {GameServiceController, RoomEventController} from '../services/GameService';
 import {DataStoreInterface, PlayerState} from '../datastore/DataStoreInterfaces';
 import {RoomRouteControllerInterface} from './Routes';
 
@@ -90,12 +90,12 @@ class RoomRouteController implements RoomRouteControllerInterface {
                 this.service.handleShuffle(results.new_game, autoCb);
             }],
             'player_states': ['players', 'new_game', 'shuffle', (autoCb, results) => {
-                var players = results.players.concat('dealer');
+                var players = results.players.concat(GameServiceController.DEALER);
 
                 return autoCb(null, _.map(players, (player) => {
                     return {
                         player: player,
-                        state: 'deal'
+                        state: GameServiceController.PLAYER_STATES.DEALING
                     };
                 }));
             }],
@@ -111,7 +111,7 @@ class RoomRouteController implements RoomRouteControllerInterface {
 
             var players:{[name:string]:ApiResponses.GamePlayerResponse} = {};
 
-            _.forEach<{player:string; state:string}>(results.player_states, (value, key) => {
+            _.forEach<{player:string; state:string}>(results.player_states, (value) => {
                 players[value.player] = {
                     state: value.state,
                     cards: []

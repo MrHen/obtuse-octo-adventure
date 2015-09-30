@@ -6,6 +6,10 @@ import express = require('express');
 
 import {sendErrorOrResult} from './RouteErrors';
 
+// Route definitions and route controller interfaces. As the application size grows it would eventually become necessary
+// to split these into separate files. This could be streamlined a bit more using some fancy TypeScript but it isn't
+// really necessary.
+
 module Routes {
     export interface ChatRouteControllerInterface {
         getMessages(callback:(err:Error, result:string[])=>any);

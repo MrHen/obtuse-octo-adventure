@@ -49,14 +49,15 @@ class GameRouteController implements GameRouteControllerInterface {
                 ended: this.service.isGameEnded(results.states)
             };
 
+            // Hide one dealer card and the dealer score when necessary
             if (!game.ended) {
-                var states = _.reject(results.states, {player: 'dealer'});
+                var states = _.reject(results.states, {player: GameServiceController.DEALER});
                 states = _.reject(states, {'state': GameServiceController.PLAYER_STATES.STAY});
-                states = _.reject(states, {'state': 'bust'});
+                states = _.reject(states, {'state': GameServiceController.PLAYER_STATES.BUST});
                 if (states.length) {
-                    players['dealer'].score = null;
-                    if (players['dealer'].cards.length > 1) {
-                        players['dealer'].cards[0] = 'XX';
+                    players[GameServiceController.DEALER].score = null;
+                    if (players[GameServiceController.DEALER].cards.length > 1) {
+                        players[GameServiceController.DEALER].cards[0] = GameServiceController.CARD_HIDDEN;
                     }
                 }
             }
@@ -78,9 +79,7 @@ class GameRouteController implements GameRouteControllerInterface {
                 actions = [GameServiceController.PLAYER_ACTIONS.DEAL];
             }
 
-            callback(null, {
-                player: player, actions: actions
-            });
+            callback(null, {player: player, actions: actions});
         });
     }
 
@@ -90,13 +89,12 @@ class GameRouteController implements GameRouteControllerInterface {
                 callback(err);
             }
 
-            var playerstate = _.find<{player:string; state:string}>(states, "player", player);
-            if (!playerstate) {
+            var playerState = _.find<{player:string; state:string}>(states, "player", player);
+            if (!playerState) {
                 return callback(new Error(RouteErrors.ERROR_INVALID_PLAYER));
             }
 
-            var state = playerstate.state;
-            console.log("TODO: Do something", {action: action, state: state});
+            var state = playerState.state;
 
             if (action === GameServiceController.PLAYER_ACTIONS.HIT) {
                 if (state !== GameServiceController.PLAYER_STATES.CURRENT) {

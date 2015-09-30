@@ -44,6 +44,7 @@ module GameServiceModule {
         public static DECK_COUNT = 1;
         public static CARD_SUITS = ['H', 'C', 'D', 'S'];
         public static CARD_VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'];
+        public static CARD_HIDDEN = 'XX'; // used to hide dealer cards when necessary
         private static _DECK:string[] = null;
         public static get DECK():string[] {
             if (!GameServiceController._DECK) {

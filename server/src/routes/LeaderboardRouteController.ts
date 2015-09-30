@@ -24,12 +24,7 @@ class LeaderboardRouteController implements LeaderboardRouteControllerInterface 
     }
 
     public getMostWins(start:number, end:number, callback:(err:Error, leaderboard:ApiResponses.LeaderboardResponse[])=>any) {
-        this.api.getMostWins(start, end, (err:Error, leaderboard:ApiResponses.LeaderboardResponse[]) => {
-            if (err) {
-                return callback(err, null);
-            }
-            callback(null, leaderboard);
-        });
+        this.api.getMostWins(start, end, callback);
     }
 }
 
