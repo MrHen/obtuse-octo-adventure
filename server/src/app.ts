@@ -15,7 +15,7 @@ import {GameServiceController} from './services/GameService';
 import Routes = require('./routes/Routes');
 
 import ChatRouteController = require('./routes/ChatRouteController');
-import GameRoute = require('./routes/GameRoute');
+import GameRouteController = require('./routes/GameRouteController');
 import RoomRoute = require('./routes/RoomRoute');
 import ResultRoute = require('./routes/ResultRoute');
 import LeaderboardRoute = require('./routes/LeaderboardRoute');
@@ -44,7 +44,7 @@ async.auto({
     },
     'routes': ['app', 'db', 'service', (autoCb, results) => {
         var chatController = new ChatRouteController(results.db.chat);
-        var gameController = new GameRoute.GameRouteController(results.db.game, results.service);
+        var gameController = new GameRouteController(results.db.game, results.service);
         var leaderboardController = new LeaderboardRoute.LeaderboardRouteController(results.db.result);
         var resultController = new ResultRoute.ResultRouteController(results.db.result);
         var roomController = new RoomRoute.RoomRouteController(results.db, results.service);
