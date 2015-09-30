@@ -215,13 +215,13 @@ describe('DataStore', () => {
             });
 
             it('post card event', (done) => {
-                dataStore.game.onPushedCard((game:string, player:string, card:string) => {
-                    should.exist(game);
-                    game.should.eql(gameId);
-                    should.exist(player);
-                    player.should.eql("new player");
-                    should.exist(card);
-                    card.should.eql("AH");
+                dataStore.game.onPushedCard((pushedCard:{gameId:string; player:string; card:string}) => {
+                    should.exist(pushedCard);
+                    pushedCard.should.eql({
+                        gameId: gameId,
+                        player: 'new player',
+                        card: 'AH'
+                    });
                     done();
                 });
 
@@ -317,13 +317,13 @@ describe('DataStore', () => {
             });
 
             it('change state event', (done) => {
-                dataStore.game.onPlayerStateChange((game:string, player:string, state:string) => {
-                    should.exist(game);
-                    game.should.eql(gameId);
-                    should.exist(player);
-                    player.should.eql("new player");
-                    should.exist(state);
-                    state.should.eql("state");
+                dataStore.game.onPlayerStateChange((playerState:{gameId:string; player:string; state:string}) => {
+                    should.exist(playerState);
+                    playerState.should.eql({
+                        gameId: gameId,
+                        player: 'new player',
+                        state: 'state'
+                    });
                     done();
                 });
 
