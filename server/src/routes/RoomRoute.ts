@@ -9,7 +9,7 @@ import http_status = require('http-status');
 
 import {RoomEventController} from '../services/GameService';
 import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
-import {RoomRouteInterface} from './RouteInterfaces';
+import {RoomRouteControllerInterface} from './Routes';
 
 import RouteErrors = require('./RouteErrors');
 import sendErrorOrResult = RouteErrors.sendErrorOrResult;
@@ -30,7 +30,7 @@ module RoomRoute {
         state: string;
     }
 
-    export class RoomRouteController implements RoomRouteInterface {
+    export class RoomRouteController implements RoomRouteControllerInterface {
         private static DEALER = 'dealer';
         private static PLAYER = 'player';
 

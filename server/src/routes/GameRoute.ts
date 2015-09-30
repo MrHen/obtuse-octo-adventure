@@ -7,7 +7,7 @@ import async = require('async');
 import express = require('express');
 
 import {GameDataStoreInterface} from '../datastore/DataStoreInterfaces';
-import {GameRouteInterface} from './RouteInterfaces';
+import {GameRouteControllerInterface} from './Routes';
 import {GameServiceInterface} from '../services/GameService'
 
 import RouteErrors = require('./RouteErrors');
@@ -27,7 +27,7 @@ module GameRouteModule {
 
     var DEALER = 'dealer';
 
-    export class GameRouteController implements GameRouteInterface {
+    export class GameRouteController implements GameRouteControllerInterface {
         private api:GameDataStoreInterface = null;
         private service:GameServiceInterface = null;
 

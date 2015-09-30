@@ -6,12 +6,12 @@ import express = require('express');
 import http_status = require('http-status');
 
 import {ResultDataStoreInterface} from '../datastore/DataStoreInterfaces';
-import {LeaderboardRouteInterface} from './RouteInterfaces';
+import {LeaderboardRouteControllerInterface} from './Routes';
 
 import {sendErrorOrResult} from './RouteErrors';
 
 module LeaderboardRoute {
-    export class LeaderboardRouteController implements LeaderboardRouteInterface {
+    export class LeaderboardRouteController implements LeaderboardRouteControllerInterface {
         private api:ResultDataStoreInterface = null;
 
         constructor(api:ResultDataStoreInterface) {

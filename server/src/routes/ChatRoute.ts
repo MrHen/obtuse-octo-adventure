@@ -5,13 +5,13 @@
 import express = require('express');
 
 import {ChatDataStoreInterface} from '../datastore/DataStoreInterfaces.ts';
-import {ChatRouteInterface} from './RouteInterfaces.ts';
+import {ChatRouteControllerInterface} from './Routes.ts';
 
 import RouteErrors = require('./RouteErrors');
 import sendErrorOrResult = RouteErrors.sendErrorOrResult;
 
 module ChatRoute {
-    export class ChatRouteController implements ChatRouteInterface {
+    export class ChatRouteController implements ChatRouteControllerInterface {
         private api:ChatDataStoreInterface = null;
 
         constructor(api:ChatDataStoreInterface) {
