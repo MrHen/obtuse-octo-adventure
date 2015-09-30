@@ -30,6 +30,11 @@ module DataStoreInterfaces {
         PLAYERSTATE: 'playerstate'
     };
 
+    export interface PlayerState {
+        player:string;
+        state:string;
+    }
+
     export interface ChatDataStoreInterface {
         getGlobalChat(limit:number, callback:(err:Error, allMessages:string[])=>any):any;
         onGlobalChat(callback:(message:string)=>any):any;
@@ -40,7 +45,7 @@ module DataStoreInterfaces {
         countDeck(gameId:string, callback:(err:Error, count:number)=>any):any;
 
         getPlayerCards(gameId:string, player:string, callback:(err:Error, cards:string[])=>any):any;
-        getPlayerStates(gameId:string, callback:(err:Error, players:{player:string; state:string}[])=>any):any;
+        getPlayerStates(gameId:string, callback:(err:Error, players:PlayerState[])=>any):any;
 
         setDeck(gameId:string, cards:string[], callback:(err:Error)=>any):any;
         setPlayerState(gameId:string, player:string, state:string, callback:(err:Error)=>any):any;

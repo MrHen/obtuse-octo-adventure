@@ -1,6 +1,8 @@
 /// <reference path="../../server/src/api.d.ts" />
 
 /// <reference path="../typings/tsd.d.ts" />
+
+/// <reference path="./GameConstants.ts" />
 /// <reference path="./api/api.service.ts" />
 /// <reference path="./config/config.service.ts" />
 /// <reference path="./sockets/sockets.service.ts" />
@@ -40,14 +42,6 @@ module OctoApp {
     export class OctoController {
         public static $inject:string[] = ["$q", "$scope", "Api", "Config", "Sockets"];
 
-        private static EVENT_ACTIONREMINDER = 'action';
-        private static EVENT_CARD = 'card';
-        private static EVENT_GLOBALCHAT = 'globalchat:created';
-        private static EVENT_TIME = 'time';
-        private static EVENT_PLAYERSTATE = 'state';
-
-        private static MAX_PING_MESSAGES = 5;
-
         constructor(private $q:angular.IQService, private $scope:OctoScope, private Api:ApiService.Api, private Config:ConfigService.Config, private Sockets:SocketsService.Sockets) {
             if (!this.$scope.socketDebug) {
                 this.$scope.socketDebug = [];
@@ -56,7 +50,7 @@ module OctoApp {
             this.$scope.chatSubmit = this.chatSubmit.bind(this);
 
             if (!this.$scope.player_name) {
-                this.$scope.player_name = 'player';
+                this.$scope.player_name = GameConstants.DEFAULT_PLAYER;
             }
 
             this.$scope.canEditPlayer = false;
@@ -90,11 +84,11 @@ module OctoApp {
         private initSockets():angular.IPromise<void> {
             this.Sockets.init(this.Config.data.websocket_host);
 
-            this.Sockets.addEventListener(OctoController.EVENT_ACTIONREMINDER, this.socketActionReminderEvent);
-            this.Sockets.addEventListener(OctoController.EVENT_CARD, this.socketCardEvent);
-            this.Sockets.addEventListener(OctoController.EVENT_TIME, this.socketTimeEvent);
-            this.Sockets.addEventListener(OctoController.EVENT_PLAYERSTATE, this.socketPlayerStateChangeEvent);
-            this.Sockets.addEventListener(OctoController.EVENT_GLOBALCHAT, this.socketChatEvent);
+            this.Sockets.addEventListener(GameConstants.EVENTS.ACTIONREMINDER, this.socketActionReminderEvent);
+            this.Sockets.addEventListener(GameConstants.EVENTS.CARD, this.socketCardEvent);
+            this.Sockets.addEventListener(GameConstants.EVENTS.TIME, this.socketTimeEvent);
+            this.Sockets.addEventListener(GameConstants.EVENTS.PLAYERSTATE, this.socketPlayerStateChangeEvent);
+            this.Sockets.addEventListener(GameConstants.EVENTS.GLOBALCHAT, this.socketChatEvent);
 
             return this.$q.when();
         }
@@ -176,7 +170,7 @@ module OctoApp {
 
         private socketActionReminderEvent = (message:string) => {
             this.$scope.socketDebug.unshift(message);
-            if (this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
+            if (this.$scope.socketDebug.length > this.Config.data.max_socket_debug) {
                 this.$scope.socketDebug.pop();
             }
             this.$scope.$apply();
@@ -194,7 +188,7 @@ module OctoApp {
 
         private socketTimeEvent = (message:string) => {
             this.$scope.socketDebug.unshift(message);
-            if (this.$scope.socketDebug.length > OctoController.MAX_PING_MESSAGES) {
+            if (this.$scope.socketDebug.length > this.Config.data.max_socket_debug) {
                 this.$scope.socketDebug.pop();
             }
             this.$scope.$apply();

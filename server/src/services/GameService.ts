@@ -4,65 +4,37 @@ import _ = require('lodash');
 import async = require('async');
 import events = require('events');
 
+import GameConstants = require('./GameConstants');
 import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
 
 module GameServiceModule {
     export interface RoomEventController {
         handleShuffle(game_id:string, callback:(err:Error)=>any);
         isGameEnded(states:{player:string; state:string}[]):boolean;
-        valueForCards(cards:string[]):number;
     }
 
     export interface GameServiceInterface {
         isGameEnded(states:{player:string; state:string}[]):boolean;
-        valueForCards(cards:string[]):number;
     }
 
     export class GameServiceController implements GameServiceInterface, RoomEventController {
         private static ACTION_DELAY:number = 2000; // time between actions controlled by game (e.g., dealer)
 
-        public static PLAYER_STATES = {
-            BUST: 'bust',
-            CURRENT: 'current',
-            DEALING: 'deal',
-            STAY: 'stay',
-            WAITING: 'wait',
-            WIN: 'win'
-        };
-
-        public static PLAYER_ACTIONS = {
-            DEAL: 'deal',
-            HIT: 'hit',
-            STAY: 'stay'
-        };
-
-        public static DEALER = 'dealer';
-
-        public static DEALER_STAY = 17;
-        public static MAX = 21;
-
-        public static DECK_COUNT = 1;
-        public static CARD_SUITS = ['H', 'C', 'D', 'S'];
-        public static CARD_VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'];
         private static _DECK:string[] = null;
         public static get DECK():string[] {
             if (!GameServiceController._DECK) {
-                var cards:string[] = _.flatten(_.map<string, string[]>(GameServiceController.CARD_VALUES, (value) => {
-                    return _.map(GameServiceController.CARD_SUITS, (suit) => value + suit);
+                var cards:string[] = _.flatten(_.map<string, string[]>(GameConstants.CARD_VALUES, (value) => {
+                    return _.map(GameConstants.CARD_SUITS, (suit) => value + suit);
                 }));
 
                 var all = _.clone(cards);
-                for (var i = 1; i < GameServiceController.DECK_COUNT; i++) {
+                for (var i = 1; i < GameConstants.DECK_COUNT; i++) {
                     all.concat(_.clone(cards));
                 }
                 GameServiceController._DECK = all;
             }
             return GameServiceController._DECK;
         }
-
-        private static EVENTS = {
-            ACTION_REMINDER: 'action:reminder'
-        };
 
         private api:DataStoreInterface = null;
 
@@ -72,16 +44,6 @@ module GameServiceModule {
 
         public constructor(api:DataStoreInterface) {
             this.api = api;
-        }
-
-        public valueForCards(cards:string[]):number {
-            return _.sum(cards, (card) => {
-                if (+card[0] > 0) {
-                    return +card[0];
-                }
-
-                return card[0] === 'A' ? 11 : 10;
-            })
         }
 
         public handleShuffle(game:string, callback:(err:Error)=>any) {
@@ -101,7 +63,7 @@ module GameServiceModule {
             console.log('handleActionStart started', gameId, player, state);
 
             // Ignore WIN state change since that only happens after the game has already ended
-            if (state === GameServiceController.PLAYER_STATES.WIN) {
+            if (state === GameConstants.PLAYER_STATES.WIN) {
                 return callback(null);
             }
 
@@ -111,7 +73,7 @@ module GameServiceModule {
                 }],
                 'next_action': ['states', (autoCb, results) => {
                     console.log('handleActionStart next_action', gameId, results);
-                    var dealing = _.find<{player:string; state:string}>(results.states, "state", GameServiceController.PLAYER_STATES.DEALING);
+                    var dealing = _.find<{player:string; state:string}>(results.states, "state", GameConstants.PLAYER_STATES.DEALING);
                     if (dealing) {
                         console.log('handleActionStart chose dealing', dealing);
                         return this.setActionTimer(() => {
@@ -119,29 +81,29 @@ module GameServiceModule {
                         });
                     }
 
-                    var current = _.find<{player:string; state:string}>(results.states, "state", GameServiceController.PLAYER_STATES.CURRENT);
-                    if (current && current.player !== GameServiceController.DEALER) {
+                    var current = _.find<{player:string; state:string}>(results.states, "state", GameConstants.PLAYER_STATES.CURRENT);
+                    if (current && current.player !== GameConstants.DEALER) {
                         console.log('handleActionStart chose current', current);
-                        var action = {player: current, action: [GameServiceController.PLAYER_ACTIONS.HIT, GameServiceController.PLAYER_ACTIONS.STAY]};
-                        this.emitter.emit(GameServiceController.EVENTS.ACTION_REMINDER, action);
+                        var action = {player: current, action: [GameConstants.PLAYER_ACTIONS.HIT, GameConstants.PLAYER_ACTIONS.STAY]};
+                        this.emitter.emit(GameConstants.EVENTS.ACTION_REMINDER, action);
                         return autoCb(null, null);
                     }
 
                     var waiting = _.find<{player:string; state:string}>(results.states, (value) => {
-                        return value.player !== GameServiceController.DEALER && value.state === GameServiceController.PLAYER_STATES.WAITING
+                        return value.player !== GameConstants.DEALER && value.state === GameConstants.PLAYER_STATES.WAITING
                     });
                     if (waiting) {
                         console.log('handleActionStart chose waiting', waiting);
-                        return this.api.game.setPlayerState(gameId, waiting.player, GameServiceController.PLAYER_STATES.CURRENT, autoCb);
+                        return this.api.game.setPlayerState(gameId, waiting.player, GameConstants.PLAYER_STATES.CURRENT, autoCb);
                     }
 
-                    var dealer = _.find<{player:string; state:string}>(results.states, "player", GameServiceController.DEALER);
-                    if (dealer && dealer.state === GameServiceController.PLAYER_STATES.WAITING) {
+                    var dealer = _.find<{player:string; state:string}>(results.states, "player", GameConstants.DEALER);
+                    if (dealer && dealer.state === GameConstants.PLAYER_STATES.WAITING) {
                         console.log('handleActionStart chose dealer');
-                        return this.api.game.setPlayerState(gameId, dealer.player, GameServiceController.PLAYER_STATES.CURRENT, autoCb);
+                        return this.api.game.setPlayerState(gameId, dealer.player, GameConstants.PLAYER_STATES.CURRENT, autoCb);
                     }
 
-                    if (dealer && dealer.state === GameServiceController.PLAYER_STATES.CURRENT) {
+                    if (dealer && dealer.state === GameConstants.PLAYER_STATES.CURRENT) {
                         console.log('handleActionStart chose dealer (hit)');
                         return this.setActionTimer(() => {
                             return this.api.game.rpoplpush(gameId, dealer.player, autoCb);
@@ -171,7 +133,7 @@ module GameServiceModule {
                     this.api.game.getPlayerCards(gameId, player, autoCb);
                 }],
                 'score': ['cards', (autoCb, results) => {
-                    autoCb(null, this.valueForCards(results.cards));
+                    autoCb(null, GameConstants.valueForCards(results.cards));
                 }],
                 'states': [(autoCb, results) => {
                     this.api.game.getPlayerStates(gameId, autoCb)
@@ -187,22 +149,22 @@ module GameServiceModule {
                     var end:boolean = false;
                     if (results.cards.length < 2) {
                         console.log('handleCardPushed saw dealing');
-                        state = GameServiceController.PLAYER_STATES.DEALING;
+                        state = GameConstants.PLAYER_STATES.DEALING;
                     }
 
-                    if (!state && results.score > GameServiceController.MAX) {
+                    if (!state && results.score > GameConstants.MAX) {
                         console.log('handleCardPushed saw bust');
-                        state = GameServiceController.PLAYER_STATES.BUST;
+                        state = GameConstants.PLAYER_STATES.BUST;
                     }
 
-                    if (!state && player === GameServiceController.DEALER && results.score >= GameServiceController.DEALER_STAY) {
+                    if (!state && player === GameConstants.DEALER && results.score >= GameConstants.DEALER_STAY) {
                         console.log('handleCardPushed saw dealer stay');
-                        end = results.score === GameServiceController.MAX;
-                        state = GameServiceController.PLAYER_STATES.STAY;
+                        end = results.score === GameConstants.MAX;
+                        state = GameConstants.PLAYER_STATES.STAY;
                     }
 
-                    if (!state && results.state === GameServiceController.PLAYER_STATES.DEALING && results.cards.length >= 2) {
-                        state = GameServiceController.PLAYER_STATES.WAITING;
+                    if (!state && results.state === GameConstants.PLAYER_STATES.DEALING && results.cards.length >= 2) {
+                        state = GameConstants.PLAYER_STATES.WAITING;
                     }
 
                     if (end) {
@@ -234,7 +196,7 @@ module GameServiceModule {
                     async.mapLimit(results.players, 3, (player:string, mapCb) => this.api.game.getPlayerCards(gameId, player, mapCb), autoCb);
                 }],
                 'scores': ['cards', (autoCb, results) => {
-                    autoCb(null, _.map(results.cards, (cards:string[]) => this.valueForCards(cards)));
+                    autoCb(null, _.map(results.cards, (cards:string[]) => GameConstants.valueForCards(cards)));
                 }],
                 'player_scores': ['scores', (autoCb, results) => {
                     autoCb(null, _.zipObject<{[player:string]:number}>(results.players, results.scores));
@@ -252,7 +214,7 @@ module GameServiceModule {
                 }],
                 'winState': ['winners', (autoCb, results:any) => {
                     async.eachLimit(results.winners, 3, (winner:string, eachCb) => {
-                        this.api.game.setPlayerState(gameId, winner, GameServiceController.PLAYER_STATES.WIN, eachCb);
+                        this.api.game.setPlayerState(gameId, winner, GameConstants.PLAYER_STATES.WIN, eachCb);
                     }, autoCb);
                 }]
             }, (err, results:any) => {
@@ -266,25 +228,25 @@ module GameServiceModule {
 
         public isGameEnded(states:{player:string; state:string}[]):boolean {
             var playing = _.pluck(states, 'state');
-            if (_.include(playing, 'win')) {
+            if (_.include(playing, GameConstants.PLAYER_STATES.WIN)) {
                 return true;
             }
-            playing = _.without(playing, 'bust', 'stay', 'win');
+            playing = _.without(playing, GameConstants.PLAYER_STATES.BUST, GameConstants.PLAYER_STATES.STAY, GameConstants.PLAYER_STATES.WIN);
             return _.isEmpty(playing);
         }
 
         public getWinners(states:{player:string; state:string}[], scores:{[player:string]:number}):string[] {
-            var winners = _.pluck(_.reject(states, {'state': GameServiceController.PLAYER_STATES.BUST}), 'player');
+            var winners = _.pluck(_.reject(states, {'state': GameConstants.PLAYER_STATES.BUST}), 'player');
 
-            var dealerBust = !_.includes(winners, GameServiceController.DEALER);
+            var dealerBust = !_.includes(winners, GameConstants.DEALER);
 
             if (!dealerBust) {
-                var dealerScore = scores[GameServiceController.DEALER];
+                var dealerScore = scores[GameConstants.DEALER];
                 winners = _.filter(winners, (player:string) => scores[player] > dealerScore);
             }
 
             if (!winners.length) {
-                winners = [GameServiceController.DEALER];
+                winners = [GameConstants.DEALER];
             }
             return winners;
         }
@@ -299,7 +261,7 @@ module GameServiceModule {
         }
 
         public onActionReminder(callback:(reminder:{player:string; actions:string[]})=>any) {
-            this.emitter.on(GameServiceController.EVENTS.ACTION_REMINDER, callback);
+            this.emitter.on(GameConstants.EVENTS.ACTION_REMINDER, callback);
         }
     }
 }

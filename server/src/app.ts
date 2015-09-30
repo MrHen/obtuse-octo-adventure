@@ -12,11 +12,13 @@ import {DataStoreInterface} from './datastore/DataStoreInterfaces';
 
 import {GameServiceController} from './services/GameService';
 
-import ChatRoute = require('./routes/ChatRoute');
-import GameRoute = require('./routes/GameRoute');
-import RoomRoute = require('./routes/RoomRoute');
-import ResultRoute = require('./routes/ResultRoute');
-import LeaderboardRoute = require('./routes/LeaderboardRoute');
+import Routes = require('./routes/Routes');
+
+import ChatRouteController = require('./routes/ChatRouteController');
+import GameRouteController = require('./routes/GameRouteController');
+import LeaderboardRouteController = require('./routes/LeaderboardRouteController');
+import ResultRouteController = require('./routes/ResultRouteController');
+import RoomRouteController = require('./routes/RoomRouteController');
 
 import Sockets = require('./services/Sockets');
 
@@ -41,11 +43,17 @@ async.auto({
         autoCb(null, app);
     },
     'routes': ['app', 'db', 'service', (autoCb, results) => {
-        ChatRoute.init(results.app, '/chat', results.db.chat);
-        GameRoute.init(results.app, '/game', results.db.game, results.service);
-        RoomRoute.init(results.app, '/rooms', results.db, results.service);
-        ResultRoute.init(results.app, '/results', results.db.result);
-        LeaderboardRoute.init(results.app, '/leaderboard', results.db.result);
+        var chatController = new ChatRouteController(results.db.chat);
+        var gameController = new GameRouteController(results.db.game, results.service);
+        var leaderboardController = new LeaderboardRouteController(results.db.result);
+        var resultController = new ResultRouteController(results.db.result);
+        var roomController = new RoomRouteController(results.db, results.service);
+
+        Routes.initChat('/chat', results.app, chatController);
+        Routes.initGame('/game', results.app, gameController);
+        Routes.initRoom('/rooms', results.app, roomController);
+        Routes.initResult('/results', results.app, resultController);
+        Routes.initLeaderboard('/leaderboard', results.app, leaderboardController);
 
         results.app.get('/', function (req, res) {
             res.send('Hello World!');
