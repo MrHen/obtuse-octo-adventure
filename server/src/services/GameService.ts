@@ -88,6 +88,10 @@ module GameServiceModule {
 
         public valueForCards(cards:string[]):number {
             return _.sum(cards, (card:string) => {
+                if (!card) {
+                    return 0;
+                }
+
                 if (+card[0] > 0) {
                     return +card[0];
                 }

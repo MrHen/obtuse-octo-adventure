@@ -204,7 +204,8 @@ describe('GameService', () => {
                 {cards: ['AD', 'TH', 'JS'], expected: 31}, // TODO support multi-value Aces
 
                 {cards: [], expected: 0},
-                {cards: null, expected: 0}
+                {cards: null, expected: 0},
+                {cards: [null], expected: 0}
             ], () => {
                 it('"{cards}" equals {expected}', (context) => {
                     var actual = gameService.valueForCards(context.cards);
