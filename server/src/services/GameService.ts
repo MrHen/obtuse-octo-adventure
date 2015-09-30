@@ -42,12 +42,76 @@ module GameServiceModule {
             this.api = api;
         }
 
+        public doNextAction(gameId:string, playerState:{player:string; state:string}, callback:(err:Error)=>any) {
+            if (playerState.state === GameConstants.PLAYER_STATES.DEALING) {
+                return this.setActionTimer(() => {
+                    return this.api.game.rpoplpush(gameId, playerState.player, callback);
+                });
+            }
+
+            if (playerState.state === GameConstants.PLAYER_STATES.CURRENT) {
+                if (playerState.player !== GameConstants.DEALER) {
+                    var action = {player: playerState.player, action: [GameConstants.PLAYER_ACTIONS.HIT, GameConstants.PLAYER_ACTIONS.STAY]};
+                    this.emitter.emit(GameConstants.EVENTS.GAME.ACTION_REMINDER, action);
+                    this.setActionTimer(() => {
+                        return this.actionLoop(gameId);
+                    });
+                } else {
+                    // The dealer will automatically change state to STAY when appropriate so if we got this far, they
+                    // should get another card.
+                    this.setActionTimer(() => {
+                        return this.api.game.rpoplpush(gameId, playerState.player, callback);
+                    });
+                }
+                return callback(null);
+            }
+
+            if (playerState.state === GameConstants.PLAYER_STATES.WAITING) {
+                return this.api.game.setPlayerState(gameId, playerState.player, GameConstants.PLAYER_STATES.CURRENT, callback);
+            }
+
+            callback(null);
+        }
+
+        public findNextActionableState(states:{player:string; state:string}[]):{player:string; state:string} {
+            // Check if someone needs to be dealt a card.
+            // TODO Mimic standard dealing patterns
+            var dealing = _.find<{player:string; state:string}>(states, "state", GameConstants.PLAYER_STATES.DEALING);
+            if (dealing) {
+                return dealing;
+            }
+
+            // If no one needs cards, remind the current player it is their turn
+            var current = _.find<{player:string; state:string}>(states, "state", GameConstants.PLAYER_STATES.CURRENT);
+            if (current) {
+                return current;
+            }
+
+            // If it is nobody's turn, look for a non-dealer to make the current player
+            // TODO The current player could theoretically alternate after every action. This behavior should be
+            // configurable and the "current player" should switch back to WAIT state after relevant actions.
+            var waiting = _.find<{player:string; state:string}>(states, (value) => {
+                return value && value.player !== GameConstants.DEALER && value.state === GameConstants.PLAYER_STATES.WAITING
+            });
+            if (waiting) {
+                return waiting;
+            }
+
+            // The only player left to act is the dealer, so make them the current player
+            var dealer = _.find<{player:string; state:string}>(states, "player", GameConstants.DEALER);
+            if (dealer && dealer.state === GameConstants.PLAYER_STATES.WAITING) {
+                return dealer;
+            }
+
+            return null;
+        }
+
         public getWinners(states:{player:string; state:string}[], scores:{[player:string]:number}):string[] {
             var winners = _.pluck(_.reject(states, {'state': GameConstants.PLAYER_STATES.BUST}), 'player');
 
             var dealerBust = !_.includes(winners, GameConstants.DEALER);
 
-            if (!dealerBust) {
+            if (!dealerBust && scores) {
                 var dealerScore = scores[GameConstants.DEALER];
                 winners = _.filter(winners, (player:string) => scores[player] > dealerScore);
             }
@@ -88,6 +152,10 @@ module GameServiceModule {
 
         public valueForCards(cards:string[]):number {
             return _.sum(cards, (card:string) => {
+                if (!card) {
+                    return 0;
+                }
+
                 if (+card[0] > 0) {
                     return +card[0];
                 }
@@ -113,63 +181,17 @@ module GameServiceModule {
                     this.api.game.getPlayerStates(gameId, autoCb)
                 }],
                 'next_action': ['states', (autoCb, results) => {
-                    console.log('actionLoop next_action', gameId, results);
-                    // Check if someone needs to be dealt a card.
-                    // TODO Mimic standard dealing patterns
-                    var dealing = _.find<{player:string; state:string}>(results.states, "state", GameConstants.PLAYER_STATES.DEALING);
-                    if (dealing) {
-                        console.log('actionLoop chose dealing', dealing);
-                        return this.setActionTimer(() => {
-                            return this.api.game.rpoplpush(gameId, dealing.player, autoCb);
-                        });
-                    }
-
-                    // If no one needs cards, remind the current player it is their turn (unless it is the dealer, which
-                    // we control.
-                    var current = _.find<{player:string; state:string}>(results.states, "state", GameConstants.PLAYER_STATES.CURRENT);
-                    if (current && current.player !== GameConstants.DEALER) {
-                        console.log('actionLoop chose current', current);
-                        var action = {player: current, action: [GameConstants.PLAYER_ACTIONS.HIT, GameConstants.PLAYER_ACTIONS.STAY]};
-                        this.emitter.emit(GameConstants.EVENTS.GAME.ACTION_REMINDER, action);
-                        this.setActionTimer(() => {
-                            return this.actionLoop(gameId);
-                        });
-                        return autoCb(null, null);
-                    }
-
-                    // If it is nobody's turn, look for a non-dealer to make the current player
-                    // TODO The current player could theoretically alternate after every action. This behavior should be
-                    // configurable and the "current player" should switch back to WAIT state after relevant actions.
-                    var waiting = _.find<{player:string; state:string}>(results.states, (value) => {
-                        return value.player !== GameConstants.DEALER && value.state === GameConstants.PLAYER_STATES.WAITING
-                    });
-                    if (waiting) {
-                        console.log('actionLoop chose waiting', waiting);
-                        return this.api.game.setPlayerState(gameId, waiting.player, GameConstants.PLAYER_STATES.CURRENT, autoCb);
-                    }
-
-                    // The only player left to act is the dealer, so make them the current player
-                    var dealer = _.find<{player:string; state:string}>(results.states, "player", GameConstants.DEALER);
-                    if (dealer && dealer.state === GameConstants.PLAYER_STATES.WAITING) {
-                        console.log('actionLoop chose dealer');
-                        return this.api.game.setPlayerState(gameId, dealer.player, GameConstants.PLAYER_STATES.CURRENT, autoCb);
-                    }
-
-                    // The dealer will automatically change state to STAY when appropriate so if we got this far, they
-                    // should get another card.
-                    if (dealer && dealer.state === GameConstants.PLAYER_STATES.CURRENT) {
-                        console.log('actionLoop chose dealer (hit)');
-                        return this.setActionTimer(() => {
-                            return this.api.game.rpoplpush(gameId, dealer.player, autoCb);
-                        });
+                    autoCb(null, this.findNextActionableState(results.states));
+                }],
+                'do_action': ['next_action', (autoCb, results) => {
+                    if (results.next_action) {
+                        return this.doNextAction(gameId, results.next_action, autoCb);
                     }
 
                     // No further actions to take
-                    this.endGame(gameId, autoCb);
+                    this.endGame(gameId, callback);
                 }]
-            }, (err, results:any) => {
-                callback(err);
-            });
+            }, callback);
         };
 
         public updatePlayerState = (gameId:string, player:string, callback?:(err:Error)=>any) => {

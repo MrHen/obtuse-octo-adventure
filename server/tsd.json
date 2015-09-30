@@ -55,6 +55,9 @@
     },
     "socket.io/socket.io.d.ts": {
       "commit": "54f064352a3615443f7bff4198078db15e28247b"
+    },
+    "sinon/sinon.d.ts": {
+      "commit": "30387ec3dd6eb426cc48522fd3aef09ada83aa48"
     }
   }
 }
