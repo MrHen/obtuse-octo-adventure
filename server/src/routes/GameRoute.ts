@@ -1,6 +1,6 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
-/// <reference path="../../../common/api.d.ts" />
+/// <reference path="../api.d.ts" />
 
 import _ = require('lodash');
 import async = require('async');

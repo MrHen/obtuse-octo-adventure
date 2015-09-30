@@ -1,4 +1,4 @@
-/// <reference path="../../common/api.d.ts" />
+/// <reference path="../../server/src/api.d.ts" />
 
 /// <reference path="../typings/tsd.d.ts" />
 /// <reference path="./api/api.service.ts" />
