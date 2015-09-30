@@ -36,20 +36,6 @@ module LeaderboardRoute {
             });
         }
     }
-
-    export function init(app:express.Express, base:string, api:ResultDataStoreInterface) {
-        var controller = new LeaderboardRouteController(api);
-
-        app.get(base + '/players/:player', function (req, res) {
-            var player:string = req.params.player;
-
-            controller.getPlayer(player, sendErrorOrResult(res));
-        });
-
-        app.get(base, function (req, res) {
-            controller.getMostWins(0, 9, sendErrorOrResult(res));
-        });
-    }
 }
 
 export = LeaderboardRoute;

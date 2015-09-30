@@ -4,15 +4,12 @@
 
 import _ = require('lodash');
 import async = require('async');
-import express = require('express');
-import http_status = require('http-status');
 
 import {RoomEventController} from '../services/GameService';
 import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
 import {RoomRouteControllerInterface} from './Routes';
 
 import RouteErrors = require('./RouteErrors');
-import sendErrorOrResult = RouteErrors.sendErrorOrResult;
 
 module RoomRoute {
     export interface Game {
@@ -148,44 +145,6 @@ module RoomRoute {
                 callback(null, game);
             });
         }
-    }
-
-    function sendErrorResponse(res:express.Response, err:Error) {
-        var status:number = null;
-        // TODO This is not entirely appropriate
-        var message:string = err.message;
-        switch(err.message) {
-            default:
-                status = http_status.INTERNAL_SERVER_ERROR;
-        }
-        return res.status(status).send({message:message});
-    }
-
-    export function init(app:express.Express, base:string, api:DataStoreInterface, service:RoomEventController) {
-        var controller = new RoomRouteController(api, service);
-
-        app.put(base + '/:room_id/players/:player_id', function (req, res) {
-            var roomId = req.params.room_id;
-            var playerId = req.params.player_id;
-
-            controller.postPlayer(roomId, playerId, sendErrorOrResult(res));
-        });
-
-        app.post(base + '/:room_id/game', function (req, res) {
-            var roomId = req.params.room_id;
-
-            controller.postGame(roomId, sendErrorOrResult(res));
-        });
-
-        app.get(base + '/:room_id', function (req, res) {
-            var roomId = req.params.room_id;
-
-            controller.getRoom(roomId, sendErrorOrResult(res));
-        });
-
-        app.get(base, function (req, res) {
-            controller.getRooms(sendErrorOrResult(res));
-        });
     }
 }
 

@@ -12,6 +12,8 @@ import {DataStoreInterface} from './datastore/DataStoreInterfaces';
 
 import {GameServiceController} from './services/GameService';
 
+import Routes = require('./routes/Routes');
+
 import ChatRoute = require('./routes/ChatRoute');
 import GameRoute = require('./routes/GameRoute');
 import RoomRoute = require('./routes/RoomRoute');
@@ -41,11 +43,17 @@ async.auto({
         autoCb(null, app);
     },
     'routes': ['app', 'db', 'service', (autoCb, results) => {
-        ChatRoute.init(results.app, '/chat', results.db.chat);
-        GameRoute.init(results.app, '/game', results.db.game, results.service);
-        RoomRoute.init(results.app, '/rooms', results.db, results.service);
-        ResultRoute.init(results.app, '/results', results.db.result);
-        LeaderboardRoute.init(results.app, '/leaderboard', results.db.result);
+        var chatController = new ChatRoute.ChatRouteController(results.db.chat);
+        var gameController = new GameRoute.GameRouteController(results.db.game, results.service);
+        var leaderboardController = new LeaderboardRoute.LeaderboardRouteController(results.db.result);
+        var resultController = new ResultRoute.ResultRouteController(results.db.result);
+        var roomController = new RoomRoute.RoomRouteController(results.db, results.service);
+
+        Routes.initChat('/chat', results.app, chatController);
+        Routes.initGame('/game', results.app, gameController);
+        Routes.initRoom('/rooms', results.app, roomController);
+        Routes.initResult('/results', results.app, resultController);
+        Routes.initLeaderboard('/leaderboard', results.app, leaderboardController);
 
         results.app.get('/', function (req, res) {
             res.send('Hello World!');

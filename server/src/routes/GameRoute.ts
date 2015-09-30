@@ -131,30 +131,6 @@ module GameRouteModule {
             });
         }
     }
-
-    export var init = (app:express.Express, base:string, api:GameDataStoreInterface, service:GameServiceInterface) => {
-        var controller = new GameRouteController(api, service);
-
-        app.get(base + '/:game_id/current', (req, res) => {
-            var gameId = req.params.game_id;
-
-            controller.getCurrentTurn(gameId, sendErrorOrResult(res));
-        });
-
-        app.post(base + '/:game_id/action', (req, res) => {
-            var gameId = req.params.game_id;
-            var player = req.body.player;
-            var action = req.body.action;
-
-            controller.postAction(gameId, player, action, sendErrorOrResult(res));
-        });
-
-        app.get(base + '/:game_id', (req, res) => {
-            var gameId = req.params.game_id;
-
-            controller.getGame(gameId, sendErrorOrResult(res));
-        });
-    }
 }
 
 export = GameRouteModule;

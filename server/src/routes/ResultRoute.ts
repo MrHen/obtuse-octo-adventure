@@ -22,25 +22,6 @@ module ResultRoute {
             this.api.getResults(skip, skip + limit, callback);
         }
     }
-
-    export function init(app:express.Express, base:string, api:ResultDataStoreInterface) {
-        var controller = new ResultRouteController(api);
-
-        app.get(base, function (req, res) {
-            var skip:number = 0;
-            var limit:number = 20;
-            if (req.query.skip) {
-                skip = +req.query.skip;
-            }
-            if (req.query.limit) {
-                limit = +req.query.limit;
-            }
-
-            console.log('get results', req.query);
-
-            controller.getResults(skip, limit, sendErrorOrResult(res));
-        });
-    }
 }
 
 export = ResultRoute;

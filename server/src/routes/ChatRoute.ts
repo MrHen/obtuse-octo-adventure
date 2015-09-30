@@ -2,13 +2,10 @@
 
 /// <reference path="../api.d.ts" />
 
-import express = require('express');
-
 import {ChatDataStoreInterface} from '../datastore/DataStoreInterfaces.ts';
 import {ChatRouteControllerInterface} from './Routes.ts';
 
 import RouteErrors = require('./RouteErrors');
-import sendErrorOrResult = RouteErrors.sendErrorOrResult;
 
 module ChatRoute {
     export class ChatRouteController implements ChatRouteControllerInterface {
@@ -29,22 +26,6 @@ module ChatRoute {
 
             this.api.pushGlobalChat(request.message, callback);
         }
-    }
-
-    export function init(app:express.Express, base:string, api:ChatDataStoreInterface) {
-        var controller = new ChatRouteController(api);
-
-        app.get(base, function (req, res) {
-            controller.getMessages(sendErrorOrResult(res));
-        });
-
-        app.post(base, function (req, res) {
-            var chatRequest = {
-                message: req.body.message
-            };
-
-            controller.postMessage(chatRequest, sendErrorOrResult(res));
-        });
     }
 }
 
