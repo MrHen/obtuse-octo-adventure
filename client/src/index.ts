@@ -1,3 +1,5 @@
+/// <reference path="../../common/api.d.ts" />
+
 /// <reference path="../typings/tsd.d.ts" />
 /// <reference path="./api/api.service.ts" />
 /// <reference path="./config/config.service.ts" />
@@ -21,12 +23,12 @@ module OctoApp {
 
         player_name: string;
 
-        room: ApiService.RoomResponse;
+        room: ApiResponses.RoomResponse;
 
         players: PlayerListItem[];
-        game: ApiService.GameResponse;
+        game: ApiResponses.GameResponse;
 
-        leaderboard: ApiService.LeaderboardResponse[];
+        leaderboard: ApiResponses.LeaderboardResponse[];
 
         newGame: Function;
         loadGame: Function;
@@ -104,7 +106,7 @@ module OctoApp {
         }
 
         private loadRoom = ():angular.IPromise<void> => {
-            return this.Api.getRooms().then((rooms:ApiService.RoomResponse[]) => {
+            return this.Api.getRooms().then((rooms:ApiResponses.RoomResponse[]) => {
                 console.log('loadRoom resolved', _.map(rooms, (room) => (<any>room).plain()));
                 this.$scope.room = rooms && rooms.length ? rooms[0] : null;
             });
@@ -125,7 +127,7 @@ module OctoApp {
                 return this.$q.when();
             }
 
-            return this.Api.newGame(this.$scope.room.room_id).then((game:ApiService.GameResponse) => {
+            return this.Api.newGame(this.$scope.room.room_id).then((game:ApiResponses.GameResponse) => {
                 console.log('newGame resolved', (<any>game).plain());
                 this.$scope.room.game_id = game.id;
                 this.$scope.players = _.map(game.players, (value, key) => {
@@ -144,20 +146,24 @@ module OctoApp {
                 return this.$q.when();
             }
 
-            return this.Api.getGame(this.$scope.room.game_id).then((game:ApiService.GameResponse) => {
+            return this.Api.getGame(this.$scope.room.game_id).then((game:ApiResponses.GameResponse) => {
                 console.log('loadGame resolved', (<any>game).plain());
                 this.$scope.game = game;
+
+                if (game.ended) {
+                    this.loadLeaderboard();
+                }
             });
         };
 
         private loadLeaderboard = ():angular.IPromise<void> => {
-            return this.Api.getMostWins().then((leaderboard:ApiService.LeaderboardResponse[]) => {
+            return this.Api.getMostWins().then((leaderboard:ApiResponses.LeaderboardResponse[]) => {
                 console.log('loadLeaderboard resolved', _.map(leaderboard, (leader) => (<any>leader).plain()));
                 this.$scope.leaderboard = leaderboard;
             });
         };
 
-        private chatSubmit(message:string):angular.IPromise<string[]> {
+        private chatSubmit(message:string):angular.IPromise<ApiResponses.ChatResponse[]> {
             return this.Api.postGlobalChat(message).then((messages:string[]) => {
                     this.$scope.globalChat = messages;
                     return messages;

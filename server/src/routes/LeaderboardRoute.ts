@@ -1,10 +1,12 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
+/// <reference path="../../../common/api.d.ts" />
+
 import express = require('express');
 import http_status = require('http-status');
 
 import {ResultDataStoreInterface} from '../datastore/DataStoreInterfaces';
-import {LeaderboardRouteInterface, LeaderboardResponse} from './RouteInterfaces';
+import {LeaderboardRouteInterface} from './RouteInterfaces';
 
 module LeaderboardRoute {
     export class LeaderboardRouteController implements LeaderboardRouteInterface {
@@ -14,7 +16,7 @@ module LeaderboardRoute {
             this.api = api;
         }
 
-        getPlayer(player:string, callback:(err:Error, leaderboard:LeaderboardResponse)=>any) {
+        getPlayer(player:string, callback:(err:Error, leaderboard:ApiResponses.LeaderboardResponse)=>any) {
             this.api.getPlayerWins(player, (err:Error, wins:number) => {
                 if (err) {
                     return callback(err, null);
@@ -23,8 +25,8 @@ module LeaderboardRoute {
             });
         }
 
-        getMostWins(start:number, end:number, callback:(err:Error, leaderboard:LeaderboardResponse[])=>any) {
-            this.api.getMostWins(start, end, (err:Error, leaderboard:LeaderboardResponse[]) => {
+        getMostWins(start:number, end:number, callback:(err:Error, leaderboard:ApiResponses.LeaderboardResponse[])=>any) {
+            this.api.getMostWins(start, end, (err:Error, leaderboard:ApiResponses.LeaderboardResponse[]) => {
                 if (err) {
                     return callback(err, null);
                 }
@@ -50,7 +52,7 @@ module LeaderboardRoute {
         app.get(base + '/players/:player', function (req, res) {
             var player:string = req.params.player;
 
-            controller.getPlayer(player, (err:Error, leaderboard:LeaderboardResponse) => {
+            controller.getPlayer(player, (err:Error, leaderboard:ApiResponses.LeaderboardResponse) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }
@@ -60,7 +62,7 @@ module LeaderboardRoute {
         });
 
         app.get(base, function (req, res) {
-            controller.getMostWins(0, 9, (err:Error, leaderboard:LeaderboardResponse[]) => {
+            controller.getMostWins(0, 9, (err:Error, leaderboard:ApiResponses.LeaderboardResponse[]) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }

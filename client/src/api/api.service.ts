@@ -1,29 +1,8 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
+/// <reference path="../../../common/api.d.ts" />
+
 module ApiService {
-    export interface RoomResponse {
-        room_id: string;
-        game_id: string;
-        players: string[];
-    }
-
-    export interface GameResponse {
-        id: string;
-        players: {
-            [name:string]:{
-                state: string;
-                cards: string[];
-                score?: number;
-            }
-        };
-        ended: boolean;
-    }
-
-    export interface LeaderboardResponse {
-        player: string;
-        wins: number;
-    }
-
     export class Api {
         public static $inject:string[] = ["Restangular"];
 
@@ -34,7 +13,7 @@ module ApiService {
             this.Restangular.setBaseUrl(baseUrl);
         }
 
-        newGame(room_id:string):angular.IPromise<GameResponse> {
+        newGame(room_id:string):angular.IPromise<ApiResponses.GameResponse> {
             return this.Restangular.one('rooms', room_id).post('game', {});
         }
 
@@ -42,15 +21,15 @@ module ApiService {
             return this.Restangular.one('rooms', room_id).one('players', player).put();
         }
 
-        getGame(game_id:string):angular.IPromise<GameResponse> {
+        getGame(game_id:string):angular.IPromise<ApiResponses.GameResponse> {
             return this.Restangular.all('game').get(game_id);
         }
 
-        getGlobalChat():angular.IPromise<string[]> {
+        getGlobalChat():angular.IPromise<ApiResponses.ChatResponse[]> {
             return this.Restangular.all('chat').getList();
         }
 
-        getRooms():angular.IPromise<RoomResponse[]> {
+        getRooms():angular.IPromise<ApiResponses.RoomResponse[]> {
             return this.Restangular.all('rooms').getList();
         }
 
@@ -58,11 +37,11 @@ module ApiService {
             return this.Restangular.one('game', game_id).post('action', {player:player, action:action});
         }
 
-        postGlobalChat(message:string):angular.IPromise<string[]> {
+        postGlobalChat(message:string):angular.IPromise<ApiResponses.ChatResponse[]> {
             return this.Restangular.all('chat').post({message:message});
         }
 
-        getMostWins():angular.IPromise<LeaderboardResponse[]> {
+        getMostWins():angular.IPromise<ApiResponses.LeaderboardResponse[]> {
             return this.Restangular.all('leaderboard').getList();
         }
     }
