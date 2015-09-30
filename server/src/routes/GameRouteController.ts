@@ -5,8 +5,9 @@
 import _ = require('lodash');
 import async = require('async');
 
+import GameConstants = require('../services/GameConstants');
 import {GameDataStoreInterface} from '../datastore/DataStoreInterfaces';
-import {GameServiceController, GameServiceInterface} from '../services/GameService'
+import {GameServiceInterface} from '../services/GameService'
 
 import {GameRouteControllerInterface} from './Routes';
 
@@ -39,7 +40,7 @@ class GameRouteController implements GameRouteControllerInterface {
                 players[value.player] = {
                     state: value.state,
                     cards: results.cards[key],
-                    score: this.service.valueForCards(results.cards[key])
+                    score: GameConstants.valueForCards(results.cards[key])
                 }
             });
 
@@ -51,13 +52,13 @@ class GameRouteController implements GameRouteControllerInterface {
 
             // Hide one dealer card and the dealer score when necessary
             if (!game.ended) {
-                var states = _.reject(results.states, {player: GameServiceController.DEALER});
-                states = _.reject(states, {'state': GameServiceController.PLAYER_STATES.STAY});
-                states = _.reject(states, {'state': GameServiceController.PLAYER_STATES.BUST});
+                var states = _.reject(results.states, {player: GameConstants.DEALER});
+                states = _.reject(states, {'state': GameConstants.PLAYER_STATES.STAY});
+                states = _.reject(states, {'state': GameConstants.PLAYER_STATES.BUST});
                 if (states.length) {
-                    players[GameServiceController.DEALER].score = null;
-                    if (players[GameServiceController.DEALER].cards.length > 1) {
-                        players[GameServiceController.DEALER].cards[0] = GameServiceController.CARD_HIDDEN;
+                    players[GameConstants.DEALER].score = null;
+                    if (players[GameConstants.DEALER].cards.length > 1) {
+                        players[GameConstants.DEALER].cards[0] = GameConstants.CARD_HIDDEN;
                     }
                 }
             }
@@ -72,11 +73,11 @@ class GameRouteController implements GameRouteControllerInterface {
                 callback(err, null);
             }
 
-            var player = _.find<{player:string; state:string}>(states, "state", GameServiceController.PLAYER_STATES.CURRENT).player;
-            var actions = [GameServiceController.PLAYER_ACTIONS.HIT, GameServiceController.PLAYER_ACTIONS.STAY];
+            var player = _.find<{player:string; state:string}>(states, "state", GameConstants.PLAYER_STATES.CURRENT).player;
+            var actions = [GameConstants.PLAYER_ACTIONS.HIT, GameConstants.PLAYER_ACTIONS.STAY];
             if (!player) {
-                player = _.find<{player:string; state:string}>(states, "player", GameServiceController.PLAYER_STATES.DEALING).player;
-                actions = [GameServiceController.PLAYER_ACTIONS.DEAL];
+                player = _.find<{player:string; state:string}>(states, "player", GameConstants.PLAYER_STATES.DEALING).player;
+                actions = [GameConstants.PLAYER_ACTIONS.DEAL];
             }
 
             callback(null, {player: player, actions: actions});
@@ -96,18 +97,18 @@ class GameRouteController implements GameRouteControllerInterface {
 
             var state = playerState.state;
 
-            if (action === GameServiceController.PLAYER_ACTIONS.HIT) {
-                if (state !== GameServiceController.PLAYER_STATES.CURRENT) {
+            if (action === GameConstants.PLAYER_ACTIONS.HIT) {
+                if (state !== GameConstants.PLAYER_STATES.CURRENT) {
                     return callback(new Error(RouteErrors.ERROR_INVALID_TURN));
                 }
                 return this.api.rpoplpush(gameId, player, callback);
             }
 
-            if (action === GameServiceController.PLAYER_ACTIONS.STAY) {
-                if (state !== GameServiceController.PLAYER_STATES.CURRENT) {
+            if (action === GameConstants.PLAYER_ACTIONS.STAY) {
+                if (state !== GameConstants.PLAYER_STATES.CURRENT) {
                     return callback(new Error(RouteErrors.ERROR_INVALID_TURN));
                 }
-                return this.api.setPlayerState(gameId, player, GameServiceController.PLAYER_STATES.STAY, callback);
+                return this.api.setPlayerState(gameId, player, GameConstants.PLAYER_STATES.STAY, callback);
             }
 
             return callback(new Error(RouteErrors.ERROR_INVALID_ACTION));

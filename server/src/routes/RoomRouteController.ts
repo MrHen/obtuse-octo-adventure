@@ -5,7 +5,8 @@
 import _ = require('lodash');
 import async = require('async');
 
-import {GameServiceController, RoomEventController} from '../services/GameService';
+import GameConstants = require('../services/GameConstants');
+import {RoomEventController} from '../services/GameService';
 import {DataStoreInterface, PlayerState} from '../datastore/DataStoreInterfaces';
 import {RoomRouteControllerInterface} from './Routes';
 
@@ -90,12 +91,12 @@ class RoomRouteController implements RoomRouteControllerInterface {
                 this.service.handleShuffle(results.new_game, autoCb);
             }],
             'player_states': ['players', 'new_game', 'shuffle', (autoCb, results) => {
-                var players = results.players.concat(GameServiceController.DEALER);
+                var players = results.players.concat(GameConstants.DEALER);
 
                 return autoCb(null, _.map(players, (player) => {
                     return {
                         player: player,
-                        state: GameServiceController.PLAYER_STATES.DEALING
+                        state: GameConstants.PLAYER_STATES.DEALING
                     };
                 }));
             }],
