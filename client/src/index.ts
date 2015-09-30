@@ -147,6 +147,10 @@ module OctoApp {
             return this.Api.getGame(this.$scope.room.game_id).then((game:ApiService.GameResponse) => {
                 console.log('loadGame resolved', (<any>game).plain());
                 this.$scope.game = game;
+
+                if (game.ended) {
+                    this.loadLeaderboard();
+                }
             });
         };
 
