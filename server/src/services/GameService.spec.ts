@@ -12,10 +12,14 @@ import DataStoreInterface = DataStoreModule.DataStoreInterface;
 import {GameServiceController} from './GameService';
 
 describe('GameService', () => {
+    var sandbox:any = null;
+
     var dataStore:DataStoreInterface = null;
     var gameService:GameServiceController = null;
 
     beforeEach((done) => {
+        sandbox = sinon.sandbox.create();
+
         dataStore = DataStore.create();
         dataStore.connect(done);
 
@@ -24,6 +28,8 @@ describe('GameService', () => {
 
     afterEach((done) => {
         dataStore.reset(done);
+
+        sandbox.restore();
     });
 
     describe('getWinners', () => {
@@ -149,6 +155,29 @@ describe('GameService', () => {
             it('{label}', (context) => {
                 var actual = gameService.isGameEnded(context.states);
                 should.equal(actual, context.expected);
+            });
+        });
+
+        describe('shuffle', () => {
+            it('fifty-two cards', (done) => {
+                var stub = sandbox.stub(dataStore.game, 'setDeck').callsArgWithAsync(2, null);
+                gameService.shuffle('game', (err) => {
+                    should.not.exist(err);
+
+                    stub.callCount.should.eql(1);
+                    stub.args[0][0].should.eql('game');
+                    stub.args[0][1].length.should.eql(52);
+                    done();
+                });
+            });
+
+            it('cascades error', (done) => {
+                var stub = sandbox.stub(dataStore.game, 'setDeck').callsArgWithAsync(2, new Error('test error'));
+                gameService.shuffle('game', (err) => {
+                    should.exist(err);
+                    stub.callCount.should.eql(1);
+                    done();
+                });
             });
         });
     });
