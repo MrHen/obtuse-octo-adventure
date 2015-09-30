@@ -11,6 +11,9 @@ import {RoomEventController} from '../services/GameService';
 import {DataStoreInterface} from '../datastore/DataStoreInterfaces';
 import {RoomRouteInterface} from './RouteInterfaces';
 
+import RouteErrors = require('./RouteErrors');
+import sendErrorOrResult = RouteErrors.sendErrorOrResult;
+
 module RoomRoute {
     export interface Game {
         id: string;
@@ -30,10 +33,6 @@ module RoomRoute {
     export class RoomRouteController implements RoomRouteInterface {
         private static DEALER = 'dealer';
         private static PLAYER = 'player';
-
-        public static ERROR_GAME_EXISTS = 'Game started';
-        public static ERROR_MISSING_PLAYER = 'No players';
-        public static ERROR_INVALID_PLAYER = 'Invalid player';
 
         private api:DataStoreInterface = null;
         private service:RoomEventController = null;
@@ -81,7 +80,7 @@ module RoomRoute {
 
         postPlayer(roomId:string, player:string, callback:(err:Error, player:string)=>any):any {
             if (player !== 'player') {
-                return callback(new Error(RoomRouteController.ERROR_INVALID_PLAYER), null);
+                return callback(new Error(RouteErrors.ERROR_INVALID_PLAYER), null);
             }
             this.api.room.putPlayer(roomId, player, callback);
         }
@@ -96,11 +95,11 @@ module RoomRoute {
 
                     if (results.game && !gameEnded) {
                         // TODO reset game -- mark game as a loss/quit? detect "ended" game?
-                        return autoCb(new Error(RoomRouteController.ERROR_GAME_EXISTS), null);
+                        return autoCb(new Error(RouteErrors.ERROR_GAME_EXISTS), null);
                     }
 
                     if (!results.players || !results.players.length) {
-                        return autoCb(new Error(RoomRouteController.ERROR_MISSING_PLAYER), null);
+                        return autoCb(new Error(RouteErrors.ERROR_MISSING_PLAYER), null);
                     }
 
                     this.api.game.postGame(autoCb);
@@ -169,47 +168,23 @@ module RoomRoute {
             var roomId = req.params.room_id;
             var playerId = req.params.player_id;
 
-            controller.postPlayer(roomId, playerId, (err:Error, message:string) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.send(message);
-            });
+            controller.postPlayer(roomId, playerId, sendErrorOrResult(res));
         });
 
         app.post(base + '/:room_id/game', function (req, res) {
             var roomId = req.params.room_id;
 
-            controller.postGame(roomId, (err:Error, game:ApiResponses.GameResponse) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.send(game);
-            });
+            controller.postGame(roomId, sendErrorOrResult(res));
         });
 
         app.get(base + '/:room_id', function (req, res) {
             var roomId = req.params.room_id;
 
-            controller.getRoom(roomId, (err:Error, room:ApiResponses.RoomResponse) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(room);
-            });
+            controller.getRoom(roomId, sendErrorOrResult(res));
         });
 
         app.get(base, function (req, res) {
-            controller.getRooms((err:Error, messages:ApiResponses.RoomResponse[]) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.send(messages);
-            });
+            controller.getRooms(sendErrorOrResult(res));
         });
     }
 }

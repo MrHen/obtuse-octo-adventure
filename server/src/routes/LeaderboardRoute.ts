@@ -8,6 +8,8 @@ import http_status = require('http-status');
 import {ResultDataStoreInterface} from '../datastore/DataStoreInterfaces';
 import {LeaderboardRouteInterface} from './RouteInterfaces';
 
+import {sendErrorOrResult} from './RouteErrors';
+
 module LeaderboardRoute {
     export class LeaderboardRouteController implements LeaderboardRouteInterface {
         private api:ResultDataStoreInterface = null;
@@ -35,40 +37,17 @@ module LeaderboardRoute {
         }
     }
 
-    function sendErrorResponse(res:express.Response, err:Error) {
-        var status:number = null;
-        // TODO This is not entirely appropriate
-        var message:string = err.message;
-        switch(err.message) {
-            default:
-                status = http_status.INTERNAL_SERVER_ERROR;
-        }
-        return res.status(status).send({message:message});
-    }
-
     export function init(app:express.Express, base:string, api:ResultDataStoreInterface) {
         var controller = new LeaderboardRouteController(api);
 
         app.get(base + '/players/:player', function (req, res) {
             var player:string = req.params.player;
 
-            controller.getPlayer(player, (err:Error, leaderboard:ApiResponses.LeaderboardResponse) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(leaderboard);
-            });
+            controller.getPlayer(player, sendErrorOrResult(res));
         });
 
         app.get(base, function (req, res) {
-            controller.getMostWins(0, 9, (err:Error, leaderboard:ApiResponses.LeaderboardResponse[]) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(leaderboard);
-            });
+            controller.getMostWins(0, 9, sendErrorOrResult(res));
         });
     }
 }

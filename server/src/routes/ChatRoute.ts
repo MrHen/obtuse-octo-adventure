@@ -3,15 +3,15 @@
 /// <reference path="../api.d.ts" />
 
 import express = require('express');
-import http_status = require('http-status');
 
 import {ChatDataStoreInterface} from '../datastore/DataStoreInterfaces.ts';
 import {ChatRouteInterface} from './RouteInterfaces.ts';
 
+import RouteErrors = require('./RouteErrors');
+import sendErrorOrResult = RouteErrors.sendErrorOrResult;
+
 module ChatRoute {
     export class ChatRouteController implements ChatRouteInterface {
-        public static ERROR_INVALID_MESSAGE = 'Invalid chat message';
-
         private api:ChatDataStoreInterface = null;
 
         constructor(api:ChatDataStoreInterface) {
@@ -24,38 +24,18 @@ module ChatRoute {
 
         postMessage(request:{message:string}, callback:(err:Error, result:ApiResponses.ChatResponse)=>any) {
             if (!request || !request.message) {
-                return callback(new Error(ChatRouteController.ERROR_INVALID_MESSAGE), null);
+                return callback(new Error(RouteErrors.ERROR_INVALID_MESSAGE), null);
             }
 
             this.api.pushGlobalChat(request.message, callback);
         }
     }
 
-    function sendErrorResponse(res:express.Response, err:Error) {
-        var status:number = null;
-        // TODO This is not entirely appropriate
-        var message:string = err.message;
-        switch(err.message) {
-            case ChatRouteController.ERROR_INVALID_MESSAGE:
-                status = http_status.BAD_REQUEST;
-                break;
-            default:
-                status = http_status.INTERNAL_SERVER_ERROR;
-        }
-        return res.status(status).send({message:message});
-    }
-
     export function init(app:express.Express, base:string, api:ChatDataStoreInterface) {
         var controller = new ChatRouteController(api);
 
         app.get(base, function (req, res) {
-            controller.getMessages((err:Error, messages:ApiResponses.ChatResponse[]) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.send(messages);
-            });
+            controller.getMessages(sendErrorOrResult(res));
         });
 
         app.post(base, function (req, res) {
@@ -63,13 +43,7 @@ module ChatRoute {
                 message: req.body.message
             };
 
-            controller.postMessage(chatRequest, (err:Error, message:ApiResponses.ChatResponse) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.send(message);
-            });
+            controller.postMessage(chatRequest, sendErrorOrResult(res));
         });
     }
 }

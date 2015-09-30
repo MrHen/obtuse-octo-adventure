@@ -5,11 +5,13 @@
 import _ = require('lodash');
 import async = require('async');
 import express = require('express');
-import http_status = require('http-status');
 
 import {GameDataStoreInterface} from '../datastore/DataStoreInterfaces';
 import {GameRouteInterface} from './RouteInterfaces';
 import {GameServiceInterface} from '../services/GameService'
+
+import RouteErrors = require('./RouteErrors');
+import sendErrorOrResult = RouteErrors.sendErrorOrResult;
 
 module GameRouteModule {
     var PLAYER_STATES = {
@@ -26,12 +28,6 @@ module GameRouteModule {
     var DEALER = 'dealer';
 
     export class GameRouteController implements GameRouteInterface {
-        public static ERROR_INVALID_ACTION = 'Invalid action';
-        public static ERROR_INVALID_GAME = 'Invalid game';
-        public static ERROR_INVALID_PLAYER = 'Invalid player';
-        public static ERROR_INVALID_PLAYERNAME = 'Invalid player name';
-        public static ERROR_INVALID_TURN = 'Different player turn';
-
         private api:GameDataStoreInterface = null;
         private service:GameServiceInterface = null;
 
@@ -111,7 +107,7 @@ module GameRouteModule {
 
                 var playerstate = _.find<{player:string; state:string}>(states, "player", player);
                 if (!playerstate) {
-                    return callback(new Error(GameRouteController.ERROR_INVALID_PLAYER));
+                    return callback(new Error(RouteErrors.ERROR_INVALID_PLAYER));
                 }
 
                 var state = playerstate.state;
@@ -119,37 +115,21 @@ module GameRouteModule {
 
                 if (action === PLAYER_ACTIONS.HIT) {
                     if (state !== PLAYER_STATES.CURRENT) {
-                        return callback(new Error(GameRouteController.ERROR_INVALID_TURN));
+                        return callback(new Error(RouteErrors.ERROR_INVALID_TURN));
                     }
                     return this.api.rpoplpush(gameId, player, callback);
                 }
 
                 if (action === PLAYER_ACTIONS.STAY) {
                     if (state !== PLAYER_STATES.CURRENT) {
-                        return callback(new Error(GameRouteController.ERROR_INVALID_TURN));
+                        return callback(new Error(RouteErrors.ERROR_INVALID_TURN));
                     }
                     return this.api.setPlayerState(gameId, player, PLAYER_STATES.DONE, callback);
                 }
 
-                return callback(new Error(GameRouteController.ERROR_INVALID_ACTION));
+                return callback(new Error(RouteErrors.ERROR_INVALID_ACTION));
             });
         }
-    }
-
-    function sendErrorResponse(res:express.Response, err:Error) {
-        var status:number = null;
-        // TODO This is not entirely appropriate
-        var message:string = err.message;
-        switch (err.message) {
-            case GameRouteController.ERROR_INVALID_ACTION:
-            case GameRouteController.ERROR_INVALID_PLAYER:
-            case GameRouteController.ERROR_INVALID_TURN:
-                status = http_status.BAD_REQUEST;
-                break;
-            default:
-                status = http_status.INTERNAL_SERVER_ERROR;
-        }
-        return res.status(status).send({message: message});
     }
 
     export var init = (app:express.Express, base:string, api:GameDataStoreInterface, service:GameServiceInterface) => {
@@ -158,13 +138,7 @@ module GameRouteModule {
         app.get(base + '/:game_id/current', (req, res) => {
             var gameId = req.params.game_id;
 
-            controller.getCurrentTurn(gameId, (err:Error, currentTurn:ApiResponses.GameCurrentTurnResponse) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(currentTurn);
-            });
+            controller.getCurrentTurn(gameId, sendErrorOrResult(res));
         });
 
         app.post(base + '/:game_id/action', (req, res) => {
@@ -172,25 +146,13 @@ module GameRouteModule {
             var player = req.body.player;
             var action = req.body.action;
 
-            controller.postAction(gameId, player, action, (err:Error) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(action);
-            });
+            controller.postAction(gameId, player, action, sendErrorOrResult(res));
         });
 
         app.get(base + '/:game_id', (req, res) => {
             var gameId = req.params.game_id;
 
-            controller.getGame(gameId, (err:Error, game:ApiResponses.GameResponse) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(game);
-            });
+            controller.getGame(gameId, sendErrorOrResult(res));
         });
     }
 }

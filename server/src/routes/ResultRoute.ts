@@ -8,10 +8,10 @@ import http_status = require('http-status');
 import {ResultDataStoreInterface} from '../datastore/DataStoreInterfaces';
 import {ResultRouteInterface} from './RouteInterfaces';
 
+import {sendErrorOrResult} from './RouteErrors';
+
 module ResultRoute {
     export class ResultRouteController implements ResultRouteInterface {
-        public static ERROR_INVALID_MESSAGE = 'Invalid Result message';
-
         private api:ResultDataStoreInterface = null;
 
         constructor(api:ResultDataStoreInterface) {
@@ -21,20 +21,6 @@ module ResultRoute {
         getResults(skip:number, limit:number, callback:(err:Error, result:ApiResponses.ResultResponse[])=>any) {
             this.api.getResults(skip, skip + limit, callback);
         }
-    }
-
-    function sendErrorResponse(res:express.Response, err:Error) {
-        var status:number = null;
-        // TODO This is not entirely appropriate
-        var message:string = err.message;
-        switch(err.message) {
-            case ResultRouteController.ERROR_INVALID_MESSAGE:
-                status = http_status.BAD_REQUEST;
-                break;
-            default:
-                status = http_status.INTERNAL_SERVER_ERROR;
-        }
-        return res.status(status).send({message:message});
     }
 
     export function init(app:express.Express, base:string, api:ResultDataStoreInterface) {
@@ -52,13 +38,7 @@ module ResultRoute {
 
             console.log('get results', req.query);
 
-            controller.getResults(skip, limit, (err:Error, results:ApiResponses.ResultResponse[]) => {
-                if (err) {
-                    return sendErrorResponse(res, err);
-                }
-
-                res.json(results);
-            });
+            controller.getResults(skip, limit, sendErrorOrResult(res));
         });
     }
 }
