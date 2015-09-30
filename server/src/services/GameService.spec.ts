@@ -180,5 +180,37 @@ describe('GameService', () => {
                 });
             });
         });
+
+        describe('value for cards', () => {
+            data_driven([
+                {cards: ['AC'], expected: 11},
+                {cards: ['2H'], expected: 2},
+                {cards: ['3D'], expected: 3},
+                {cards: ['4D'], expected: 4},
+                {cards: ['5H'], expected: 5},
+                {cards: ['6C'], expected: 6},
+                {cards: ['7S'], expected: 7},
+                {cards: ['8S'], expected: 8},
+                {cards: ['9S'], expected: 9},
+                {cards: ['TH'], expected: 10},
+                {cards: ['JC'], expected: 10},
+                {cards: ['QC'], expected: 10},
+                {cards: ['KC'], expected: 10},
+
+                {cards: ['AS', 'KC'], expected: 21},
+                {cards: ['AS', '3H', '2D', '3D'], expected: 19},
+                {cards: ['KS', 'TH', 'JS'], expected: 30},
+
+                {cards: ['AD', 'TH', 'JS'], expected: 31}, // TODO support multi-value Aces
+
+                {cards: [], expected: 0},
+                {cards: null, expected: 0}
+            ], () => {
+                it('"{cards}" equals {expected}', (context) => {
+                    var actual = gameService.valueForCards(context.cards);
+                    should.equal(actual, context.expected);
+                });
+            });
+        });
     });
 });
