@@ -22,6 +22,7 @@ The app is split into `client` and `server` folders but could be split into two 
   * REST API
      * Behavior declared using [controller interfaces](https://github.com/MrHen/obtuse-octo-adventure/blob/master/server/src/routes/Routes.ts)
      * Initalization and base route driven by the [core app](https://github.com/MrHen/obtuse-octo-adventure/blob/master/server/src/app.ts#L45)
+     * Route payloads defined using TypeScript and consumed on both server ([example](https://github.com/MrHen/obtuse-octo-adventure/blob/master/server/src/routes/ChatRouteController.ts#L3)) and client ([example](https://github.com/MrHen/obtuse-octo-adventure/blob/master/client/src/api/api.service.ts#L3))
   * "Hot swappable" data stores
     * Development environment uses an [in-memory variation](https://github.com/MrHen/obtuse-octo-adventure/blob/master/server/src/datastore/DataStoreMemory.ts)
     * Production uses [Redis](http://redis.io/) _[(source)](https://github.com/MrHen/obtuse-octo-adventure/blob/master/server/src/datastore/DataStoreRedis.ts)_
