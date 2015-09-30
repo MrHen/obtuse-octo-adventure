@@ -3,7 +3,8 @@ import async = require('async');
 import events = require('events');
 import redis = require('redis');
 
-import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, ResultDataStoreInterface, RoomDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
+import {EVENTS} from '../services/GameConstants';
+import {DataStoreInterface, ChatDataStoreInterface, GameDataStoreInterface, ResultDataStoreInterface, RoomDataStoreInterface, ERRORS} from './DataStoreInterfaces';
 
 // Used on heroku box
 
@@ -38,20 +39,20 @@ module DataStoreRedisModule {
                 console.log("DataStoreRedis pubsub hit", channel, message);
                 emitter.emit(channel, message);
             });
-            redisSubcriber.subscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE, callback);
+            redisSubcriber.subscribe(EVENTS.DATA.GLOBAL_CHAT, EVENTS.DATA.PUSHED_CARD, EVENTS.DATA.PLAYER_STATE, callback);
         }
 
         // WARNING: Deletes all data!
         public reset(callback:(err:Error)=>any) {
             if (redisClient) {
-                emitter.removeAllListeners(EVENTS.GLOBALCHAT);
-                emitter.removeAllListeners(EVENTS.PUSHEDCARD);
-                emitter.removeAllListeners(EVENTS.PLAYERSTATE);
+                emitter.removeAllListeners(EVENTS.DATA.GLOBAL_CHAT);
+                emitter.removeAllListeners(EVENTS.DATA.PUSHED_CARD);
+                emitter.removeAllListeners(EVENTS.DATA.PLAYER_STATE);
                 redisSubcriber.removeAllListeners('message');
 
                 async.series([
                     (cb) => redisClient.flushdb(cb),
-                    (cb) => redisSubcriber.unsubscribe(EVENTS.GLOBALCHAT, EVENTS.PUSHEDCARD, EVENTS.PLAYERSTATE, cb)
+                    (cb) => redisSubcriber.unsubscribe(EVENTS.DATA.GLOBAL_CHAT, EVENTS.DATA.PUSHED_CARD, EVENTS.DATA.PLAYER_STATE, cb)
                 ], callback);
             }
         }
@@ -74,13 +75,13 @@ module DataStoreRedisModule {
                     return callback(err, null);
                 }
 
-                redisClient.publish(EVENTS.GLOBALCHAT, message);
+                redisClient.publish(EVENTS.DATA.GLOBAL_CHAT, message);
                 callback(null, message);
             });
         }
 
         public onGlobalChat(handler:(message:string)=>any) {
-            emitter.on(EVENTS.GLOBALCHAT, handler);
+            emitter.on(EVENTS.DATA.GLOBAL_CHAT, handler);
         }
     }
 
@@ -146,7 +147,7 @@ module DataStoreRedisModule {
                 if (err) {
                     return callback(new Error(err));
                 }
-                redisClient.publish(EVENTS.PLAYERSTATE, JSON.stringify({game_id:gameId, player:player, state:state}));
+                redisClient.publish(EVENTS.DATA.PLAYER_STATE, JSON.stringify({game_id:gameId, player:player, state:state}));
                 callback(null);
             });
         }
@@ -156,7 +157,7 @@ module DataStoreRedisModule {
             var pushkey = [GameRedis.KEY_GAME, gameId, GameRedis.KEY_PLAYER, player, GameRedis.KEY_CARDS].join(DELIMETER);
             redisClient.rpoplpush(popkey, pushkey, (err, result:string) => {
                 console.log('DataStoreRedis.rpoplpush resolved', err, result);
-                redisClient.publish(EVENTS.PUSHEDCARD, JSON.stringify({game_id:gameId, player:player, card:result}));
+                redisClient.publish(EVENTS.DATA.PUSHED_CARD, JSON.stringify({game_id:gameId, player:player, card:result}));
                 callback(err, result);
             });
         }
@@ -180,28 +181,24 @@ module DataStoreRedisModule {
             var success = redisClient.lpush(key, card, (err, result:number) => {
                 console.log('DataStoreRedis.postPlayerCard resolved', err, result);
 
-                redisClient.publish(EVENTS.PUSHEDCARD, JSON.stringify({game_id:gameId, player:player, card:card}));
+                redisClient.publish(EVENTS.DATA.PUSHED_CARD, JSON.stringify({game_id:gameId, player:player, card:card}));
                 return callback(err, result);
             });
         }
 
-        public postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any {
-            callback(null);
-        }
-
-        public onPushedCard(handler:(gameId:string, player:string, card:string)=>any) {
-            emitter.on(EVENTS.PUSHEDCARD, (message:string) => {
+        public onPushedCard(handler:(pushedCard:{gameId:string; player:string; card:string})=>any) {
+            emitter.on(EVENTS.DATA.PUSHED_CARD, (message:string) => {
                 console.log("DataStoreRedis.onPushedCard resolved", message);
                 var data = JSON.parse(message);
-                handler(data.game_id, data.player, data.card);
+                handler({gameId:data.game_id, player:data.player, card:data.card});
             });
         }
 
-        public onPlayerStateChange(handler:(gameId:string, player:string, state:string)=>any) {
-            emitter.on(EVENTS.PLAYERSTATE, (message:string) => {
+        public onPlayerStateChange(handler:(playerState:{gameId:string; player:string; state:string})=>any) {
+            emitter.on(EVENTS.DATA.PLAYER_STATE, (message:string) => {
                 console.log("DataStoreRedis.onPlayerStateChange resolved", message);
                 var data = JSON.parse(message);
-                handler(data.game_id, data.player, data.state);
+                handler({gameId:data.game_id, player:data.player, state:data.state});
             });
         }
     }

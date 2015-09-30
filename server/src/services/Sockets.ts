@@ -1,20 +1,14 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
+/// <reference path="../api.d.ts" />
+
 import _ = require('lodash');
 import http = require('http');
 import socket_io = require('socket.io');
 
-module Sockets {
-    export var EVENTS = {
-        CLIENT: {
-            ACTION_REMINDER: 'action',
-            CARD: 'card',
-            GLOBAL_CHAT: 'globalchat:created',
-            PLAYER_STATE: 'state',
-            PING: 'time'
-        }
-    };
+import {EVENTS} from './GameConstants';
 
+module Sockets {
     export class Sockets {
         private socketServer:SocketIO.Server = null;
 
@@ -51,18 +45,18 @@ module Sockets {
             this.emitAllClients(EVENTS.CLIENT.GLOBAL_CHAT, message);
         };
 
-        public emitActionReminder = (reminder:{player:string; actions:string[]}) => {
+        public emitActionReminder = (reminder:ApiResponses.GameCurrentTurnResponse) => {
             this.emitAllClients(EVENTS.CLIENT.ACTION_REMINDER, JSON.stringify(reminder));
         };
 
-        public emitCardPushed = (gameId:string, player:string, card:string) => {
+        public emitCardPushed = (cardDealt:ApiResponses.CardDealtResponse) => {
             // TODO not every user needs every update
-            this.emitAllClients(EVENTS.CLIENT.CARD, JSON.stringify({gameId: gameId, player:player, card:card}));
+            this.emitAllClients(EVENTS.CLIENT.CARD, JSON.stringify(cardDealt));
         };
 
-        public emitPlayerStateChange = (gameId:string, player:string, state:string) => {
+        public emitPlayerStateChange = (playerState:ApiResponses.PlayerStateResponse) => {
             // TODO not every user needs every update
-            this.emitAllClients(EVENTS.CLIENT.PLAYER_STATE, JSON.stringify({gameId: gameId, player:player, state:state}));
+            this.emitAllClients(EVENTS.CLIENT.PLAYER_STATE, JSON.stringify(playerState));
         };
     }
 }

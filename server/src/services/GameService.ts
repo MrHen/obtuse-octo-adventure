@@ -85,7 +85,7 @@ module GameServiceModule {
                     if (current && current.player !== GameConstants.DEALER) {
                         console.log('handleActionStart chose current', current);
                         var action = {player: current, action: [GameConstants.PLAYER_ACTIONS.HIT, GameConstants.PLAYER_ACTIONS.STAY]};
-                        this.emitter.emit(GameConstants.EVENTS.ACTION_REMINDER, action);
+                        this.emitter.emit(GameConstants.EVENTS.GAME.ACTION_REMINDER, action);
                         return autoCb(null, null);
                     }
 
@@ -261,7 +261,7 @@ module GameServiceModule {
         }
 
         public onActionReminder(callback:(reminder:{player:string; actions:string[]})=>any) {
-            this.emitter.on(GameConstants.EVENTS.ACTION_REMINDER, callback);
+            this.emitter.on(GameConstants.EVENTS.GAME.ACTION_REMINDER, callback);
         }
     }
 }

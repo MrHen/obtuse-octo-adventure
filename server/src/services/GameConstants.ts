@@ -28,7 +28,21 @@ module GameConstants {
     export var CARD_HIDDEN = 'XX'; // used to hide dealer cards when necessary
 
     export var EVENTS = {
-        ACTION_REMINDER: 'action:reminder'
+        DATA: {
+            GLOBAL_CHAT: 'globalchat:created',
+            PUSHED_CARD: 'card',
+            PLAYER_STATE: 'playerstate'
+        },
+        GAME: {
+            ACTION_REMINDER: 'action:reminder'
+        },
+        CLIENT: {
+            ACTION_REMINDER: 'action',
+            CARD: 'card',
+            GLOBAL_CHAT: 'globalchat:created',
+            PLAYER_STATE: 'state',
+            PING: 'time'
+        }
     };
 
     // These three could theoretically be configurable but for now they are locked

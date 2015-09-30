@@ -3,7 +3,8 @@
 import _ = require('lodash');
 import events = require('events');
 
-import {ChatDataStoreInterface, ERRORS, EVENTS} from './DataStoreInterfaces';
+import {EVENTS} from '../services/GameConstants';
+import {ChatDataStoreInterface, ERRORS} from './DataStoreInterfaces';
 
 class ChatMemory implements ChatDataStoreInterface {
     private globalChat:string[] = [];
@@ -26,12 +27,12 @@ class ChatMemory implements ChatDataStoreInterface {
         }
         this.globalChat.push(message);
 
-        this.emitter.emit(EVENTS.GLOBALCHAT, message);
+        this.emitter.emit(EVENTS.DATA.GLOBAL_CHAT, message);
         process.nextTick(() => callback(null, message));
     }
 
     public onGlobalChat(callback:(message:string)=>any) {
-        this.emitter.on(EVENTS.GLOBALCHAT, callback);
+        this.emitter.on(EVENTS.DATA.GLOBAL_CHAT, callback);
     }
 }
 

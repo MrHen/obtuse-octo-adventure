@@ -1,5 +1,7 @@
 /// <reference path="../../typings/tsd.d.ts" />
 
+/// <reference path="../api.d.ts" />
+
 module DataStoreInterfaces {
     export interface DataStoreInterface {
         chat:ChatDataStoreInterface;
@@ -24,12 +26,6 @@ module DataStoreInterfaces {
         }
     };
 
-    export var EVENTS = {
-        GLOBALCHAT: 'globalchat:created',
-        PUSHEDCARD: 'card',
-        PLAYERSTATE: 'playerstate'
-    };
-
     export interface PlayerState {
         player:string;
         state:string;
@@ -37,7 +33,7 @@ module DataStoreInterfaces {
 
     export interface ChatDataStoreInterface {
         getGlobalChat(limit:number, callback:(err:Error, allMessages:string[])=>any):any;
-        onGlobalChat(callback:(message:string)=>any):any;
+        onGlobalChat(callback:(message:ApiResponses.ChatResponse)=>any):any;
         pushGlobalChat(message:string, callback:(err:Error, message:string)=>any):any;
     }
 
@@ -54,10 +50,9 @@ module DataStoreInterfaces {
 
         postGame(callback:(err:Error, gameId:string)=>any):any;
         postPlayerCard(gameId:string, player:string, card:string, callback:(err:Error)=>any):any;
-        postResult(player:string, playerResult:number, dealerResult:number, callback:(err:Error)=>any):any;
 
-        onPushedCard(callback:(gameId:string, player:string, card:string)=>any):any;
-        onPlayerStateChange(callback:(gameId:string, player:string, state:string)=>any):any;
+        onPushedCard(callback:(pushedCard:ApiResponses.CardDealtResponse)=>any):any;
+        onPlayerStateChange(callback:(playerState:ApiResponses.PlayerStateResponse)=>any):any;
     }
 
     export interface ResultDataStoreInterface {
@@ -72,7 +67,6 @@ module DataStoreInterfaces {
 
     export interface RoomDataStoreInterface {
         deletePlayer(roomId:string, player:string, callback:(err:Error, player:string)=>any):any;
-        //getBurned(roomId:string, callback:(err:Error, cards:string[])=>any):any;
         getRooms(callback:(err:Error, rooms:string[])=>any):any;
         getGame(roomId:string, callback:(err:Error, game:string)=>any):any;
         getPlayers(roomId:string, callback:(err:Error, players:string[])=>any):any;
