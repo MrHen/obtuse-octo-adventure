@@ -23,8 +23,10 @@ module OctoApp {
 
         room: ApiService.RoomResponse;
 
-        players: PlayerListItem[]
+        players: PlayerListItem[];
         game: ApiService.GameResponse;
+
+        leaderboard: ApiService.LeaderboardResponse[];
 
         newGame: Function;
         loadGame: Function;
@@ -63,15 +65,15 @@ module OctoApp {
 
             this.$scope.doAction = this.doAction;
 
+            // TODO split up this chain
             this.Config.load()
                 .then(() => this.initSockets())
                 .then(() => this.initApi())
                 .then(() => this.loadChat())
                 .then(() => this.loadRoom())
                 .then(() => this.joinRoom())
-                .then(() => this.loadGame());
-
-            // TODO load global chat
+                .then(() => this.loadGame())
+                .then(() => this.loadLeaderboard());
         }
 
         private initApi():angular.IPromise<void> {
@@ -148,6 +150,13 @@ module OctoApp {
             });
         };
 
+        private loadLeaderboard = ():angular.IPromise<void> => {
+            return this.Api.getMostWins().then((leaderboard:ApiService.LeaderboardResponse[]) => {
+                console.log('loadLeaderboard resolved', _.map(leaderboard, (leader) => (<any>leader).plain()));
+                this.$scope.leaderboard = leaderboard;
+            });
+        };
+
         private chatSubmit(message:string):angular.IPromise<string[]> {
             return this.Api.postGlobalChat(message).then((messages:string[]) => {
                     this.$scope.globalChat = messages;
@@ -157,7 +166,7 @@ module OctoApp {
 
         public doAction = (action:string) => {
             this.Api.postAction(this.$scope.room.game_id, this.$scope.player_name, action);
-        }
+        };
 
         private socketActionReminderEvent = (message:string) => {
             this.$scope.socketDebug.unshift(message);
@@ -199,7 +208,8 @@ module OctoApp {
 
             'octo.settings',
             'octo.chat',
-            'octo.game'
+            'octo.game',
+            'octo.leaderboard'
         ])
         .controller("OctoController", OctoController);
 }

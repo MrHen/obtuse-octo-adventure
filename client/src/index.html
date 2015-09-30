@@ -19,6 +19,7 @@
     <script src="components/settings/settings.js"></script>
     <script src="components/chat/chat.js"></script>
     <script src="components/game/game.js"></script>
+    <script src="components/leaderboard/leaderboard.js"></script>
 
     <script src="index.js"></script>
 </head>
@@ -51,6 +52,8 @@
             </div>
 
             <octo-game game="game" player="player_name" on-new-game="newGame()" on-action="doAction(action)"></octo-game>
+
+            <octo-leaderboard players="leaderboard"></octo-leaderboard>
         </div>
 
         <div class="col-md-4 hidden-xs hidden-sm">

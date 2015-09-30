@@ -307,6 +307,19 @@ module DataStoreRedisModule {
                 callback(null, +result);
             });
         }
+        getMostWins(start:number, end:number, callback:(err:Error, results:{player:string; wins:number}[])=>any):any {
+            redisClient.zrevrange(ResultRedis.KEY_LEADERBOARD, start, end, 'WITHSCORES', (err:Error, result:string[]) => {
+                if (err) {
+                    return callback(err, null);
+                }
+
+                console.log('getMostWins resolved', result);
+
+                callback(null, _.map(_.chunk(result, 2), (pair) => {
+                    return {player: pair[0], wins: +pair[1]};
+                }));
+            });
+        }
     }
 }
 

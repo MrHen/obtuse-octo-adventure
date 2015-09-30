@@ -22,6 +22,15 @@ module LeaderboardRoute {
                 callback(null, {player: player, wins: wins});
             });
         }
+
+        getMostWins(start:number, end:number, callback:(err:Error, leaderboard:LeaderboardResponse[])=>any) {
+            this.api.getMostWins(start, end, (err:Error, leaderboard:LeaderboardResponse[]) => {
+                if (err) {
+                    return callback(err, null);
+                }
+                callback(null, leaderboard);
+            });
+        }
     }
 
     function sendErrorResponse(res:express.Response, err:Error) {
@@ -42,6 +51,16 @@ module LeaderboardRoute {
             var player:string = req.params.player;
 
             controller.getPlayer(player, (err:Error, leaderboard:LeaderboardResponse) => {
+                if (err) {
+                    return sendErrorResponse(res, err);
+                }
+
+                res.json(leaderboard);
+            });
+        });
+
+        app.get(base, function (req, res) {
+            controller.getMostWins(0, 9, (err:Error, leaderboard:LeaderboardResponse[]) => {
                 if (err) {
                     return sendErrorResponse(res, err);
                 }

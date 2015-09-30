@@ -61,6 +61,8 @@ module DataStoreInterfaces {
 
         addPlayerWin(player:string, callback:(err:Error, wins:number)=>any):any;
         getPlayerWins(player:string, callback:(err:Error, wins:number)=>any):any;
+
+        getMostWins(start:number, end:number, callback:(err:Error, results:{player:string; wins:number}[])=>any):any;
     }
 
     export interface RoomDataStoreInterface {
