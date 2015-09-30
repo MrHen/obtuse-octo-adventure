@@ -51,7 +51,7 @@ module GameServiceModule {
             this.api.game.setDeck(game, newDeck, callback);
         }
 
-        public handleActionStart(gameId:string, player:string, state:string, callback?:(err:Error)=>any) {
+        public handleActionStart = (gameId:string, player:string, state:string, callback?:(err:Error)=>any) => {
             if (!callback) {
                 callback = (err:Error) => {
                     if (err) {
@@ -86,6 +86,9 @@ module GameServiceModule {
                         console.log('handleActionStart chose current', current);
                         var action = {player: current, action: [GameConstants.PLAYER_ACTIONS.HIT, GameConstants.PLAYER_ACTIONS.STAY]};
                         this.emitter.emit(GameConstants.EVENTS.GAME.ACTION_REMINDER, action);
+                        this.setActionTimer(() => {
+                            return this.handleActionStart(gameId, current.player, null, autoCb);
+                        });
                         return autoCb(null, null);
                     }
 
