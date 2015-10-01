@@ -8,12 +8,6 @@
 /// <reference path="./sockets/sockets.service.ts" />
 
 module OctoApp {
-    export interface PlayerListItem {
-        name: string;
-        state: string;
-        cards: string[];
-    }
-
     export interface OctoScope extends angular.IScope {
         globalChat: string[];
         socketDebug: string[];
@@ -27,7 +21,6 @@ module OctoApp {
 
         room: ApiResponses.RoomResponse;
 
-        players: PlayerListItem[];
         game: ApiResponses.GameResponse;
 
         leaderboard: ApiResponses.LeaderboardResponse[];
@@ -124,13 +117,7 @@ module OctoApp {
             return this.Api.newGame(this.$scope.room.room_id).then((game:ApiResponses.GameResponse) => {
                 console.log('newGame resolved', (<any>game).plain());
                 this.$scope.room.game_id = game.id;
-                this.$scope.players = _.map(game.players, (value, key) => {
-                    return {
-                        name: key,
-                        state: value.state,
-                        cards: value.cards
-                    }
-                })
+                this.$scope.game = game;
             });
         };
 

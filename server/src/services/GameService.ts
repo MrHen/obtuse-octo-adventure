@@ -15,8 +15,6 @@ module GameServiceModule {
     }
 
     export class GameServiceController implements GameServiceInterface {
-        private static ACTION_DELAY:number = 2000; // time between actions controlled by game (e.g., dealer)
-
         private static _DECK:string[] = null;
         public static get DECK():string[] {
             if (!GameServiceController._DECK) {
@@ -33,9 +31,6 @@ module GameServiceModule {
             return GameServiceController._DECK;
         }
 
-        // Used to artificially limit user interaction (for suspense!)
-        private actionTimer:number = null;
-
         private emitter:events.EventEmitter = new events.EventEmitter();
 
         public constructor(private api:DataStoreInterface) {
@@ -43,30 +38,35 @@ module GameServiceModule {
         }
 
         public doNextAction(gameId:string, playerState:{player:string; state:string}, callback:(err:Error)=>any) {
+            console.log('doNextAction entered');
             if (playerState.state === GameConstants.PLAYER_STATES.DEALING) {
-                return this.setActionTimer(() => {
-                    return this.api.game.rpoplpush(gameId, playerState.player, callback);
-                });
+                console.log('\tdoNextAction saw dealing');
+                this.deal(() => this.api.game.rpoplpush(gameId, playerState.player, (err) => {
+                    if (err) {
+                        console.log('Unhandled error from rpoplpush', err);
+                    }
+                }));
             }
 
             if (playerState.state === GameConstants.PLAYER_STATES.CURRENT) {
                 if (playerState.player !== GameConstants.DEALER) {
+                    console.log('\tdoNextAction saw player current');
                     var action = {player: playerState.player, action: [GameConstants.PLAYER_ACTIONS.HIT, GameConstants.PLAYER_ACTIONS.STAY]};
                     this.emitter.emit(GameConstants.EVENTS.GAME.ACTION_REMINDER, action);
-                    this.setActionTimer(() => {
-                        return this.actionLoop(gameId);
-                    });
                 } else {
+                    console.log('\tdoNextAction saw dealer current');
                     // The dealer will automatically change state to STAY when appropriate so if we got this far, they
                     // should get another card.
-                    this.setActionTimer(() => {
-                        return this.api.game.rpoplpush(gameId, playerState.player, callback);
-                    });
+                    this.deal(() => this.api.game.rpoplpush(gameId, playerState.player, (err) => {
+                        if (err) {
+                            console.log('Unhandled error from rpoplpush', err);
+                        }
+                    }));
                 }
-                return callback(null);
             }
 
             if (playerState.state === GameConstants.PLAYER_STATES.WAITING) {
+                console.log('\tdoNextAction saw waiting');
                 return this.api.game.setPlayerState(gameId, playerState.player, GameConstants.PLAYER_STATES.CURRENT, callback);
             }
 
@@ -74,16 +74,19 @@ module GameServiceModule {
         }
 
         public findNextActionableState(states:{player:string; state:string}[]):{player:string; state:string} {
+            console.log('findNextActionableState started');
             // Check if someone needs to be dealt a card.
             // TODO Mimic standard dealing patterns
             var dealing = _.find<{player:string; state:string}>(states, "state", GameConstants.PLAYER_STATES.DEALING);
             if (dealing) {
+                console.log('\tfindNextActionableState saw dealing');
                 return dealing;
             }
 
             // If no one needs cards, remind the current player it is their turn
             var current = _.find<{player:string; state:string}>(states, "state", GameConstants.PLAYER_STATES.CURRENT);
             if (current) {
+                console.log('\tfindNextActionableState saw current');
                 return current;
             }
 
@@ -94,15 +97,18 @@ module GameServiceModule {
                 return value && value.player !== GameConstants.DEALER && value.state === GameConstants.PLAYER_STATES.WAITING
             });
             if (waiting) {
+                console.log('\tfindNextActionableState saw player waiting');
                 return waiting;
             }
 
             // The only player left to act is the dealer, so make them the current player
             var dealer = _.find<{player:string; state:string}>(states, "player", GameConstants.DEALER);
             if (dealer && dealer.state === GameConstants.PLAYER_STATES.WAITING) {
+                console.log('\tfindNextActionableState saw dealer waiting');
                 return dealer;
             }
 
+            console.log('\tfindNextActionableState saw nothing');
             return null;
         }
 
@@ -123,7 +129,8 @@ module GameServiceModule {
         }
 
         // Player was dealt a card; check if a state change is necessary
-        public handleCardPushed = (cardPush:ApiResponses.CardDealtResponse, callback?:(err:Error)=>any) => {
+        public handleCardPushed = (cardPush:ApiResponses.CardDealtResponse) => {
+            console.log('handleCardPushed -> updatePlayerState');
             this.updatePlayerState(cardPush.gameId, cardPush.player);
         };
 
@@ -132,6 +139,7 @@ module GameServiceModule {
         public handleStateChange = (playerState:ApiResponses.PlayerStateResponse) => {
             // Ignore WIN state change since that only happens after the game has already ended
             if (playerState.state !== GameConstants.PLAYER_STATES.WIN) {
+                console.log('handleStateChange -> actionLoop');
                 this.actionLoop(playerState.gameId);
             }
         };
@@ -181,14 +189,17 @@ module GameServiceModule {
                     this.api.game.getPlayerStates(gameId, autoCb)
                 }],
                 'next_action': ['states', (autoCb, results) => {
+                    console.log('\tactionLoop saw findNextActionableState');
                     autoCb(null, this.findNextActionableState(results.states));
                 }],
                 'do_action': ['next_action', (autoCb, results) => {
                     if (results.next_action) {
+                        console.log('\tactionLoop saw doNextAction');
                         return this.doNextAction(gameId, results.next_action, autoCb);
                     }
 
                     // No further actions to take
+                    console.log('\tactionLoop saw endGame');
                     this.endGame(gameId, callback);
                 }]
             }, callback);
@@ -216,48 +227,52 @@ module GameServiceModule {
                     this.api.game.getPlayerStates(gameId, autoCb)
                 }],
                 'state': ['states', (autoCb, results) => {
-                    console.log('updatePlayerState state', results);
+                    console.log('\tupdatePlayerState state', results);
                     autoCb(null, _.find<{player:string; state:string}>(results.states, 'player', player).state);
                 }],
                 'process': ['cards', 'state', (autoCb, results) => {
-                    console.log('updatePlayerState process', results);
+                    console.log('\tupdatePlayerState process', results);
 
                     var state:string = null;
                     var end:boolean = false;
 
                     if (results.cards.length < 2) {
-                        console.log('updatePlayerState saw dealing');
+                        console.log('\tupdatePlayerState saw dealing');
                         state = GameConstants.PLAYER_STATES.DEALING;
                     }
 
                     if (!state && results.score > GameConstants.MAX) {
-                        console.log('updatePlayerState saw bust');
+                        console.log('\tupdatePlayerState saw bust');
                         state = GameConstants.PLAYER_STATES.BUST;
                     }
 
                     if (!state && player === GameConstants.DEALER && results.score >= GameConstants.DEALER_STAY) {
-                        console.log('updatePlayerState saw dealer stay');
+                        console.log('\tupdatePlayerState saw dealer stay');
                         end = results.score === GameConstants.MAX; // Prematurely end the game once the dealer hits max
                         state = GameConstants.PLAYER_STATES.STAY;
                     }
 
                     // If we were waiting for cards and got enough, update to WAITING state
                     if (!state && results.state === GameConstants.PLAYER_STATES.DEALING && results.cards.length >= 2) {
+                        console.log('\tupdatePlayerState saw dealer wait');
                         state = GameConstants.PLAYER_STATES.WAITING;
                     }
 
                     // Don't bother updating the player state before ending the game. endGame() will update things
                     // appropriately
                     if (end) {
+                        console.log('\tupdatePlayerState saw game end');
                         return this.endGame(gameId, autoCb);
                     }
 
                     if (state && state !== results.state) {
+                        console.log('\tupdatePlayerState saw state change', {old: results.state, new: state});
                         return this.api.game.setPlayerState(gameId, player, state, autoCb);
                     }
 
                     // If no state changes hit, run the action loop again. If a state change _did_ hit, the listener
                     // will automatically detect it.
+                    console.log('\tupdatePlayerState saw actionLoop');
                     this.actionLoop(gameId, autoCb);
                 }]
             }, (err, results:any) => {
@@ -309,13 +324,23 @@ module GameServiceModule {
             });
         };
 
-        private setActionTimer(func:Function) {
-            if (this.actionTimer) {
-                clearTimeout(this.actionTimer);
-                this.actionTimer = null;
+        // Deal card but use a throttle to prevent all the cards from getting dealt too suddenly
+        // TODO the first card dealt should be snappy; it's the follow up cards that should be delayed
+        private static DEAL_DELAY:number = 1200;
+
+        private dealTimer:NodeJS.Timer = null;
+
+        private deal(func:Function) {
+            if (this.dealTimer) {
+                return;
             }
 
-            this.actionTimer = setTimeout(func, GameServiceController.ACTION_DELAY);
+            this.dealTimer = setTimeout(() => {
+                clearTimeout(this.dealTimer);
+                this.dealTimer = null;
+
+                func();
+            }, GameServiceController.DEAL_DELAY);
         }
 
         public onActionReminder(callback:(reminder:{player:string; actions:string[]})=>any) {
