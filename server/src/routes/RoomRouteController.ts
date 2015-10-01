@@ -75,7 +75,7 @@ class RoomRouteController implements RoomRouteControllerInterface {
 
                 if (results.game && !gameEnded) {
                     // TODO reset game -- mark game as a loss/quit? detect "ended" game?
-                    return autoCb(new Error(RouteErrors.ERROR_GAME_EXISTS), null);
+                    //return autoCb(new Error(RouteErrors.ERROR_GAME_EXISTS), null);
                 }
 
                 if (!results.players || !results.players.length) {
