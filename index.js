@@ -35,13 +35,7 @@ var OctoApp;
                 return _this.Api.newGame(_this.$scope.room.room_id).then(function (game) {
                     console.log('newGame resolved', game.plain());
                     _this.$scope.room.game_id = game.id;
-                    _this.$scope.players = _.map(game.players, function (value, key) {
-                        return {
-                            name: key,
-                            state: value.state,
-                            cards: value.cards
-                        };
-                    });
+                    _this.$scope.game = game;
                 });
             };
             this.loadGame = function () {
