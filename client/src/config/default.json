@@ -1,6 +1,6 @@
 {
-  "api_base": "http://murmuring-tundra-3318.herokuapp.com/",
-  "websocket_host": "ws://murmuring-tundra-3318.herokuapp.com/",
+  "api_base": "http://obscure-reef-4259.herokuapp.com/",
+  "websocket_host": "ws://obscure-reef-4259.herokuapp.com/",
 
   "max_socket_debug": 5
 }

@@ -55,9 +55,7 @@ async.auto({
         Routes.initResult('/results', results.app, resultController);
         Routes.initLeaderboard('/leaderboard', results.app, leaderboardController);
 
-        results.app.get('/', function (req, res) {
-            res.send('Hello World!');
-        });
+        results.app.use('/', express.static(__dirname + '/dashboard'));
 
         autoCb(null, null);
     }],
