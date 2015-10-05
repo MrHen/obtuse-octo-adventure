@@ -11,14 +11,18 @@ var gulp_tsd = require('gulp-tsd');
 var gulp_typescript = require('gulp-typescript');
 var gulp_util = require('gulp-util');
 var gulp_nodemon = require('gulp-nodemon');
+var main_bower_files = require('main-bower-files');
 var run_sequence = require('run-sequence');
 
 var configs = {
     inject : {
         angular: {
-            starttag: '<!-- inject:angular:{{ext}} -->',
+            name: 'angular',
             ignorePath: 'app/',
             addRootSlash: false
+        },
+        bower: {
+            name: 'bower'
         }
     },
 
@@ -52,7 +56,7 @@ var locations = {
 
     inject: {
         dest: 'app',
-        src: 'src/index.html',
+        src: 'app/index.html',
         angular: ['app/**/*.js', '!app/app.js', '!app/**/*.spec.js', '!app/bower_components/**/*']
     },
 
@@ -176,12 +180,18 @@ gulp.task('build:tsd', function (callback) {
 });
 
 gulp.task('build:inject', function(callback) {
-    run_sequence('build:inject:angular', callback);
+    run_sequence('build:inject:angular', 'build:inject:bower', callback);
 });
 
 gulp.task('build:inject:angular', function() {
     return gulp.src(locations.inject.src)
         .pipe(gulp_inject(gulp.src(locations.inject.angular).pipe(gulp_angular_filesort()), configs.inject.angular))
+        .pipe(gulp.dest(locations.inject.dest));
+});
+
+gulp.task('build:inject:bower', function() {
+    return gulp.src(locations.inject.src)
+        .pipe(gulp_inject(gulp.src(main_bower_files(), {read: false}), configs.inject.bower))
         .pipe(gulp.dest(locations.inject.dest));
 });
 
