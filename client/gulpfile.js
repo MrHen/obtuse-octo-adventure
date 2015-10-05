@@ -1,9 +1,11 @@
 var del = require('del');
 var gulp = require('gulp');
+var gulp_angular_filesort = require('gulp-angular-filesort');
 var gulp_bower = require('gulp-bower');
 var gulp_changed = require('gulp-changed');
-var gulp_gh_pages = require('gulp-gh-pages');
 var gulp_filter = require("gulp-filter");
+var gulp_gh_pages = require('gulp-gh-pages');
+var gulp_inject = require('gulp-inject');
 var gulp_spawn_mocha = require('gulp-spawn-mocha');
 var gulp_tsd = require('gulp-tsd');
 var gulp_typescript = require('gulp-typescript');
@@ -12,6 +14,14 @@ var gulp_nodemon = require('gulp-nodemon');
 var run_sequence = require('run-sequence');
 
 var configs = {
+    inject : {
+        angular: {
+            starttag: '<!-- inject:angular:{{ext}} -->',
+            ignorePath: 'app/',
+            addRootSlash: false
+        }
+    },
+
     mocha: {},
 
     tsd: {
@@ -39,6 +49,12 @@ var locations = {
     deploy: "app/**/*",
     start: "app/app.js",
     bower: "app/bower_components",
+
+    inject: {
+        dest: 'app',
+        src: 'src/index.html',
+        angular: ['app/**/*.js', '!app/app.js', '!app/**/*.spec.js', '!app/bower_components/**/*']
+    },
 
     filters: {
         copy: ['**/*.{html,css,json}'],
@@ -94,7 +110,7 @@ gulp.task('build', function(callback) {
 });
 
 gulp.task('build:client', ['build:tsd', 'build:bower'], function(callback) {
-    run_sequence('build:client:typescript', 'build:client:copy', callback);
+    run_sequence('build:client:typescript', 'build:client:copy', 'build:inject', callback);
 });
 
 gulp.task('build:client:copy', function() {
@@ -157,6 +173,16 @@ gulp.task('build:bower', function () {
 
 gulp.task('build:tsd', function (callback) {
     return gulp_tsd(configs.tsd, callback);
+});
+
+gulp.task('build:inject', function(callback) {
+    run_sequence('build:inject:angular', callback);
+});
+
+gulp.task('build:inject:angular', function() {
+    return gulp.src(locations.inject.src)
+        .pipe(gulp_inject(gulp.src(locations.inject.angular).pipe(gulp_angular_filesort()), configs.inject.angular))
+        .pipe(gulp.dest(locations.inject.dest));
 });
 
 //////

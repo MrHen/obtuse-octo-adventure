@@ -19,10 +19,12 @@
   "devDependencies": {
     "del": "^1.2.1",
     "gulp": "^3.9.0",
+    "gulp-angular-filesort": "^1.1.1",
     "gulp-changed": "^1.3.0",
     "gulp-bower": "0.0.10",
     "gulp-filter": "^3.0.1",
     "gulp-gh-pages": "^0.5.2",
+    "gulp-inject": "^3.0.0",
     "gulp-nodemon": "^2.0.4",
     "gulp-spawn-mocha": "^2.2.1",
     "gulp-tsd": "0.0.4",
