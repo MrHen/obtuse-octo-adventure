@@ -18,8 +18,7 @@ var configs = {
     inject : {
         angular: {
             name: 'angular',
-            ignorePath: 'app/',
-            addRootSlash: false
+            ignorePath: 'app/'
         },
         bower: {
             name: 'bower'
