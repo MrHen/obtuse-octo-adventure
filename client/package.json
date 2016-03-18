@@ -29,11 +29,9 @@
     "gulp-inject": "^3.0.0",
     "gulp-nodemon": "^2.0.4",
     "gulp-spawn-mocha": "^2.2.1",
-    "gulp-tsd": "0.0.4",
     "gulp-typescript": "^2.8.1",
     "gulp-util": "^3.0.6",
-    "run-sequence": "^1.1.2",
-    "tsd": "^0.6.3"
+    "run-sequence": "^1.1.2"
   },
   "scripts": {
     "start": "node app/app.js"
