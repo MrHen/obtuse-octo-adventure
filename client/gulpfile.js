@@ -81,16 +81,16 @@ gulp.task('purge', function(callback) {
     run_sequence('clean:client', 'clean:typings', callback);
 });
 
-gulp.task('clean:client', function(callback) {
-    del([locations.output + '/*'], callback);
+gulp.task('clean:client', function() {
+    return del([locations.output + '/*']);
 });
 
-gulp.task('clean:deploy', function(callback) {
-    del(['.publish/*'], callback);
+gulp.task('clean:deploy', function() {
+    return del(['.publish/*']);
 });
 
-gulp.task('clean:typings', function (callback) {
-    del(['typings/*'], callback);
+gulp.task('clean:typings', function () {
+    return del(['typings/*']);
 });
 
 ////////
