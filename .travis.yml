@@ -15,4 +15,4 @@ addons:
     packages:
       - g++-4.8
 before_install:
-  - cd TEST_DIR
+  - cd $TEST_DIR
