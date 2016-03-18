@@ -5,7 +5,6 @@ import body_parser = require('body-parser');
 import cors = require('cors');
 import express = require('express');
 import http = require('http');
-import ws = require('ws');
 
 import DataStoreModule = require('./datastore/DataStore')
 import {DataStoreInterface} from './datastore/DataStoreInterfaces';
