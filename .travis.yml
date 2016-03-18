@@ -8,11 +8,16 @@ env:
   matrix:
     - TEST_DIR=client
     - TEST_DIR=server
+matrix:
+  fast_finish: true
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
+branches:
+  except:
+    - /^feature.*$/
 before_install:
   - cd $TEST_DIR
