@@ -61,7 +61,8 @@ var locations = {
 
     filters: {
         copy: ['**/*.{html,css,json}'],
-        typescript: ['**/*.ts', '!**/*.spec.ts']
+        typescript: ['**/*.ts', '!**/*.spec.ts'],
+        tests: ['**/*.spec.ts']
     },
 
     watch: {
@@ -136,7 +137,7 @@ gulp.task('build:client:typescript', function () {
         .pipe(tsFilter)
         .pipe(gulp_typescript(tsProject))
         .on('error', function(error) {
-            errors = error;
+            errors = errors || error;
         })
         .on('end', function() {
             if (errors) {
@@ -152,18 +153,18 @@ gulp.task('build:test', ['build:tsd', 'build:client'], function(callback) {
 });
 
 gulp.task('build:test:typescript', function () {
-    var tsTestFilter = gulp_filter('**/*.spec.ts');
+    var tsTestFilter = gulp_filter(locations.filters.tests);
 
     var errors = false;
     var tsResult = gulp.src(locations.sources)
         .pipe(tsTestFilter)
         .pipe(gulp_typescript(configs.typescript))
-        .on('error', function() {
-            errors = true;
+        .on('error', function(error) {
+            errors = errors || error;
         })
         .on('end', function() {
             if (errors) {
-                process.exit(1);
+                throw errors;
             }
         });
 
