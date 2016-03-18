@@ -2,10 +2,7 @@
   "name": "obtuse-octo-adventure-client",
   "version": "1.0.0",
   "description": "obtuse octo adventure client",
-  "main": "index.js",
-  "directories": {
-    "test": "tests"
-  },
+  "main": "app/app.js",
   "engines": {
     "node": "0.10.x",
     "npm": "2.x"
@@ -38,7 +35,8 @@
     "typescript": "^1.8.9"
   },
   "scripts": {
-    "start": "node app/app.js"
+    "start": "node app/app.js",
+    "test": "gulp test"
   },
   "repository": {
     "type": "git",
