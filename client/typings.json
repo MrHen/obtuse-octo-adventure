@@ -2,17 +2,17 @@
   "name": "obtuse-octo-adventure-client",
   "version": false,
   "ambientDependencies": {
-    "lodash": "github:DefinitelyTyped/DefinitelyTyped/lodash/lodash.d.ts#af81415504b4edce8dac8446d96857f8018c6e9f",
+    "angular": "github:DefinitelyTyped/DefinitelyTyped/angularjs/angular.d.ts#6f6e5c7dd9effe21fee14eb65fe340ecbbc8580a",
     "data-driven": "github:DefinitelyTyped/DefinitelyTyped/data-driven/data-driven.d.ts#af81415504b4edce8dac8446d96857f8018c6e9f",
-    "should": "github:DefinitelyTyped/DefinitelyTyped/should/should.d.ts#af81415504b4edce8dac8446d96857f8018c6e9f",
+    "express": "github:DefinitelyTyped/DefinitelyTyped/express/express.d.ts#6f6e5c7dd9effe21fee14eb65fe340ecbbc8580a",
+    "jquery": "github:DefinitelyTyped/DefinitelyTyped/jquery/jquery.d.ts#6f6e5c7dd9effe21fee14eb65fe340ecbbc8580a",
+    "lodash": "registry:dt/lodash#3.10.0+20160316155526",
+    "mime": "github:DefinitelyTyped/DefinitelyTyped/mime/mime.d.ts#6f6e5c7dd9effe21fee14eb65fe340ecbbc8580a",
     "mocha": "github:DefinitelyTyped/DefinitelyTyped/mocha/mocha.d.ts#af81415504b4edce8dac8446d96857f8018c6e9f",
     "node": "github:DefinitelyTyped/DefinitelyTyped/node/node.d.ts#af81415504b4edce8dac8446d96857f8018c6e9f",
-    "jquery": "github:DefinitelyTyped/DefinitelyTyped/jquery/jquery.d.ts#6f6e5c7dd9effe21fee14eb65fe340ecbbc8580a",
-    "angular": "github:DefinitelyTyped/DefinitelyTyped/angularjs/angular.d.ts#6f6e5c7dd9effe21fee14eb65fe340ecbbc8580a",
-    "express": "github:DefinitelyTyped/DefinitelyTyped/express/express.d.ts#6f6e5c7dd9effe21fee14eb65fe340ecbbc8580a",
-    "serve-static": "github:DefinitelyTyped/DefinitelyTyped/serve-static/serve-static.d.ts#6f6e5c7dd9effe21fee14eb65fe340ecbbc8580a",
-    "mime": "github:DefinitelyTyped/DefinitelyTyped/mime/mime.d.ts#6f6e5c7dd9effe21fee14eb65fe340ecbbc8580a",
     "restangular": "github:DefinitelyTyped/DefinitelyTyped/restangular/restangular.d.ts#54f064352a3615443f7bff4198078db15e28247b",
+    "serve-static": "github:DefinitelyTyped/DefinitelyTyped/serve-static/serve-static.d.ts#6f6e5c7dd9effe21fee14eb65fe340ecbbc8580a",
+    "should": "github:DefinitelyTyped/DefinitelyTyped/should/should.d.ts#af81415504b4edce8dac8446d96857f8018c6e9f",
     "socket.io-client": "github:DefinitelyTyped/DefinitelyTyped/socket.io-client/socket.io-client.d.ts#54f064352a3615443f7bff4198078db15e28247b"
   }
 }

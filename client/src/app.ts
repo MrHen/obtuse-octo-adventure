@@ -1,4 +1,4 @@
-/// <reference path="../typings/main.d.ts" />
+/// <reference path="../typings/browser.d.ts" />
 
 var config:any = require('config');
 import express = require('express');
