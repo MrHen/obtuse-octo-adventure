@@ -1,6 +1,6 @@
 /// <reference path="../../server/src/api.d.ts" />
 
-/// <reference path="../typings/tsd.d.ts" />
+/// <reference path="../typings/main.d.ts" />
 
 /// <reference path="./GameConstants.ts" />
 /// <reference path="./api/api.service.ts" />

@@ -7,8 +7,8 @@ var gulp_filter = require("gulp-filter");
 var gulp_gh_pages = require('gulp-gh-pages');
 var gulp_inject = require('gulp-inject');
 var gulp_spawn_mocha = require('gulp-spawn-mocha');
-var gulp_tsd = require('gulp-tsd');
 var gulp_typescript = require('gulp-typescript');
+var gulp_typings = require('gulp-typings');
 var gulp_util = require('gulp-util');
 var gulp_nodemon = require('gulp-nodemon');
 var main_bower_files = require('main-bower-files');
@@ -27,9 +27,8 @@ var configs = {
 
     mocha: {},
 
-    tsd: {
-        command: 'reinstall',
-        config: 'tsd.json'
+    typings: {
+      config: './typings.json'
     },
 
     typescript: {
@@ -79,7 +78,7 @@ gulp.task('clean', function(callback) {
 });
 
 gulp.task('purge', function(callback) {
-    run_sequence('clean:client', 'clean:tsd', callback);
+    run_sequence('clean:client', 'clean:typings', callback);
 });
 
 gulp.task('clean:client', function(callback) {
@@ -90,7 +89,7 @@ gulp.task('clean:deploy', function(callback) {
     del(['.publish/*'], callback);
 });
 
-gulp.task('clean:tsd', function (callback) {
+gulp.task('clean:typings', function (callback) {
     del(['typings/*'], callback);
 });
 
@@ -113,7 +112,7 @@ gulp.task('build', function(callback) {
     run_sequence('build:client', callback);
 });
 
-gulp.task('build:client', ['build:tsd', 'build:bower'], function(callback) {
+gulp.task('build:client', ['build:typings', 'build:bower'], function(callback) {
     run_sequence('build:client:typescript', 'build:client:copy', 'build:inject', callback);
 });
 
@@ -148,7 +147,7 @@ gulp.task('build:client:typescript', function () {
     return tsResult.js.pipe(gulp.dest(locations.output));
 });
 
-gulp.task('build:test', ['build:tsd', 'build:client'], function(callback) {
+gulp.task('build:test', ['build:typings', 'build:client'], function(callback) {
     run_sequence('build:test:typescript', callback);
 });
 
@@ -175,8 +174,8 @@ gulp.task('build:bower', function () {
     return gulp_bower().pipe(gulp.dest(locations.bower));
 });
 
-gulp.task('build:tsd', function (callback) {
-    return gulp_tsd(configs.tsd, callback);
+gulp.task('build:typings', function () {
+  return gulp.src(configs.typings.config).pipe(gulp_typings());
 });
 
 gulp.task('build:inject', function(callback) {
