@@ -11,11 +11,11 @@
     "npm": "2.x"
   },
   "dependencies": {
-    "config": "^1.16.0",
+    "config": "^1.19.0",
     "data-driven": "^1.2.0",
-    "express": "^4.13.3",
-    "main-bower-files": "^2.9.0",
-    "should": "^7.0.4"
+    "express": "^4.13.4",
+    "main-bower-files": "^2.11.1",
+    "should": "^7.1.1"
   },
   "devDependencies": {
     "del": "^1.2.1",
