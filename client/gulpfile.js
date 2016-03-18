@@ -1,17 +1,30 @@
 var del = require('del');
 var gulp = require('gulp');
+var gulp_angular_filesort = require('gulp-angular-filesort');
 var gulp_bower = require('gulp-bower');
 var gulp_changed = require('gulp-changed');
-var gulp_gh_pages = require('gulp-gh-pages');
 var gulp_filter = require("gulp-filter");
+var gulp_gh_pages = require('gulp-gh-pages');
+var gulp_inject = require('gulp-inject');
 var gulp_spawn_mocha = require('gulp-spawn-mocha');
 var gulp_tsd = require('gulp-tsd');
 var gulp_typescript = require('gulp-typescript');
 var gulp_util = require('gulp-util');
 var gulp_nodemon = require('gulp-nodemon');
+var main_bower_files = require('main-bower-files');
 var run_sequence = require('run-sequence');
 
 var configs = {
+    inject : {
+        angular: {
+            name: 'angular',
+            ignorePath: 'app/'
+        },
+        bower: {
+            name: 'bower'
+        }
+    },
+
     mocha: {},
 
     tsd: {
@@ -40,9 +53,16 @@ var locations = {
     start: "app/app.js",
     bower: "app/bower_components",
 
+    inject: {
+        dest: 'app',
+        src: 'app/index.html',
+        angular: ['app/**/*.js', '!app/app.js', '!app/**/*.spec.js', '!app/bower_components/**/*']
+    },
+
     filters: {
         copy: ['**/*.{html,css,json}'],
-        typescript: ['**/*.ts', '!**/*.spec.ts']
+        typescript: ['**/*.ts', '!**/*.spec.ts'],
+        tests: ['**/*.spec.ts']
     },
 
     watch: {
@@ -94,7 +114,7 @@ gulp.task('build', function(callback) {
 });
 
 gulp.task('build:client', ['build:tsd', 'build:bower'], function(callback) {
-    run_sequence('build:client:typescript', 'build:client:copy', callback);
+    run_sequence('build:client:typescript', 'build:client:copy', 'build:inject', callback);
 });
 
 gulp.task('build:client:copy', function() {
@@ -117,7 +137,7 @@ gulp.task('build:client:typescript', function () {
         .pipe(tsFilter)
         .pipe(gulp_typescript(tsProject))
         .on('error', function(error) {
-            errors = error;
+            errors = errors || error;
         })
         .on('end', function() {
             if (errors) {
@@ -133,18 +153,18 @@ gulp.task('build:test', ['build:tsd', 'build:client'], function(callback) {
 });
 
 gulp.task('build:test:typescript', function () {
-    var tsTestFilter = gulp_filter('**/*.spec.ts');
+    var tsTestFilter = gulp_filter(locations.filters.tests);
 
     var errors = false;
     var tsResult = gulp.src(locations.sources)
         .pipe(tsTestFilter)
         .pipe(gulp_typescript(configs.typescript))
-        .on('error', function() {
-            errors = true;
+        .on('error', function(error) {
+            errors = errors || error;
         })
         .on('end', function() {
             if (errors) {
-                process.exit(1);
+                throw errors;
             }
         });
 
@@ -157,6 +177,22 @@ gulp.task('build:bower', function () {
 
 gulp.task('build:tsd', function (callback) {
     return gulp_tsd(configs.tsd, callback);
+});
+
+gulp.task('build:inject', function(callback) {
+    run_sequence('build:inject:angular', 'build:inject:bower', callback);
+});
+
+gulp.task('build:inject:angular', function() {
+    return gulp.src(locations.inject.src)
+        .pipe(gulp_inject(gulp.src(locations.inject.angular).pipe(gulp_angular_filesort()), configs.inject.angular))
+        .pipe(gulp.dest(locations.inject.dest));
+});
+
+gulp.task('build:inject:bower', function() {
+    return gulp.src(locations.inject.src)
+        .pipe(gulp_inject(gulp.src(main_bower_files(), {read: false}), configs.inject.bower))
+        .pipe(gulp.dest(locations.inject.dest));
 });
 
 //////

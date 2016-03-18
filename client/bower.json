@@ -26,5 +26,13 @@
     "restangular": "~1.5.1",
     "lodash": "~3.10.1",
     "socket.io-client": "~1.3.7"
+  },
+  "overrides": {
+    "bootstrap": {
+      "main": ["dist/css/bootstrap.css"]
+    },
+    "socket.io-client": {
+      "main": "socket.io.js"
+    }
   }
 }
