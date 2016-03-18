@@ -40,7 +40,7 @@ class RoomMemory implements RoomDataStoreInterface {
         if (!this.players[roomId]) {
             this.players[roomId] = [];
         }
-        if (!_.include(this.players[roomId], player)) {
+        if (!_.includes(this.players[roomId], player)) {
             this.players[roomId].push(player);
         }
         callback(null, player);
