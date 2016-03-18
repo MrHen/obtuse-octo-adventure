@@ -1,4 +1,4 @@
-/// <reference path="../../typings/tsd.d.ts" />
+/// <reference path="../../typings/main.d.ts" />
 
 import _ = require('lodash');
 import async = require('async');
@@ -77,14 +77,14 @@ module GameServiceModule {
             console.log('findNextActionableState started');
             // Check if someone needs to be dealt a card.
             // TODO Mimic standard dealing patterns
-            var dealing = _.find<{player:string; state:string}>(states, "state", GameConstants.PLAYER_STATES.DEALING);
+            var dealing:{player:string; state:string} = _.find(states, {"state": GameConstants.PLAYER_STATES.DEALING});
             if (dealing) {
                 console.log('\tfindNextActionableState saw dealing');
                 return dealing;
             }
 
             // If no one needs cards, remind the current player it is their turn
-            var current = _.find<{player:string; state:string}>(states, "state", GameConstants.PLAYER_STATES.CURRENT);
+            var current:{player:string; state:string} = _.find(states, {"state": GameConstants.PLAYER_STATES.CURRENT});
             if (current) {
                 console.log('\tfindNextActionableState saw current');
                 return current;
@@ -102,7 +102,7 @@ module GameServiceModule {
             }
 
             // The only player left to act is the dealer, so make them the current player
-            var dealer = _.find<{player:string; state:string}>(states, "player", GameConstants.DEALER);
+            var dealer:{player:string; state:string} = _.find(states, {"player": GameConstants.DEALER});
             if (dealer && dealer.state === GameConstants.PLAYER_STATES.WAITING) {
                 console.log('\tfindNextActionableState saw dealer waiting');
                 return dealer;
@@ -113,7 +113,7 @@ module GameServiceModule {
         }
 
         public getWinners(states:{player:string; state:string}[], scores:{[player:string]:number}):string[] {
-            var winners = _.pluck(_.reject(states, {'state': GameConstants.PLAYER_STATES.BUST}), 'player');
+            var winners:string[] = _.map<{player:string; state:string}, string>(_.reject(states, {'state': GameConstants.PLAYER_STATES.BUST}), 'player');
 
             var dealerBust = !_.includes(winners, GameConstants.DEALER);
 
@@ -145,8 +145,8 @@ module GameServiceModule {
         };
 
         public isGameEnded(states:{player:string; state:string}[]):boolean {
-            var playing = _.pluck(states, 'state');
-            if (_.include(playing, GameConstants.PLAYER_STATES.WIN)) {
+            var playing = _.map(states, 'state');
+            if (_.includes(playing, GameConstants.PLAYER_STATES.WIN)) {
                 return true;
             }
             playing = _.without(playing, GameConstants.PLAYER_STATES.BUST, GameConstants.PLAYER_STATES.STAY, GameConstants.PLAYER_STATES.WIN);
@@ -159,7 +159,7 @@ module GameServiceModule {
         }
 
         public valueForCards(cards:string[]):number {
-            return _.sum(cards, (card:string) => {
+            return _.sumBy(cards, (card:string) => {
                 if (!card) {
                     return 0;
                 }
@@ -288,7 +288,7 @@ module GameServiceModule {
                     this.api.game.getPlayerStates(gameId, autoCb)
                 }],
                 'players': ['states', (autoCb, results) => {
-                    autoCb(null, _.pluck(results.states, 'player'));
+                    autoCb(null, _.map(results.states, 'player'));
                 }],
                 'cards': ['players', (autoCb, results) => {
                     async.mapLimit(results.players, 3, (player:string, mapCb) => this.api.game.getPlayerCards(gameId, player, mapCb), autoCb);

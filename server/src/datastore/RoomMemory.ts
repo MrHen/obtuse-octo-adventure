@@ -1,4 +1,4 @@
-/// <reference path="../../typings/tsd.d.ts" />
+/// <reference path="../../typings/main.d.ts" />
 
 import _ = require('lodash');
 
@@ -40,7 +40,7 @@ class RoomMemory implements RoomDataStoreInterface {
         if (!this.players[roomId]) {
             this.players[roomId] = [];
         }
-        if (!_.include(this.players[roomId], player)) {
+        if (!_.includes(this.players[roomId], player)) {
             this.players[roomId].push(player);
         }
         callback(null, player);

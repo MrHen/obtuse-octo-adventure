@@ -1,4 +1,4 @@
-/// <reference path="../../typings/tsd.d.ts" />
+/// <reference path="../../typings/main.d.ts" />
 
 /// <reference path="../api.d.ts" />
 
@@ -25,7 +25,7 @@ class GameRouteController implements GameRouteControllerInterface {
     public getGame(gameId:string, callback:(err:Error, game:ApiResponses.GameResponse)=>any):any {
         async.auto({
             'states': (autoCb, results) => this.api.getPlayerStates(gameId, autoCb),
-            'players': ['states', (autoCb, results) => autoCb(null, _.pluck(results.states, 'player'))],
+            'players': ['states', (autoCb, results) => autoCb(null, _.map(results.states, 'player'))],
             'cards': ['players', (autoCb, results) => {
                 async.mapLimit<string, string[]>(results.players, 3, (player, eachCb) => this.api.getPlayerCards(gameId, player, eachCb), autoCb);
             }]

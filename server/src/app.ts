@@ -1,11 +1,10 @@
-/// <reference path="../typings/tsd.d.ts" />
+/// <reference path="../typings/main.d.ts" />
 
 import async = require('async');
 import body_parser = require('body-parser');
 import cors = require('cors');
 import express = require('express');
 import http = require('http');
-import ws = require('ws');
 
 import DataStoreModule = require('./datastore/DataStore')
 import {DataStoreInterface} from './datastore/DataStoreInterfaces';

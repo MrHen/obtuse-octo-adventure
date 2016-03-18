@@ -4,8 +4,8 @@ var gulp_changed = require('gulp-changed');
 var gulp_filter = require("gulp-filter");
 var gulp_shell = require('gulp-shell');
 var gulp_spawn_mocha = require('gulp-spawn-mocha');
-var gulp_tsd = require('gulp-tsd');
 var gulp_typescript = require('gulp-typescript');
+var gulp_typings = require('gulp-typings');
 var gulp_util = require('gulp-util');
 var gulp_nodemon = require('gulp-nodemon');
 var run_sequence = require('run-sequence');
@@ -13,16 +13,15 @@ var run_sequence = require('run-sequence');
 var configs = {
     mocha: {},
 
-    tsd: {
-        command: 'reinstall',
-        config: 'tsd.json'
-    },
-
     typescript: {
         noImplicitAny: false,
         noEmitOnError: true,
         module: 'commonjs',
         target: 'ES5'
+    },
+
+    typings: {
+      config: './typings.json'
     },
 
     watcher: {
@@ -58,19 +57,19 @@ gulp.task('clean', function(callback) {
 });
 
 gulp.task('purge', function(callback) {
-    run_sequence('clean:server', 'clean:tsd', callback);
+    run_sequence('clean:server', 'clean:typings', callback);
 });
 
-gulp.task('clean:server', function(callback) {
-    del([locations.output + '/*'], callback);
+gulp.task('clean:server', function() {
+    return del([locations.output + '/*']);
 });
 
-gulp.task('clean:deploy', function(callback) {
-    del(['.publish/*'], callback);
+gulp.task('clean:deploy', function() {
+    return del(['.publish/*']);
 });
 
-gulp.task('clean:tsd', function (callback) {
-    del(['typings/*'], callback);
+gulp.task('clean:typings', function () {
+    return del(['typings/*']);
 });
 
 ////////
@@ -92,7 +91,7 @@ gulp.task('build', function(callback) {
     run_sequence('build:server', callback);
 });
 
-gulp.task('build:server', ['build:tsd'], function(callback) {
+gulp.task('build:server', ['build:typings'], function(callback) {
     run_sequence('build:server:typescript', 'build:server:copy', callback);
 });
 
@@ -127,7 +126,7 @@ gulp.task('build:server:typescript', function () {
     return tsResult.js.pipe(gulp.dest(locations.output));
 });
 
-gulp.task('build:test', ['build:tsd', 'build:server'], function(callback) {
+gulp.task('build:test', ['build:typings', 'build:server'], function(callback) {
     run_sequence('build:test:typescript', callback);
 });
 
@@ -150,8 +149,8 @@ gulp.task('build:test:typescript', function () {
     return tsResult.js.pipe(gulp.dest(locations.output));
 });
 
-gulp.task('build:tsd', function (callback) {
-    return gulp_tsd(configs.tsd, callback);
+gulp.task('build:typings', function (callback) {
+    return gulp.src(configs.typings.config).pipe(gulp_typings());
 });
 
 //////

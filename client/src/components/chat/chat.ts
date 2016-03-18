@@ -1,4 +1,4 @@
-/// <reference path="../../../typings/tsd.d.ts" />
+/// <reference path="../../../typings/browser.d.ts" />
 
 module Chat {
     var app = angular
