@@ -11,7 +11,9 @@ var gulp_nodemon = require('gulp-nodemon');
 var run_sequence = require('run-sequence');
 
 var configs = {
-    mocha: {},
+    mocha: {
+      "opts": "mocha.opts"
+    },
 
     typescript: {
         noImplicitAny: false,
