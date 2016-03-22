@@ -32,10 +32,8 @@ var configs = {
     },
 
     typescript: {
-        noImplicitAny: true,
-        noEmitOnError: true,
-        module: 'commonjs',
-        target: 'ES5'
+        config: 'tsconfig.json',
+        overrides: {}
     },
 
     watcher: {
@@ -125,7 +123,7 @@ gulp.task('build:client:copy', function() {
         .pipe(gulp.dest(locations.output));
 });
 
-var tsProject = gulp_typescript.createProject(configs.typescript);
+var tsProject = gulp_typescript.createProject(configs.typescript.config, configs.typescript.overrides);
 
 gulp.task('build:client:typescript', function () {
     var tsFilter = gulp_filter(locations.filters.typescript); // non-test TypeScript files
@@ -157,7 +155,7 @@ gulp.task('build:test:typescript', function () {
     var errors = false;
     var tsResult = gulp.src(locations.sources)
         .pipe(tsTestFilter)
-        .pipe(gulp_typescript(configs.typescript))
+        .pipe(gulp_typescript(tsProject))
         .on('error', function(error) {
             errors = errors || error;
         })

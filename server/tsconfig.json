@@ -1,0 +1,42 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "outDir": "app",
+        "rootDir": "src",
+        "noImplicitAny": false,
+        "noEmitOnError": true
+    },
+    "compileOnSave": false,
+    "filesGlob": [
+        "src/**/*.ts"
+    ],
+    "files": [
+        "src/api.d.ts",
+        "src/app.ts",
+        "src/datastore/ChatMemory.ts",
+        "src/datastore/DataStore.spec.ts",
+        "src/datastore/DataStore.ts",
+        "src/datastore/DataStoreInterfaces.ts",
+        "src/datastore/DataStoreMemory.ts",
+        "src/datastore/DataStoreRedis.ts",
+        "src/datastore/GameMemory.ts",
+        "src/datastore/ResultMemory.ts",
+        "src/datastore/RoomMemory.ts",
+        "src/global.spec.ts",
+        "src/routes/ChatRouteController.ts",
+        "src/routes/GameRouteController.ts",
+        "src/routes/LeaderboardRouteController.ts",
+        "src/routes/ResultRouteController.ts",
+        "src/routes/RoomRouteController.ts",
+        "src/routes/RouteErrors.ts",
+        "src/routes/Routes.ts",
+        "src/services/GameConstants.ts",
+        "src/services/GameService.spec.ts",
+        "src/services/GameService.ts",
+        "src/services/Sockets.ts"
+    ],
+    "atom": {
+        "rewriteTsconfig": true
+    }
+}
