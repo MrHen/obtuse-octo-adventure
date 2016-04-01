@@ -526,7 +526,7 @@ describe('DataStore', () => {
                         dataStore.room.getPlayers('demo', (err:Error, players:string[]) => {
                             should.not.exist(err);
                             should.exist(players);
-                            players.should.eql(['player', 'other']);
+                            players.should.containDeep(['player', 'other']);
                             done();
                         });
                     });
