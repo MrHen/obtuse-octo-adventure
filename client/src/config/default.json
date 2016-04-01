@@ -1,6 +1,0 @@
-{
-  "api_base": "http://obscure-reef-4259.herokuapp.com/",
-  "websocket_host": "ws://obscure-reef-4259.herokuapp.com/",
-
-  "max_socket_debug": 5
-}

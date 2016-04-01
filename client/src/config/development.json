@@ -1,4 +1,0 @@
-{
-  "api_base": "http://localhost:5000/",
-  "websocket_host": "ws://localhost:5000/"
-}
