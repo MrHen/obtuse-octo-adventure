@@ -1,10 +1,10 @@
 /// <reference path="../../typings/main.d.ts" />
-
-module GameConstants {
-    export var DEFAULT_ROOM = 'demo';
-    export var DEFAULT_PLAYER = 'player';
-
-    export var PLAYER_STATES = {
+"use strict";
+var GameConstants;
+(function (GameConstants) {
+    GameConstants.DEFAULT_ROOM = 'demo';
+    GameConstants.DEFAULT_PLAYER = 'player';
+    GameConstants.PLAYER_STATES = {
         BUST: 'bust',
         CURRENT: 'current',
         DEALING: 'deal',
@@ -12,20 +12,16 @@ module GameConstants {
         WAITING: 'wait',
         WIN: 'win'
     };
-
-    export var PLAYER_ACTIONS = {
+    GameConstants.PLAYER_ACTIONS = {
         DEAL: 'deal',
         HIT: 'hit',
         STAY: 'stay'
     };
-
-    export var DEALER = 'dealer';
-
-    export var CARD_SUITS = ['H', 'C', 'D', 'S'];
-    export var CARD_VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'];
-    export var CARD_HIDDEN = 'XX'; // used to hide dealer cards when necessary
-
-    export var EVENTS = {
+    GameConstants.DEALER = 'dealer';
+    GameConstants.CARD_SUITS = ['H', 'C', 'D', 'S'];
+    GameConstants.CARD_VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K'];
+    GameConstants.CARD_HIDDEN = 'XX'; // used to hide dealer cards when necessary
+    GameConstants.EVENTS = {
         DATA: {
             GLOBAL_CHAT: 'globalchat:created',
             PUSHED_CARD: 'card',
@@ -42,11 +38,9 @@ module GameConstants {
             PING: 'time'
         }
     };
-
     // These three could theoretically be configurable but for now they are locked
-    export var DEALER_STAY = 17;
-    export var DECK_COUNT = 1;
-    export var MAX = 21;
-}
-
-export = GameConstants;
+    GameConstants.DEALER_STAY = 17;
+    GameConstants.DECK_COUNT = 1;
+    GameConstants.MAX = 21;
+})(GameConstants || (GameConstants = {}));
+module.exports = GameConstants;

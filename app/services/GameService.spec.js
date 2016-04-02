@@ -1,0 +1,276 @@
+/// <reference path="../../typings/main.d.ts" />
+"use strict";
+var data_driven = require("data-driven");
+var should = require("should");
+var sinon = require("sinon");
+var DataStore = require('../datastore/DataStore');
+var GameService_1 = require('./GameService');
+describe('GameService', function () {
+    var sandbox = null;
+    var dataStore = null;
+    var gameService = null;
+    beforeEach(function (done) {
+        sandbox = sinon.sandbox.create();
+        dataStore = DataStore.create();
+        dataStore.connect(done);
+        gameService = new GameService_1.GameServiceController(dataStore);
+    });
+    afterEach(function (done) {
+        dataStore.reset(done);
+        sandbox.restore();
+    });
+    describe('findNextActionableState', function () {
+        data_driven([
+            {
+                label: 'all bust',
+                states: [{ player: 'player', state: 'bust' }, { player: 'dealer', state: 'bust' }],
+                expected: null
+            },
+            {
+                label: 'all stay',
+                states: [{ player: 'player', state: 'stay' }, { player: 'dealer', state: 'stay' }],
+                expected: null
+            },
+            {
+                label: 'wait > stay',
+                states: [{ player: 'player', state: 'wait' }, { player: 'dealer', state: 'stay' }],
+                expected: { player: 'player', state: 'wait' }
+            },
+            {
+                label: 'current > stay',
+                states: [{ player: 'player', state: 'current' }, { player: 'dealer', state: 'stay' }],
+                expected: { player: 'player', state: 'current' }
+            },
+            {
+                label: 'wait > win',
+                states: [{ player: 'player', state: 'wait' }, { player: 'dealer', state: 'win' }],
+                expected: { player: 'player', state: 'wait' }
+            },
+            {
+                label: 'deal > stay',
+                states: [{ player: 'player', state: 'deal' }, { player: 'dealer', state: 'stay' }],
+                expected: { player: 'player', state: 'deal' }
+            },
+            {
+                label: 'player wait > dealer wait',
+                states: [{ player: 'player', state: 'wait' }, { player: 'dealer', state: 'wait' }],
+                expected: { player: 'player', state: 'wait' }
+            },
+            {
+                label: 'dealer deal > player wait',
+                states: [{ player: 'player', state: 'wait' }, { player: 'dealer', state: 'deal' }],
+                expected: { player: 'dealer', state: 'deal' }
+            },
+            {
+                label: 'dealer wait > player bust',
+                states: [{ player: 'player', state: 'bust' }, { player: 'dealer', state: 'wait' }],
+                expected: { player: 'dealer', state: 'wait' }
+            },
+            {
+                label: 'dealer current > player wait',
+                states: [{ player: 'player', state: 'wait' }, { player: 'dealer', state: 'current' }],
+                expected: { player: 'dealer', state: 'current' }
+            },
+            {
+                label: 'survives empty states',
+                states: [],
+                expected: null
+            },
+            {
+                label: 'survives null states',
+                states: null,
+                expected: null
+            },
+            {
+                label: 'survives null state',
+                states: [null],
+                expected: null
+            }
+        ], function () {
+            it('{label}', function (context) {
+                var actual = gameService.findNextActionableState(context.states);
+                if (context.expected) {
+                    should.exist(actual);
+                    actual.should.eql(context.expected);
+                }
+                else {
+                    should.not.exist(actual);
+                }
+            });
+        });
+    });
+    describe('getWinners', function () {
+        data_driven([
+            {
+                label: 'dealer wins if everyone is bust',
+                states: [{ player: 'player', state: 'bust' }, { player: 'dealer', state: 'bust' }],
+                scores: { 'player': 22, 'dealer': 23 },
+                expected: ['dealer']
+            },
+            {
+                label: 'dealer wins with higher score',
+                states: [{ player: 'player', state: 'stay' }, { player: 'dealer', state: 'stay' }],
+                scores: { 'player': 16, 'dealer': 20 },
+                expected: ['dealer']
+            },
+            {
+                label: 'dealer wins with equal score',
+                states: [{ player: 'player', state: 'stay' }, { player: 'dealer', state: 'stay' }],
+                scores: { 'player': 20, 'dealer': 20 },
+                expected: ['dealer']
+            },
+            {
+                label: 'player wins with higher score',
+                states: [{ player: 'player', state: 'stay' }, { player: 'dealer', state: 'stay' }],
+                scores: { 'player': 20, 'dealer': 19 },
+                expected: ['player']
+            },
+            {
+                label: 'player wins if dealer busts',
+                states: [{ player: 'player', state: 'stay' }, { player: 'dealer', state: 'bust' }],
+                scores: { 'player': 20, 'dealer': 23 },
+                expected: ['player']
+            },
+            {
+                label: 'dealer wins if player busts',
+                states: [{ player: 'player', state: 'bust' }, { player: 'dealer', state: 'stay' }],
+                scores: { 'player': 23, 'dealer': 20 },
+                expected: ['dealer']
+            },
+            {
+                label: 'multiple players can win',
+                states: [{ player: 'player', state: 'stay' }, { player: 'dealer', state: 'stay' }, { player: 'other', state: 'stay' }],
+                scores: { 'player': 20, 'dealer': 19, 'other': 20 },
+                expected: ['player', 'other']
+            },
+            {
+                label: 'survives empty states',
+                states: [],
+                scores: { 'player': 20, 'dealer': 19, 'other': 20 },
+                expected: ['dealer']
+            },
+            {
+                label: 'survives null states',
+                states: null,
+                scores: { 'player': 20, 'dealer': 19, 'other': 20 },
+                expected: ['dealer']
+            },
+            {
+                label: 'survives empty scores',
+                states: [{ player: 'player', state: 'stay' }, { player: 'dealer', state: 'stay' }],
+                scores: {},
+                expected: ['dealer']
+            },
+            {
+                label: 'survives null scores',
+                states: [{ player: 'player', state: 'stay' }, { player: 'dealer', state: 'stay' }],
+                scores: null,
+                expected: ['dealer']
+            }
+        ], function () {
+            it('{label}', function (context) {
+                var actual = gameService.getWinners(context.states, context.scores);
+                should.exist(actual);
+                actual.should.containDeep(context.expected);
+            });
+        });
+    });
+    describe('isGameEnded', function () {
+        data_driven([
+            {
+                label: 'all bust',
+                states: [{ player: 'player', state: 'bust' }, { player: 'dealer', state: 'bust' }],
+                expected: true
+            },
+            {
+                label: 'all stay',
+                states: [{ player: 'player', state: 'stay' }, { player: 'dealer', state: 'stay' }],
+                expected: true
+            },
+            {
+                label: 'wait + stay',
+                states: [{ player: 'player', state: 'wait' }, { player: 'dealer', state: 'stay' }],
+                expected: false
+            },
+            {
+                label: 'current + stay',
+                states: [{ player: 'player', state: 'current' }, { player: 'dealer', state: 'stay' }],
+                expected: false
+            },
+            {
+                label: 'wait + win',
+                states: [{ player: 'player', state: 'wait' }, { player: 'dealer', state: 'win' }],
+                expected: true
+            },
+            {
+                label: 'deal + stay',
+                states: [{ player: 'player', state: 'deal' }, { player: 'dealer', state: 'stay' }],
+                expected: false
+            },
+            {
+                label: 'survives empty states',
+                states: [],
+                expected: true
+            },
+            {
+                label: 'survives null states',
+                states: null,
+                expected: true
+            }
+        ], function () {
+            it('{label}', function (context) {
+                var actual = gameService.isGameEnded(context.states);
+                should.equal(actual, context.expected);
+            });
+        });
+        describe('shuffle', function () {
+            it('fifty-two cards', function (done) {
+                var stub = sandbox.stub(dataStore.game, 'setDeck').callsArgWithAsync(2, null);
+                gameService.shuffle('game', function (err) {
+                    should.not.exist(err);
+                    stub.callCount.should.eql(1);
+                    stub.args[0][0].should.eql('game');
+                    stub.args[0][1].length.should.eql(52);
+                    done();
+                });
+            });
+            it('cascades error', function (done) {
+                var stub = sandbox.stub(dataStore.game, 'setDeck').callsArgWithAsync(2, new Error('test error'));
+                gameService.shuffle('game', function (err) {
+                    should.exist(err);
+                    stub.callCount.should.eql(1);
+                    done();
+                });
+            });
+        });
+        describe('value for cards', function () {
+            data_driven([
+                { cards: ['AC'], expected: 11 },
+                { cards: ['2H'], expected: 2 },
+                { cards: ['3D'], expected: 3 },
+                { cards: ['4D'], expected: 4 },
+                { cards: ['5H'], expected: 5 },
+                { cards: ['6C'], expected: 6 },
+                { cards: ['7S'], expected: 7 },
+                { cards: ['8S'], expected: 8 },
+                { cards: ['9S'], expected: 9 },
+                { cards: ['TH'], expected: 10 },
+                { cards: ['JC'], expected: 10 },
+                { cards: ['QC'], expected: 10 },
+                { cards: ['KC'], expected: 10 },
+                { cards: ['AS', 'KC'], expected: 21 },
+                { cards: ['AS', '3H', '2D', '3D'], expected: 19 },
+                { cards: ['KS', 'TH', 'JS'], expected: 30 },
+                { cards: ['AD', 'TH', 'JS'], expected: 31 },
+                { cards: [], expected: 0 },
+                { cards: null, expected: 0 },
+                { cards: [null], expected: 0 }
+            ], function () {
+                it('"{cards}" equals {expected}', function (context) {
+                    var actual = gameService.valueForCards(context.cards);
+                    should.equal(actual, context.expected);
+                });
+            });
+        });
+    });
+});
