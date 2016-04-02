@@ -38,7 +38,7 @@ var locations = {
 
     output: "app",
     test: "app/**/*.spec.js",
-    deploy: ["./*.*", "src/**/*"],
+    deploy: ["./*.*", "./.travis.yml", "app/**/*"],
     start: "app/app.js",
     bower: "app/bower_components",
 
@@ -187,6 +187,12 @@ gulp.task('deploy', function(callback) {
 gulp.task('deploy:heroku', ['build:server', 'test:run'], function() {
     return gulp.src(locations.deploy, { base: './' })
         .pipe(gulp_gh_pages(configs.deploy));
+});
+
+// Assumes everything was already built and installed
+gulp.task('postinstall', function(callback) {
+  return gulp.src([locations.test])
+      .pipe(gulp_spawn_mocha(configs.mocha));
 });
 
 ///////
